@@ -94,3 +94,12 @@ QVariant ProtocolModel::data(const QModelIndex &index, int role) const {
         return QString::fromStdString(service->descriptor->full_name());
     }
 }
+
+Qt::ItemFlags ProtocolModel::flags(const QModelIndex &index) const {
+    if (index.isValid() && !index.parent().isValid()) {
+        // is Service
+        return Qt::ItemFlag::ItemIsEnabled;
+    }
+
+    return QAbstractItemModel::flags(index);
+}
