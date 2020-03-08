@@ -185,12 +185,13 @@ void MainWindow::onExecuteButtonClicked() {
     call->StartCall();
     grpc::ByteBuffer receiveBuffer;
     grpc::Status status;
-    call->Finish(&receiveBuffer, &status, (void*) 1);
+    void *tag = (void*) 1;
+    call->Finish(&receiveBuffer, &status, tag);
 
     void* gotTag;
     bool ok = false;
     cq.Next(&gotTag, &ok);
-    if (ok && gotTag == (void*) 1) {
+    if (ok && gotTag == tag) {
         if (status.ok()) {
             auto resProto = dmf.GetPrototype(method->output_type());
             auto resMessage = std::unique_ptr<google::protobuf::Message>(resProto->New());
