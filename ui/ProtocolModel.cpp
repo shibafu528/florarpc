@@ -26,11 +26,10 @@ ProtocolModel::ProtocolModel(QObject *parent, Protocol *protocol)
     auto fd = protocol->getFileDescriptor();
     for (uint32_t sindex = 0; sindex < fd->service_count(); sindex++) {
         auto sd = fd->service(sindex);
-        shared_ptr<ServiceNode> sn(new ServiceNode(sindex, sd));
+        auto sn = std::make_shared<ServiceNode>(sindex, sd);
         nodes.push_back(sn);
         for (uint32_t mindex = 0; mindex < sd->method_count(); mindex++) {
-            shared_ptr<MethodNode> mn(new MethodNode(sn, mindex, sd->method(mindex)));
-            sn->methods.push_back(move(mn));
+            sn->methods.push_back(move(std::make_shared<MethodNode>(sn, mindex, sd->method(mindex))));
         }
     }
 }
