@@ -51,8 +51,8 @@ void MainWindow::onOpenProtoButtonClicked() {
 }
 
 void MainWindow::onTreeViewClicked(const QModelIndex &index) {
-    if (!index.parent().isValid()) {
-        // is not method node
+    if (!index.parent().isValid() || !index.flags().testFlag(Qt::ItemFlag::ItemIsEnabled)) {
+        // is not method node or disabled
         return;
     }
 

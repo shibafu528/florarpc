@@ -79,26 +79,48 @@ int ProtocolModel::columnCount(const QModelIndex &parent) const {
 }
 
 QVariant ProtocolModel::data(const QModelIndex &index, int role) const {
-    if (role != Qt::DisplayRole || !index.isValid()) {
+    if (!index.isValid()) {
         return QVariant();
+    }
+
+    auto node = static_cast<DescriptorNode *>(index.internalPointer());
+
+    switch (role) {
+        case Qt::DisplayRole:
+        case Qt::ToolTipRole:
+            if (node->type == DescriptorNode::Type::Service) {
+                auto service = reinterpret_cast<ServiceNode *>(node);
+                return QString::fromStdString(service->descriptor->full_name());
+            } else {
+                auto method = reinterpret_cast<MethodNode *>(node);
+                if (role == Qt::ToolTipRole && (method->descriptor->client_streaming() || method->descriptor->server_streaming())) {
+                    return QString::fromStdString(method->descriptor->name()) + "<hr><b>Streaming RPC is not supported yet.</b>";
+                }
+                return QString::fromStdString(method->descriptor->name());
+            }
+        default:
+            return QVariant();
+    }
+
+    return QVariant();
+}
+
+Qt::ItemFlags ProtocolModel::flags(const QModelIndex &index) const {
+    if (!index.isValid()) {
+        return QAbstractItemModel::flags(index);
     }
 
     if (index.parent().isValid()) {
         // is Method
         auto method = static_cast<MethodNode *>(index.internalPointer());
-        return QString::fromStdString(method->descriptor->name());
-    } else {
-        // is Service
-        auto service = static_cast<ServiceNode *>(index.internalPointer());
-        return QString::fromStdString(service->descriptor->full_name());
-    }
-}
+        if (method->descriptor->client_streaming() || method->descriptor->server_streaming()) {
+            // Streaming RPC is not supported yet
+            return Qt::ItemFlag::NoItemFlags;
+        }
 
-Qt::ItemFlags ProtocolModel::flags(const QModelIndex &index) const {
-    if (index.isValid() && !index.parent().isValid()) {
+        return QAbstractItemModel::flags(index);
+    } else {
         // is Service
         return Qt::ItemFlag::ItemIsEnabled;
     }
-
-    return QAbstractItemModel::flags(index);
 }
