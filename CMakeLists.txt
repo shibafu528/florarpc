@@ -12,6 +12,6 @@ find_package(PkgConfig REQUIRED)
 pkg_search_module(GRPC REQUIRED grpc)
 pkg_search_module(GRPCPP REQUIRED grpc++)
 
-add_executable(flora main.cpp ui/MainWindow.ui ui/MainWindow.cpp ui/MainWindow.h entity/Protocol.cpp entity/Protocol.h ui/ProtocolModel.cpp ui/ProtocolModel.h)
+add_executable(flora main.cpp ui/MainWindow.ui ui/MainWindow.cpp ui/MainWindow.h entity/Protocol.cpp entity/Protocol.h ui/ProtocolModel.cpp ui/ProtocolModel.h util/GrpcUtility.cpp util/GrpcUtility.h)
 
 target_link_libraries(flora Qt5::Widgets protobuf::libprotobuf grpc++)
