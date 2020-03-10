@@ -21,7 +21,7 @@ private slots:
 private:
     Ui::MainWindow ui;
     std::unique_ptr<Protocol> currentProtocol;
-    MethodNode *currentMethod = nullptr;
+    MethodNode const *currentMethod = nullptr;
 };
 
 

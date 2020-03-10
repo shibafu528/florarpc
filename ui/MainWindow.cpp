@@ -56,7 +56,7 @@ void MainWindow::onTreeViewClicked(const QModelIndex &index) {
         return;
     }
 
-    auto method = static_cast<MethodNode*>(index.internalPointer());
+    auto method = ProtocolModel::indexToMethod(index);
     currentMethod = method;
     ui.currentMethodLabel->setText(QString::fromStdString(method->descriptor->full_name()));
     ui.executeButton->setEnabled(true);

@@ -52,9 +52,7 @@ QModelIndex ProtocolModel::parent(const QModelIndex &child) const {
         return QModelIndex();
     }
 
-    auto node = static_cast<DescriptorNode *>(child.internalPointer());
-    if (node->type == DescriptorNode::Type::Method) {
-        auto method = reinterpret_cast<MethodNode *>(node);
+    if (auto method = indexToMethod(child)) {
         return createIndex(method->parent->index, 0, method->parent.get());
     }
 
@@ -63,11 +61,10 @@ QModelIndex ProtocolModel::parent(const QModelIndex &child) const {
 
 int ProtocolModel::rowCount(const QModelIndex &parent) const {
     if (parent.isValid()) {
-        auto node = static_cast<DescriptorNode *>(parent.internalPointer());
-        if (node->type == DescriptorNode::Type::Method) {
-            return 0;
+        if (auto service = indexToService(parent)) {
+            return service->methods.size();
         } else {
-            return reinterpret_cast<ServiceNode *>(node)->methods.size();
+            return 0;
         }
     } else {
         return nodes.size();
@@ -83,16 +80,12 @@ QVariant ProtocolModel::data(const QModelIndex &index, int role) const {
         return QVariant();
     }
 
-    auto node = static_cast<DescriptorNode *>(index.internalPointer());
-
     switch (role) {
         case Qt::DisplayRole:
         case Qt::ToolTipRole:
-            if (node->type == DescriptorNode::Type::Service) {
-                auto service = reinterpret_cast<ServiceNode *>(node);
+            if (auto service = indexToService(index)) {
                 return QString::fromStdString(service->descriptor->full_name());
-            } else {
-                auto method = reinterpret_cast<MethodNode *>(node);
+            } else if (auto method = indexToMethod(index)) {
                 if (role == Qt::ToolTipRole && (method->descriptor->client_streaming() || method->descriptor->server_streaming())) {
                     return QString::fromStdString(method->descriptor->name()) + "<hr><b>Streaming RPC is not supported yet.</b>";
                 }
@@ -110,9 +103,7 @@ Qt::ItemFlags ProtocolModel::flags(const QModelIndex &index) const {
         return QAbstractItemModel::flags(index);
     }
 
-    if (index.parent().isValid()) {
-        // is Method
-        auto method = static_cast<MethodNode *>(index.internalPointer());
+    if (auto method = indexToMethod(index)) {
         if (method->descriptor->client_streaming() || method->descriptor->server_streaming()) {
             // Streaming RPC is not supported yet
             return Qt::ItemFlag::NoItemFlags;
@@ -123,4 +114,20 @@ Qt::ItemFlags ProtocolModel::flags(const QModelIndex &index) const {
         // is Service
         return Qt::ItemFlag::ItemIsEnabled;
     }
+}
+
+const ServiceNode* ProtocolModel::indexToService(const QModelIndex &index) {
+    auto node = static_cast<DescriptorNode*>(index.internalPointer());
+    if (node->type == DescriptorNode::Type::Service) {
+        return reinterpret_cast<ServiceNode*>(node);
+    }
+    return nullptr;
+}
+
+const MethodNode* ProtocolModel::indexToMethod(const QModelIndex &index) {
+    auto node = static_cast<DescriptorNode*>(index.internalPointer());
+    if (node->type == DescriptorNode::Type::Method) {
+        return reinterpret_cast<MethodNode*>(node);
+    }
+    return nullptr;
 }

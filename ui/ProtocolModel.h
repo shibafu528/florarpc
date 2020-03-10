@@ -52,6 +52,10 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
+    static const ServiceNode* indexToService(const QModelIndex &index);
+
+    static const MethodNode* indexToMethod(const QModelIndex &index);
+
 private:
     Protocol *protocol;
     std::vector<std::shared_ptr<ServiceNode>> nodes;
