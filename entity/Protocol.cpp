@@ -11,7 +11,7 @@ using std::move;
 
 class ErrorCollectorStub : public MultiFileErrorCollector {
 public:
-    unique_ptr<vector<std::string>> errors;
+    unique_ptr<vector<std::string>> errors = std::make_unique<vector<std::string>>();
 
     void AddError(const std::string &filename, int line, int column, const std::string &message) override {
         std::stringstream error;
