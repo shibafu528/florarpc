@@ -31,6 +31,10 @@ unique_ptr<Protocol> Protocol::loadFromFile(QFileInfo &file) {
     auto sourceTree = new DiskSourceTree();
     auto importer = new Importer(sourceTree, errorCollector);
 
+#ifdef PROTOBUF_INCLUDE_DIR
+    // TODO: how to do cross-platform support...?
+    sourceTree->MapPath("", PROTOBUF_INCLUDE_DIR);
+#endif
     sourceTree->MapPath("", file.dir().absolutePath().toStdString());
     auto fd = importer->Import(file.fileName().toStdString());
     if (fd == nullptr) {
