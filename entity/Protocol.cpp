@@ -76,7 +76,7 @@ template<class T>
 class WellKnownSourceTree : public SourceTree {
     static_assert(std::is_base_of<SourceTree, T>::value == true, "template parameter T must inherit from SourceTree.");
 public:
-    WellKnownSourceTree(unique_ptr<T> fallback) : fallback(move(fallback)) {}
+    explicit WellKnownSourceTree(unique_ptr<T> fallback) : fallback(move(fallback)) {}
 
     ~WellKnownSourceTree() override = default;
 
