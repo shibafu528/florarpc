@@ -20,7 +20,7 @@
       <item>
        <widget class="QPushButton" name="manageImportsButton">
         <property name="text">
-         <string>Manage &amp;Imports...</string>
+         <string>インポート管理(&amp;I)...</string>
         </property>
         <property name="icon">
          <iconset theme="document-properties"/>
@@ -30,7 +30,7 @@
       <item>
        <widget class="QPushButton" name="openProtoButton">
         <property name="text">
-         <string>&amp;Open proto...</string>
+         <string>Protoファイルを開く(&amp;O)...</string>
         </property>
         <property name="icon">
          <iconset theme="document-open">
@@ -129,7 +129,7 @@
              <bool>false</bool>
             </property>
             <property name="text">
-             <string>E&amp;xecute</string>
+             <string>実行(&amp;X)</string>
             </property>
             <property name="icon">
              <iconset theme="go-next">

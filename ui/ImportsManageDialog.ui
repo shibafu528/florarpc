@@ -48,7 +48,7 @@
         </size>
        </property>
        <property name="text">
-        <string>追加 (&amp;A)</string>
+        <string>追加(&amp;A)</string>
        </property>
        <property name="icon">
         <iconset theme="list-add">
@@ -87,7 +87,7 @@
           </size>
          </property>
          <property name="text">
-          <string>削除 (&amp;R)</string>
+          <string>削除(&amp;R)</string>
          </property>
          <property name="icon">
           <iconset theme="list-remove">
