@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QTextStream>
+#include <QFontDatabase>
 #include <memory>
 #include <google/protobuf/dynamic_message.h>
 #include <grpcpp/grpcpp.h>
@@ -18,6 +19,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     connect(ui.openProtoButton, &QPushButton::clicked, this, &MainWindow::onOpenProtoButtonClicked);
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
     connect(ui.executeButton, &QPushButton::clicked, this, &MainWindow::onExecuteButtonClicked);
+
+    const auto fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    ui.requestEdit->setFont(fixedFont);
+    ui.responseEdit->setFont(fixedFont);
 
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(),
             QGuiApplication::primaryScreen()->availableGeometry()));
