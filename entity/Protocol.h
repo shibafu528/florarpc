@@ -13,12 +13,12 @@ public:
     inline const google::protobuf::FileDescriptor* getFileDescriptor() { return fd; };
 
 private:
-    Protocol(google::protobuf::compiler::DiskSourceTree *sourceTree,
+    Protocol(google::protobuf::compiler::SourceTree *sourceTree,
              google::protobuf::compiler::Importer *importer,
              google::protobuf::compiler::MultiFileErrorCollector *errorCollector,
              const google::protobuf::FileDescriptor *fd);
 
-    std::unique_ptr<google::protobuf::compiler::DiskSourceTree> sourceTree;
+    std::unique_ptr<google::protobuf::compiler::SourceTree> sourceTree;
     std::unique_ptr<google::protobuf::compiler::Importer> importer;
     std::unique_ptr<google::protobuf::compiler::MultiFileErrorCollector> errorCollector;
     const google::protobuf::FileDescriptor *fd;

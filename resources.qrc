@@ -1,0 +1,16 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource>
+        <!-- Well known types .proto -->
+        <file>proto/google/protobuf/timestamp.proto</file>
+        <file>proto/google/protobuf/type.proto</file>
+        <file>proto/google/protobuf/field_mask.proto</file>
+        <file>proto/google/protobuf/struct.proto</file>
+        <file>proto/google/protobuf/api.proto</file>
+        <file>proto/google/protobuf/empty.proto</file>
+        <file>proto/google/protobuf/any.proto</file>
+        <file>proto/google/protobuf/duration.proto</file>
+        <file>proto/google/protobuf/wrappers.proto</file>
+        <file>proto/google/protobuf/source_context.proto</file>
+    </qresource>
+</RCC>
