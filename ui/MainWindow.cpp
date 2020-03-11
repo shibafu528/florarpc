@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "../entity/Protocol.h"
 #include "../util/GrpcUtility.h"
+#include "ImportsManageDialog.h"
 #include <QStyle>
 #include <QScreen>
 #include <QFileDialog>
@@ -17,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     ui.setupUi(this);
 
     connect(ui.openProtoButton, &QPushButton::clicked, this, &MainWindow::onOpenProtoButtonClicked);
+    connect(ui.manageImportsButton, &QPushButton::clicked, this, &MainWindow::onManageImportsButtonClicked);
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
     connect(ui.executeButton, &QPushButton::clicked, this, &MainWindow::onExecuteButtonClicked);
 
@@ -54,6 +56,11 @@ void MainWindow::onOpenProtoButtonClicked() {
         }
         QMessageBox::critical(this, "Load error", message);
     }
+}
+
+void MainWindow::onManageImportsButtonClicked() {
+    auto dialog = std::make_unique<ImportsManageDialog>(this);
+    dialog->exec();
 }
 
 void MainWindow::onTreeViewClicked(const QModelIndex &index) {

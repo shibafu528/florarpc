@@ -15,6 +15,7 @@ public:
 
 private slots:
     void onOpenProtoButtonClicked();
+    void onManageImportsButtonClicked();
     void onTreeViewClicked(const QModelIndex &index);
     void onExecuteButtonClicked();
 

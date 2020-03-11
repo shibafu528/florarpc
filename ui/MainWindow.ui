@@ -18,12 +18,23 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QPushButton" name="openProtoButton">
+       <widget class="QPushButton" name="manageImportsButton">
         <property name="text">
-         <string>Open proto</string>
+         <string>Manage &amp;Imports...</string>
         </property>
         <property name="icon">
-         <iconset theme="document-open"/>
+         <iconset theme="document-properties"/>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="openProtoButton">
+        <property name="text">
+         <string>&amp;Open proto...</string>
+        </property>
+        <property name="icon">
+         <iconset theme="document-open">
+          <normaloff>.</normaloff>.</iconset>
         </property>
        </widget>
       </item>
@@ -118,10 +129,11 @@
              <bool>false</bool>
             </property>
             <property name="text">
-             <string>Execute</string>
+             <string>E&amp;xecute</string>
             </property>
             <property name="icon">
-             <iconset theme="go-next"/>
+             <iconset theme="go-next">
+              <normaloff>.</normaloff>.</iconset>
             </property>
            </widget>
           </item>

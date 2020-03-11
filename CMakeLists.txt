@@ -18,6 +18,9 @@ add_executable(flora
         ui/MainWindow.ui
         ui/MainWindow.cpp
         ui/MainWindow.h
+        ui/ImportsManageDialog.ui
+        ui/ImportsManageDialog.cpp
+        ui/ImportsManageDialog.h
         entity/Protocol.cpp
         entity/Protocol.h
         ui/ProtocolModel.cpp
