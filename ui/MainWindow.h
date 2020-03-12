@@ -3,6 +3,9 @@
 
 #include <QMainWindow>
 #include <QFileInfo>
+#include <SyntaxHighlighter>
+#include <Repository>
+#include <Definition>
 #include "ui/ui_MainWindow.h"
 #include "../entity/Protocol.h"
 #include "ProtocolModel.h"
@@ -24,6 +27,12 @@ private:
     std::unique_ptr<Protocol> currentProtocol;
     MethodNode const *currentMethod = nullptr;
     QStringList imports;
+    KSyntaxHighlighting::Repository syntaxDefinitions;
+    std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> requestHighlighter;
+    std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> responseHighlighter;
+
+    std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> setupHighlighter(QTextEdit &edit,
+            const KSyntaxHighlighting::Definition &definition, const KSyntaxHighlighting::Theme &theme);
 };
 
 

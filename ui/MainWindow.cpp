@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include <QTextStream>
 #include <QFontDatabase>
+#include <Theme>
 #include <memory>
 #include <google/protobuf/dynamic_message.h>
 #include <grpcpp/grpcpp.h>
@@ -25,6 +26,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     const auto fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui.requestEdit->setFont(fixedFont);
     ui.responseEdit->setFont(fixedFont);
+
+    const auto jsonDefinition = syntaxDefinitions.definitionForMimeType("application/json");
+    if (jsonDefinition.isValid()) {
+        const auto theme = (palette().color(QPalette::Base).lightness() < 128) ? syntaxDefinitions.defaultTheme(KSyntaxHighlighting::Repository::DarkTheme) : syntaxDefinitions.defaultTheme(KSyntaxHighlighting::Repository::LightTheme);
+        requestHighlighter = setupHighlighter(*ui.requestEdit, jsonDefinition, theme);
+        responseHighlighter = setupHighlighter(*ui.responseEdit, jsonDefinition, theme);
+    }
 
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(),
             QGuiApplication::primaryScreen()->availableGeometry()));
@@ -147,4 +155,22 @@ void MainWindow::onExecuteButtonClicked() {
             ui.responseEdit->setText(result);
         }
     }
+}
+
+std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> MainWindow::setupHighlighter(
+        QTextEdit &edit, const KSyntaxHighlighting::Definition &definition, const KSyntaxHighlighting::Theme &theme) {
+    auto highlighter = std::make_unique<KSyntaxHighlighting::SyntaxHighlighter>(&edit);
+
+    auto pal = qApp->palette();
+    if (theme.isValid()) {
+        pal.setColor(QPalette::Base, theme.editorColor(KSyntaxHighlighting::Theme::BackgroundColor));
+        pal.setColor(QPalette::Highlight, theme.editorColor(KSyntaxHighlighting::Theme::TextSelection));
+    }
+    setPalette(pal);
+
+    highlighter->setDefinition(definition);
+    highlighter->setTheme(theme);
+    highlighter->rehighlight();
+
+    return highlighter;
 }

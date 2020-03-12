@@ -7,6 +7,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(KF5SyntaxHighlighting REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GRPC REQUIRED grpc)
@@ -28,4 +29,8 @@ add_executable(flora
         util/GrpcUtility.cpp
         util/GrpcUtility.h)
 
-target_link_libraries(flora Qt5::Widgets protobuf::libprotobuf grpc++)
+target_link_libraries(flora
+        Qt5::Widgets
+        KF5::SyntaxHighlighting
+        protobuf::libprotobuf
+        grpc++)

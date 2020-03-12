@@ -6,7 +6,8 @@ QtでgRPC Clientを書いてみる試み。Awesome gRPCを見てもネイティ�
 - Qt 5.14
 - protobuf 3.11
 - gRPC 1.27
+- KSyntaxHighlighting 5.67
 
 ```sh
-$ yay -S cmake qt5-base protobuf grpc
+$ yay -S cmake qt5-base protobuf grpc syntax-highlighting
 ```
