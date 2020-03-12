@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     const auto fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui.requestEdit->setFont(fixedFont);
     ui.responseEdit->setFont(fixedFont);
+    ui.errorDetailsEdit->setFont(fixedFont);
 
     const auto jsonDefinition = syntaxDefinitions.definitionForMimeType("application/json");
     if (jsonDefinition.isValid()) {
@@ -33,6 +34,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         requestHighlighter = setupHighlighter(*ui.requestEdit, jsonDefinition, theme);
         responseHighlighter = setupHighlighter(*ui.responseEdit, jsonDefinition, theme);
     }
+
+    ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseErrorTab));
+
+    QStringList metadataHeaderLabels;
+    metadataHeaderLabels.append("Key");
+    metadataHeaderLabels.append("Value");
+    ui.responseMetadataTable->setHorizontalHeaderLabels(metadataHeaderLabels);
+    ui.responseMetadataTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeMode::ResizeToContents);
+    ui.responseMetadataTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeMode::Stretch);
 
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(),
             QGuiApplication::primaryScreen()->availableGeometry()));
@@ -110,12 +120,13 @@ void MainWindow::onExecuteButtonClicked() {
     parseOptions.case_insensitive_enum_parsing = true;
     auto parseStatus = google::protobuf::util::JsonStringToMessage(ui.requestEdit->toPlainText().toStdString(), reqMessage.get(), parseOptions);
     if (!parseStatus.ok()) {
-        QString result;
-        QTextStream stream(&result);
-        stream << "{\n";
-        stream << "  \"request_parse_error\": \"\n" << QString::fromStdString(parseStatus.ToString()) << "\n\"\n";
-        stream << "}";
-        ui.responseEdit->setText(result);
+        ui.errorCodeLabel->setText("-");
+        ui.errorMessageLabel->setText("Request Parse Error");
+        ui.errorDetailsEdit->setText(QString::fromStdString(parseStatus.error_message()));
+
+        ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseBodyTab));
+        ui.responseTabs->insertTab(0, ui.responseErrorTab, "Error");
+        ui.responseTabs->setCurrentIndex(0);
         return;
     }
 
@@ -147,19 +158,18 @@ void MainWindow::onExecuteButtonClicked() {
             opts.always_print_primitive_fields = true;
             google::protobuf::util::MessageToJsonString(*resMessage, &out, opts);
             ui.responseEdit->setText(QString::fromStdString(out));
-        } else {
-            QString result;
-            QTextStream stream(&result);
 
-            stream << "{\n";
-            stream << "  \"grpc_error\": {\n";
-            stream << "    \"code\": \"" << GrpcUtility::errorCodeToString(status.error_code()) << "\",\n";
-            stream << "    \"message\": \"" << QString::fromStdString(status.error_message()) << "\",\n";
-            stream << "    \"details_length\": " << status.error_details().size() << ",\n";
-            stream << "    \"details_bin\": \"" << QString::fromStdString(status.error_details()) << "\",\n";
-            stream << "  }\n";
-            stream << "}";
-            ui.responseEdit->setText(result);
+            ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseErrorTab));
+            ui.responseTabs->insertTab(0, ui.responseBodyTab, "Body");
+            ui.responseTabs->setCurrentIndex(0);
+        } else {
+            ui.errorCodeLabel->setText(GrpcUtility::errorCodeToString(status.error_code()));
+            ui.errorMessageLabel->setText(QString::fromStdString(status.error_message()));
+            ui.errorDetailsEdit->setText(QString::fromStdString(status.error_details()));
+
+            ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseBodyTab));
+            ui.responseTabs->insertTab(0, ui.responseErrorTab, "Error");
+            ui.responseTabs->setCurrentIndex(0);
         }
     }
 }
