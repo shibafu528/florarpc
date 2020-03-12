@@ -2,7 +2,8 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-ImportsManageDialog::ImportsManageDialog(QWidget *parent) : QDialog(parent) {
+ImportsManageDialog::ImportsManageDialog(QWidget *parent)
+        : QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint) {
     ui.setupUi(this);
 
     connect(ui.browseButton, &QAbstractButton::clicked, this, &ImportsManageDialog::onBrowseButtonClick);
@@ -12,7 +13,7 @@ ImportsManageDialog::ImportsManageDialog(QWidget *parent) : QDialog(parent) {
             this, &ImportsManageDialog::onCloseButtonClick);
 }
 
-void ImportsManageDialog::setPaths(const QStringList& list) {
+void ImportsManageDialog::setPaths(const QStringList &list) {
     ui.list->clear();
     ui.list->addItems(list);
 }
