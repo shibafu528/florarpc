@@ -112,7 +112,9 @@ void MainWindow::onExecuteButtonClicked() {
     if (!parseStatus.ok()) {
         QString result;
         QTextStream stream(&result);
-        stream << "[Request Parse Error]\n" << QString::fromStdString(parseStatus.ToString());
+        stream << "{\n";
+        stream << "  \"request_parse_error\": \"\n" << QString::fromStdString(parseStatus.ToString()) << "\n\"\n";
+        stream << "}";
         ui.responseEdit->setText(result);
         return;
     }
@@ -149,9 +151,14 @@ void MainWindow::onExecuteButtonClicked() {
             QString result;
             QTextStream stream(&result);
 
-            stream << "[gRPC Error]\n - Error Code: " << GrpcUtility::errorCodeToString(status.error_code()) <<
-                "\n - Error Message: " << QString::fromStdString(status.error_message()) <<
-                "\n - Details:\n" << QString::fromStdString(status.error_details());
+            stream << "{\n";
+            stream << "  \"grpc_error\": {\n";
+            stream << "    \"code\": \"" << GrpcUtility::errorCodeToString(status.error_code()) << "\",\n";
+            stream << "    \"message\": \"" << QString::fromStdString(status.error_message()) << "\",\n";
+            stream << "    \"details_length\": " << status.error_details().size() << ",\n";
+            stream << "    \"details_bin\": \"" << QString::fromStdString(status.error_details()) << "\",\n";
+            stream << "  }\n";
+            stream << "}";
             ui.responseEdit->setText(result);
         }
     }
