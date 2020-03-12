@@ -10,6 +10,12 @@ class ImportsManageDialog : public QDialog {
 public:
     explicit ImportsManageDialog(QWidget *parent = nullptr);
 
+private slots:
+    void onBrowseButtonClick();
+    void onAddButtonClick();
+    void onDeleteButtonClick();
+    void onCloseButtonClick();
+
 private:
     Ui::ImportsManageDialog ui;
 };
