@@ -122,13 +122,16 @@ Protocol::Protocol(SourceTree *sourceTree,
                    const google::protobuf::FileDescriptor *fd)
         : sourceTree(sourceTree), importer(importer), errorCollector(errorCollector), fd(fd) {}
 
-unique_ptr<Protocol> Protocol::loadFromFile(QFileInfo &file) {
+unique_ptr<Protocol> Protocol::loadFromFile(QFileInfo &file, QStringList &imports) {
     auto errorCollector = new ErrorCollectorStub();
     auto diskSourceTree = std::make_unique<DiskSourceTree>();
     auto wellKnownSourceTree = new WellKnownSourceTree(std::move(diskSourceTree));
     auto importer = new Importer(wellKnownSourceTree, errorCollector);
 
     wellKnownSourceTree->getFallback()->MapPath("", file.dir().absolutePath().toStdString());
+    for (QString &include : imports) {
+        wellKnownSourceTree->getFallback()->MapPath("", include.toStdString());
+    }
     auto fd = importer->Import(file.fileName().toStdString());
     if (fd == nullptr) {
         throw ProtocolLoadException(move(errorCollector->errors));

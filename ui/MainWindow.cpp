@@ -38,7 +38,7 @@ void MainWindow::onOpenProtoButtonClicked() {
     }
     QFileInfo file(filename);
     try {
-        currentProtocol = std::move(Protocol::loadFromFile(file));
+        currentProtocol = std::move(Protocol::loadFromFile(file, imports));
         ui.currentProtoLabel->setText(file.fileName());
 
         auto model = new ProtocolModel(ui.treeView, currentProtocol.get());
@@ -60,7 +60,9 @@ void MainWindow::onOpenProtoButtonClicked() {
 
 void MainWindow::onManageImportsButtonClicked() {
     auto dialog = std::make_unique<ImportsManageDialog>(this);
+    dialog->setPaths(imports);
     dialog->exec();
+    imports = dialog->getPaths();
 }
 
 void MainWindow::onTreeViewClicked(const QModelIndex &index) {

@@ -23,6 +23,7 @@ private:
     Ui::MainWindow ui;
     std::unique_ptr<Protocol> currentProtocol;
     MethodNode const *currentMethod = nullptr;
+    QStringList imports;
 };
 
 

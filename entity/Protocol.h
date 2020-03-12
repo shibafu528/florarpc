@@ -9,7 +9,7 @@ class Protocol;
 
 class Protocol {
 public:
-    static std::unique_ptr<Protocol> loadFromFile(QFileInfo &file);
+    static std::unique_ptr<Protocol> loadFromFile(QFileInfo &file, QStringList &imports);
     inline const google::protobuf::FileDescriptor* getFileDescriptor() { return fd; };
 
 private:
