@@ -10,6 +10,10 @@ class ImportsManageDialog : public QDialog {
 public:
     explicit ImportsManageDialog(QWidget *parent = nullptr);
 
+public:
+    void setPaths(const QStringList& list);
+    QStringList getPaths();
+
 private slots:
     void onBrowseButtonClick();
     void onAddButtonClick();

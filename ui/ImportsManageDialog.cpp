@@ -12,6 +12,20 @@ ImportsManageDialog::ImportsManageDialog(QWidget *parent) : QDialog(parent) {
             this, &ImportsManageDialog::onCloseButtonClick);
 }
 
+void ImportsManageDialog::setPaths(const QStringList& list) {
+    ui.list->clear();
+    ui.list->addItems(list);
+}
+
+QStringList ImportsManageDialog::getPaths() {
+    QStringList result;
+    int count = ui.list->count();
+    for (int i = 0; i < count; i++) {
+        result.append(ui.list->item(i)->text());
+    }
+    return result;
+}
+
 void ImportsManageDialog::onBrowseButtonClick() {
     auto dirName = QFileDialog::getExistingDirectory(this, "インポート パスを追加");
     if (dirName.isEmpty()) {
