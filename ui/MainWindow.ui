@@ -16,42 +16,33 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_3">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QPushButton" name="manageImportsButton">
-        <property name="text">
-         <string>インポート管理(&amp;I)...</string>
-        </property>
-        <property name="icon">
-         <iconset theme="document-properties"/>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="openProtoButton">
-        <property name="text">
-         <string>Protoファイルを開く(&amp;O)...</string>
-        </property>
-        <property name="icon">
-         <iconset theme="document-open">
-          <normaloff>.</normaloff>.</iconset>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="currentProtoLabel">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <widget class="QLabel" name="currentProtoLabel">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>ファイルメニューからProtoファイルを開いてください</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Fixed</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>0</width>
+        <height>4</height>
+       </size>
+      </property>
+     </spacer>
     </item>
     <item>
      <widget class="QSplitter" name="splitter">
@@ -226,8 +217,52 @@
      <height>40</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>ファイル(&amp;F)</string>
+    </property>
+    <addaction name="actionOpen"/>
+    <addaction name="separator"/>
+    <addaction name="actionManageProto"/>
+    <addaction name="separator"/>
+    <addaction name="actionQuit"/>
+   </widget>
+   <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionOpen">
+   <property name="icon">
+    <iconset theme="document-open"/>
+   </property>
+   <property name="text">
+    <string>Protoファイルを開く(&amp;O)...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionManageProto">
+   <property name="icon">
+    <iconset theme="document-properties"/>
+   </property>
+   <property name="text">
+    <string>インポート パスの管理(&amp;I)...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+I</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="icon">
+    <iconset theme="application-exit"/>
+   </property>
+   <property name="text">
+    <string>終了(&amp;Q)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

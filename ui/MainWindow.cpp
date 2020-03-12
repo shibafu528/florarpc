@@ -17,8 +17,8 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     ui.setupUi(this);
 
-    connect(ui.openProtoButton, &QPushButton::clicked, this, &MainWindow::onOpenProtoButtonClicked);
-    connect(ui.manageImportsButton, &QPushButton::clicked, this, &MainWindow::onManageImportsButtonClicked);
+    connect(ui.actionOpen, &QAction::triggered, this, &MainWindow::onActionOpenTriggered);
+    connect(ui.actionManageProto, &QAction::triggered, this, &MainWindow::onActionManageProtoTriggered);
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
     connect(ui.executeButton, &QPushButton::clicked, this, &MainWindow::onExecuteButtonClicked);
 
@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
             QGuiApplication::primaryScreen()->availableGeometry()));
 }
 
-void MainWindow::onOpenProtoButtonClicked() {
+void MainWindow::onActionOpenTriggered() {
     auto filename = QFileDialog::getOpenFileName(this, "Open proto", "",
             "Proto definition files (*.proto)", nullptr);
     if (filename.isEmpty()) {
@@ -58,7 +58,7 @@ void MainWindow::onOpenProtoButtonClicked() {
     }
 }
 
-void MainWindow::onManageImportsButtonClicked() {
+void MainWindow::onActionManageProtoTriggered() {
     auto dialog = std::make_unique<ImportsManageDialog>(this);
     dialog->setPaths(imports);
     dialog->exec();

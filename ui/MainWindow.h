@@ -14,8 +14,8 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
 
 private slots:
-    void onOpenProtoButtonClicked();
-    void onManageImportsButtonClicked();
+    void onActionOpenTriggered();
+    void onActionManageProtoTriggered();
     void onTreeViewClicked(const QModelIndex &index);
     void onExecuteButtonClicked();
 
