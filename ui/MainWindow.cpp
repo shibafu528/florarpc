@@ -103,6 +103,7 @@ void MainWindow::onTreeViewClicked(const QModelIndex &index) {
     std::string out;
     google::protobuf::util::MessageToJsonString(*message, &out, opts);
     ui.requestEdit->setText(QString::fromStdString(out));
+    requestHighlighter->rehighlight();
 }
 
 void MainWindow::onExecuteButtonClicked() {
@@ -163,6 +164,7 @@ void MainWindow::onExecuteButtonClicked() {
             opts.always_print_primitive_fields = true;
             google::protobuf::util::MessageToJsonString(*resMessage, &out, opts);
             ui.responseEdit->setText(QString::fromStdString(out));
+            responseHighlighter->rehighlight();
 
             ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseErrorTab));
             ui.responseTabs->insertTab(0, ui.responseBodyTab, "Body");
