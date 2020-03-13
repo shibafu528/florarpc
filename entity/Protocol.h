@@ -5,23 +5,16 @@
 #include <memory>
 #include <google/protobuf/compiler/importer.h>
 
-class Protocol;
-
 class Protocol {
 public:
-    static std::unique_ptr<Protocol> loadFromFile(QFileInfo &file, QStringList &imports);
-    inline const google::protobuf::FileDescriptor* getFileDescriptor() { return fd; };
+    Protocol(QFileInfo &file, QStringList &imports);
+    inline const google::protobuf::FileDescriptor* getFileDescriptor() { return fileDescriptor; };
 
 private:
-    Protocol(google::protobuf::compiler::SourceTree *sourceTree,
-             google::protobuf::compiler::Importer *importer,
-             google::protobuf::compiler::MultiFileErrorCollector *errorCollector,
-             const google::protobuf::FileDescriptor *fd);
-
     std::unique_ptr<google::protobuf::compiler::SourceTree> sourceTree;
     std::unique_ptr<google::protobuf::compiler::Importer> importer;
     std::unique_ptr<google::protobuf::compiler::MultiFileErrorCollector> errorCollector;
-    const google::protobuf::FileDescriptor *fd;
+    const google::protobuf::FileDescriptor *fileDescriptor;
 };
 
 class ProtocolLoadException : public std::exception {

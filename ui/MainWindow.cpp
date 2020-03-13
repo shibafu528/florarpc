@@ -69,7 +69,7 @@ void MainWindow::onActionOpenTriggered() {
     }
     QFileInfo file(filename);
     try {
-        currentProtocol = std::move(Protocol::loadFromFile(file, imports));
+        currentProtocol = std::make_unique<Protocol>(file, imports);
         ui.currentProtoLabel->setText(file.fileName());
 
         auto model = new ProtocolModel(ui.treeView, currentProtocol.get());

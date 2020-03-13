@@ -116,17 +116,10 @@ private:
     OpenFrom lastOpenFrom = OpenFrom::Resource;
 };
 
-Protocol::Protocol(SourceTree *sourceTree,
-                   Importer *importer,
-                   MultiFileErrorCollector *errorCollector,
-                   const google::protobuf::FileDescriptor *fd)
-        : sourceTree(sourceTree), importer(importer), errorCollector(errorCollector), fd(fd) {}
-
-unique_ptr<Protocol> Protocol::loadFromFile(QFileInfo &file, QStringList &imports) {
-    auto errorCollector = new ErrorCollectorStub();
-    auto diskSourceTree = std::make_unique<DiskSourceTree>();
-    auto wellKnownSourceTree = new WellKnownSourceTree(std::move(diskSourceTree));
-    auto importer = new Importer(wellKnownSourceTree, errorCollector);
+Protocol::Protocol(QFileInfo &file, QStringList &imports) {
+    auto errorCollectorStub = std::make_unique<ErrorCollectorStub>();
+    auto wellKnownSourceTree = std::make_unique<WellKnownSourceTree<DiskSourceTree>>(std::make_unique<DiskSourceTree>());
+    importer = std::make_unique<Importer>(wellKnownSourceTree.get(), errorCollectorStub.get());
 
     wellKnownSourceTree->getFallback()->MapPath("", file.dir().absolutePath().toStdString());
     for (QString &include : imports) {
@@ -134,10 +127,12 @@ unique_ptr<Protocol> Protocol::loadFromFile(QFileInfo &file, QStringList &import
     }
     auto fd = importer->Import(file.fileName().toStdString());
     if (fd == nullptr) {
-        throw ProtocolLoadException(move(errorCollector->errors));
+        throw ProtocolLoadException(move(errorCollectorStub->errors));
     }
 
-    return unique_ptr<Protocol>(new Protocol(wellKnownSourceTree, importer, errorCollector, fd));
+    errorCollector = move(errorCollectorStub);
+    sourceTree = move(wellKnownSourceTree);
+    fileDescriptor = fd;
 }
 
 ProtocolLoadException::ProtocolLoadException(std::unique_ptr<std::vector<std::string>> errors)
