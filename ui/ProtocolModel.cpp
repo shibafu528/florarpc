@@ -8,18 +8,41 @@ using std::unique_ptr;
 using std::shared_ptr;
 using std::move;
 
-MethodNode::MethodNode(shared_ptr<ServiceNode> parent, uint32_t index, const MethodDescriptor *descriptor)
-        : DescriptorNode(Type::Method) {
-    this->parent = move(parent);
-    this->index = index;
-    this->descriptor = descriptor;
-}
+struct ProtocolModel::DescriptorNode {
+    enum class Type {
+        Service,
+        Method,
+    };
 
-ServiceNode::ServiceNode(uint32_t index, const ServiceDescriptor *descriptor)
-        : DescriptorNode(Type::Service) {
-    this->index = index;
-    this->descriptor = descriptor;
-}
+    const Type type;
+
+protected:
+    inline explicit DescriptorNode(Type type) : type(type) {}
+};
+
+struct ProtocolModel::MethodNode : public DescriptorNode {
+    uint32_t index;
+    const MethodDescriptor *descriptor;
+    shared_ptr<ServiceNode> parent;
+
+    MethodNode(shared_ptr<ServiceNode> parent, uint32_t index, const MethodDescriptor *descriptor)
+            : DescriptorNode(Type::Method) {
+        this->parent = move(parent);
+        this->index = index;
+        this->descriptor = descriptor;
+    }
+};
+
+struct ProtocolModel::ServiceNode : public DescriptorNode {
+    uint32_t index;
+    const ServiceDescriptor *descriptor;
+    vector<shared_ptr<MethodNode>> methods;
+
+    ServiceNode(uint32_t index, const ServiceDescriptor *descriptor) : DescriptorNode(Type::Service) {
+        this->index = index;
+        this->descriptor = descriptor;
+    }
+};
 
 ProtocolModel::ProtocolModel(QObject *parent, Protocol *protocol)
         : QAbstractItemModel(parent), protocol(protocol) {
@@ -116,7 +139,15 @@ Qt::ItemFlags ProtocolModel::flags(const QModelIndex &index) const {
     }
 }
 
-const ServiceNode* ProtocolModel::indexToService(const QModelIndex &index) {
+const ServiceDescriptor* ProtocolModel::indexToServiceDescriptor(const QModelIndex &index) {
+    return indexToService(index)->descriptor;
+}
+
+const MethodDescriptor* ProtocolModel::indexToMethodDescriptor(const QModelIndex &index) {
+    return indexToMethod(index)->descriptor;
+}
+
+const ProtocolModel::ServiceNode* ProtocolModel::indexToService(const QModelIndex &index) {
     auto node = static_cast<DescriptorNode*>(index.internalPointer());
     if (node->type == DescriptorNode::Type::Service) {
         return reinterpret_cast<ServiceNode*>(node);
@@ -124,7 +155,7 @@ const ServiceNode* ProtocolModel::indexToService(const QModelIndex &index) {
     return nullptr;
 }
 
-const MethodNode* ProtocolModel::indexToMethod(const QModelIndex &index) {
+const ProtocolModel::MethodNode* ProtocolModel::indexToMethod(const QModelIndex &index) {
     auto node = static_cast<DescriptorNode*>(index.internalPointer());
     if (node->type == DescriptorNode::Type::Method) {
         return reinterpret_cast<MethodNode*>(node);

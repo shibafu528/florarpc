@@ -102,13 +102,12 @@ void MainWindow::onTreeViewClicked(const QModelIndex &index) {
         return;
     }
 
-    auto method = ProtocolModel::indexToMethod(index);
-    currentMethod = method;
-    ui.currentMethodLabel->setText(QString::fromStdString(method->descriptor->full_name()));
+    currentMethod = ProtocolModel::indexToMethodDescriptor(index);
+    ui.currentMethodLabel->setText(QString::fromStdString(currentMethod->full_name()));
     ui.executeButton->setEnabled(true);
 
     google::protobuf::DynamicMessageFactory dmf;
-    auto proto = dmf.GetPrototype(method->descriptor->input_type());
+    auto proto = dmf.GetPrototype(currentMethod->input_type());
     auto message = std::unique_ptr<google::protobuf::Message>(proto->New());
     google::protobuf::util::JsonOptions opts;
     opts.add_whitespace = true;
@@ -130,9 +129,8 @@ void MainWindow::onExecuteButtonClicked() {
     ui.responseTabs->setTabText(ui.responseTabs->indexOf(ui.responseMetadataTab), "Metadata");
 
     google::protobuf::DynamicMessageFactory dmf;
-    auto method = currentMethod->descriptor;
 
-    auto reqProto = dmf.GetPrototype(method->input_type());
+    auto reqProto = dmf.GetPrototype(currentMethod->input_type());
     auto reqMessage = std::unique_ptr<google::protobuf::Message>(reqProto->New());
     google::protobuf::util::JsonParseOptions parseOptions;
     parseOptions.ignore_unknown_fields = true;
@@ -153,7 +151,7 @@ void MainWindow::onExecuteButtonClicked() {
     auto ch = grpc::CreateChannel(ui.serverAddressEdit->text().toStdString(), grpc::InsecureChannelCredentials());
     grpc::GenericStub stub(ch);
     grpc::ClientContext ctx;
-    const std::string methodName = "/" + method->service()->full_name() + "/" + method->name();
+    const std::string methodName = "/" + currentMethod->service()->full_name() + "/" + currentMethod->name();
 
     grpc_impl::CompletionQueue cq;
     auto call = stub.PrepareUnaryCall(&ctx, methodName, *sendBuffer, &cq);
@@ -168,7 +166,7 @@ void MainWindow::onExecuteButtonClicked() {
     cq.Next(&gotTag, &ok);
     if (ok && gotTag == tag) {
         if (status.ok()) {
-            auto resProto = dmf.GetPrototype(method->output_type());
+            auto resProto = dmf.GetPrototype(currentMethod->output_type());
             auto resMessage = std::unique_ptr<google::protobuf::Message>(resProto->New());
             GrpcUtility::parseMessage(receiveBuffer, *resMessage);
             std::string out;

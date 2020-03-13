@@ -25,7 +25,7 @@ private slots:
 private:
     Ui::MainWindow ui;
     std::unique_ptr<Protocol> currentProtocol;
-    MethodNode const *currentMethod = nullptr;
+    google::protobuf::MethodDescriptor const *currentMethod = nullptr;
     QStringList imports;
     QMenu *responseMetadataContextMenu;
     KSyntaxHighlighting::Repository syntaxDefinitions;

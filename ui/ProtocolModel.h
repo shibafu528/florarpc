@@ -4,38 +4,6 @@
 #include <QAbstractItemModel>
 #include "../entity/Protocol.h"
 
-struct DescriptorNode;
-struct MethodNode;
-struct ServiceNode;
-
-struct DescriptorNode {
-    enum class Type {
-        Service,
-        Method,
-    };
-
-    const Type type;
-
-protected:
-    inline explicit DescriptorNode(Type type) : type(type) {}
-};
-
-struct MethodNode : public DescriptorNode {
-    uint32_t index;
-    const google::protobuf::MethodDescriptor *descriptor;
-    std::shared_ptr<ServiceNode> parent;
-
-    MethodNode(std::shared_ptr<ServiceNode> parent, uint32_t index, const google::protobuf::MethodDescriptor *descriptor);
-};
-
-struct ServiceNode : public DescriptorNode {
-    uint32_t index;
-    const google::protobuf::ServiceDescriptor *descriptor;
-    std::vector<std::shared_ptr<MethodNode>> methods;
-
-    ServiceNode(uint32_t index, const google::protobuf::ServiceDescriptor *descriptor);
-};
-
 class ProtocolModel : public QAbstractItemModel {
 public:
     ProtocolModel(QObject *parent, Protocol *protocol);
@@ -52,13 +20,20 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-    static const ServiceNode* indexToService(const QModelIndex &index);
+    static const google::protobuf::ServiceDescriptor* indexToServiceDescriptor(const QModelIndex &index);
 
-    static const MethodNode* indexToMethod(const QModelIndex &index);
+    static const google::protobuf::MethodDescriptor* indexToMethodDescriptor(const QModelIndex &index);
 
 private:
+    struct DescriptorNode;
+    struct ServiceNode;
+    struct MethodNode;
+
     Protocol *protocol;
     std::vector<std::shared_ptr<ServiceNode>> nodes;
+
+    static const ServiceNode* indexToService(const QModelIndex &index);
+    static const MethodNode* indexToMethod(const QModelIndex &index);
 };
 
 
