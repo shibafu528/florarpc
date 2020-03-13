@@ -333,9 +333,15 @@
                <layout class="QVBoxLayout" name="verticalLayout_6">
                 <item>
                  <widget class="QTableWidget" name="responseMetadataTable">
+                  <property name="editTriggers">
+                   <set>QAbstractItemView::NoEditTriggers</set>
+                  </property>
                   <property name="columnCount">
                    <number>2</number>
                   </property>
+                  <attribute name="verticalHeaderVisible">
+                   <bool>false</bool>
+                  </attribute>
                   <column/>
                   <column/>
                  </widget>
