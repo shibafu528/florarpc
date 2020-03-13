@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include <QTextStream>
 #include <QFontDatabase>
+#include <QClipboard>
 #include <Theme>
 #include <memory>
 #include <google/protobuf/dynamic_message.h>
@@ -15,7 +16,7 @@
 #include <grpcpp/generic/generic_stub.h>
 #include <google/protobuf/util/json_util.h>
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), responseMetadataContextMenu(new QMenu(this)) {
     ui.setupUi(this);
 
     connect(ui.actionOpen, &QAction::triggered, this, &MainWindow::onActionOpenTriggered);
@@ -43,6 +44,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     ui.responseMetadataTable->setHorizontalHeaderLabels(metadataHeaderLabels);
     ui.responseMetadataTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeMode::ResizeToContents);
     ui.responseMetadataTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeMode::Stretch);
+    ui.responseMetadataTable->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui.responseMetadataTable, &QWidget::customContextMenuRequested, [=](const QPoint &pos) {
+        if (!ui.responseMetadataTable->selectedItems().isEmpty()) {
+            responseMetadataContextMenu->exec(ui.responseMetadataTable->viewport()->mapToGlobal(pos));
+        }
+    });
+    responseMetadataContextMenu->addAction("コピー(&C)", [=](){
+        auto selected = ui.responseMetadataTable->selectedItems();
+        if (!selected.isEmpty()) {
+            QApplication::clipboard()->setText(selected.first()->text());
+        }
+    })->setIcon(QIcon::fromTheme("edit-copy"));
 
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(),
             QGuiApplication::primaryScreen()->availableGeometry()));

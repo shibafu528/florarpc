@@ -27,6 +27,7 @@ private:
     std::unique_ptr<Protocol> currentProtocol;
     MethodNode const *currentMethod = nullptr;
     QStringList imports;
+    QMenu *responseMetadataContextMenu;
     KSyntaxHighlighting::Repository syntaxDefinitions;
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> requestHighlighter;
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> responseHighlighter;
