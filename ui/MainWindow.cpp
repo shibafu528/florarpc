@@ -110,6 +110,11 @@ void MainWindow::onExecuteButtonClicked() {
         return;
     }
 
+    ui.responseEdit->clear();
+    ui.responseMetadataTable->clearContents();
+    ui.responseMetadataTable->setRowCount(0);
+    ui.responseTabs->setTabText(ui.responseTabs->indexOf(ui.responseMetadataTab), "Metadata");
+
     google::protobuf::DynamicMessageFactory dmf;
     auto method = currentMethod->descriptor;
 
@@ -172,8 +177,6 @@ void MainWindow::onExecuteButtonClicked() {
             ui.responseTabs->setCurrentIndex(0);
         }
 
-        ui.responseMetadataTable->clearContents();
-        ui.responseMetadataTable->setRowCount(0);
         for (auto [key, value] : ctx.GetServerTrailingMetadata()) {
             int row = ui.responseMetadataTable->rowCount();
             ui.responseMetadataTable->insertRow(row);
@@ -186,6 +189,10 @@ void MainWindow::onExecuteButtonClicked() {
             } else {
                 ui.responseMetadataTable->setItem(row, 1, new QTableWidgetItem(QString::fromLatin1(value.data(), value.size())));
             }
+        }
+        if (ui.responseMetadataTable->rowCount() > 0) {
+            ui.responseTabs->setTabText(ui.responseTabs->indexOf(ui.responseMetadataTab),
+                                        QString::asprintf("Metadata (%d)", ui.responseMetadataTable->rowCount()));
         }
     }
 }
