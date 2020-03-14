@@ -198,18 +198,11 @@ void MainWindow::onExecuteButtonClicked() {
             ui.responseTabs->setCurrentIndex(0);
         }
 
+        for (auto [key, value] : ctx.GetServerInitialMetadata()) {
+            addMetadataRow(key, value);
+        }
         for (auto [key, value] : ctx.GetServerTrailingMetadata()) {
-            int row = ui.responseMetadataTable->rowCount();
-            ui.responseMetadataTable->insertRow(row);
-            const QString &keyString = QString::fromLatin1(key.data(), key.size());
-            ui.responseMetadataTable->setItem(row, 0, new QTableWidgetItem(keyString));
-
-            if (keyString.endsWith("-bin")) {
-                QByteArray byteValue(value.data(), value.size());
-                ui.responseMetadataTable->setItem(row, 1, new QTableWidgetItem(QString::fromLatin1(byteValue.toBase64())));
-            } else {
-                ui.responseMetadataTable->setItem(row, 1, new QTableWidgetItem(QString::fromLatin1(value.data(), value.size())));
-            }
+            addMetadataRow(key, value);
         }
         if (ui.responseMetadataTable->rowCount() > 0) {
             ui.responseTabs->setTabText(ui.responseTabs->indexOf(ui.responseMetadataTab),
@@ -234,4 +227,18 @@ std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> MainWindow::setupHighlig
     highlighter->rehighlight();
 
     return highlighter;
+}
+
+void MainWindow::addMetadataRow(const grpc::string_ref &key, const grpc::string_ref &value) {
+    int row = ui.responseMetadataTable->rowCount();
+    ui.responseMetadataTable->insertRow(row);
+    const QString &keyString = QString::fromLatin1(key.data(), key.size());
+    ui.responseMetadataTable->setItem(row, 0, new QTableWidgetItem(keyString));
+
+    if (keyString.endsWith("-bin")) {
+        QByteArray byteValue(value.data(), value.size());
+        ui.responseMetadataTable->setItem(row, 1, new QTableWidgetItem(QString::fromLatin1(byteValue.toBase64())));
+    } else {
+        ui.responseMetadataTable->setItem(row, 1, new QTableWidgetItem(QString::fromLatin1(value.data(), value.size())));
+    }
 }

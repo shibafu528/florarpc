@@ -6,6 +6,7 @@
 #include <SyntaxHighlighter>
 #include <Repository>
 #include <Definition>
+#include <grpcpp/grpcpp.h>
 #include "ui/ui_MainWindow.h"
 #include "../entity/Protocol.h"
 #include "ProtocolTreeModel.h"
@@ -35,6 +36,7 @@ private:
 
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> setupHighlighter(QTextEdit &edit,
             const KSyntaxHighlighting::Definition &definition, const KSyntaxHighlighting::Theme &theme);
+    void addMetadataRow(const grpc::string_ref &key, const grpc::string_ref &value);
 };
 
 
