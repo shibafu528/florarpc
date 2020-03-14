@@ -70,7 +70,6 @@ void MainWindow::onActionOpenTriggered() {
     QFileInfo file(filename);
     try {
         currentProtocol = std::make_unique<Protocol>(file, imports);
-        ui.currentProtoLabel->setText(file.fileName());
 
         auto model = new ProtocolTreeModel(ui.treeView);
         model->addProtocol(*currentProtocol);
@@ -98,8 +97,8 @@ void MainWindow::onActionManageProtoTriggered() {
 }
 
 void MainWindow::onTreeViewClicked(const QModelIndex &index) {
-    if (!index.parent().isValid() || !index.flags().testFlag(Qt::ItemFlag::ItemIsEnabled)) {
-        // is not method node or disabled
+    if (!index.parent().isValid() || !index.flags().testFlag(Qt::ItemFlag::ItemIsSelectable)) {
+        // disabled node
         return;
     }
 

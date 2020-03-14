@@ -27,14 +27,11 @@ public:
     static const google::protobuf::MethodDescriptor* indexToMethodDescriptor(const QModelIndex &index);
 
 private:
-    struct DescriptorNode;
-    struct ServiceNode;
-    struct MethodNode;
+    struct Node;
 
-    std::vector<std::shared_ptr<ServiceNode>> nodes;
+    std::vector<std::shared_ptr<Node>> nodes;
 
-    static const ServiceNode* indexToService(const QModelIndex &index);
-    static const MethodNode* indexToMethod(const QModelIndex &index);
+    static const Node* indexToNode(const QModelIndex &index);
 };
 
 
