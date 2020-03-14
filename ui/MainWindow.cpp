@@ -25,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui.actionOpen, &QAction::triggered, this, &MainWindow::onActionOpenTriggered);
     connect(ui.actionManageProto, &QAction::triggered, this, &MainWindow::onActionManageProtoTriggered);
+    connect(ui.actionQuit, &QAction::triggered, this, &MainWindow::close);
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
     connect(ui.executeButton, &QPushButton::clicked, this, &MainWindow::onExecuteButtonClicked);
 
@@ -106,6 +107,13 @@ void MainWindow::onActionManageProtoTriggered() {
     dialog->setPaths(imports);
     dialog->exec();
     imports = dialog->getPaths();
+}
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+    if (QMessageBox::information(this, "確認", "アプリケーションを終了します。よろしいですか？",
+            QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel) {
+        event->ignore();
+    }
 }
 
 void MainWindow::onTreeViewClicked(const QModelIndex &index) {
