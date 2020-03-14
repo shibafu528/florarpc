@@ -1,12 +1,14 @@
-#ifndef FLORARPC_PROTOCOLMODEL_H
-#define FLORARPC_PROTOCOLMODEL_H
+#ifndef FLORARPC_PROTOCOLTREEMODEL_H
+#define FLORARPC_PROTOCOLTREEMODEL_H
 
 #include <QAbstractItemModel>
 #include "../entity/Protocol.h"
 
-class ProtocolModel : public QAbstractItemModel {
+class ProtocolTreeModel : public QAbstractItemModel {
 public:
-    ProtocolModel(QObject *parent, Protocol *protocol);
+    ProtocolTreeModel(QObject *parent);
+
+    QModelIndex addProtocol(const Protocol &protocol);
 
     QModelIndex index(int row, int column, const QModelIndex &parent) const override;
 
@@ -25,16 +27,12 @@ public:
     static const google::protobuf::MethodDescriptor* indexToMethodDescriptor(const QModelIndex &index);
 
 private:
-    struct DescriptorNode;
-    struct ServiceNode;
-    struct MethodNode;
+    struct Node;
 
-    Protocol *protocol;
-    std::vector<std::shared_ptr<ServiceNode>> nodes;
+    std::vector<std::shared_ptr<Node>> nodes;
 
-    static const ServiceNode* indexToService(const QModelIndex &index);
-    static const MethodNode* indexToMethod(const QModelIndex &index);
+    static const Node* indexToNode(const QModelIndex &index);
 };
 
 
-#endif //FLORARPC_PROTOCOLMODEL_H
+#endif //FLORARPC_PROTOCOLTREEMODEL_H

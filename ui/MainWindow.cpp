@@ -16,13 +16,17 @@
 #include <grpcpp/generic/generic_stub.h>
 #include <google/protobuf/util/json_util.h>
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), responseMetadataContextMenu(new QMenu(this)) {
+MainWindow::MainWindow(QWidget *parent)
+        : QMainWindow(parent), protocolTreeModel(std::make_unique<ProtocolTreeModel>(this)),
+          responseMetadataContextMenu(new QMenu(this)) {
     ui.setupUi(this);
 
     connect(ui.actionOpen, &QAction::triggered, this, &MainWindow::onActionOpenTriggered);
     connect(ui.actionManageProto, &QAction::triggered, this, &MainWindow::onActionManageProtoTriggered);
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
     connect(ui.executeButton, &QPushButton::clicked, this, &MainWindow::onExecuteButtonClicked);
+
+    ui.treeView->setModel(protocolTreeModel.get());
 
     const auto fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui.requestEdit->setFont(fixedFont);
@@ -68,13 +72,17 @@ void MainWindow::onActionOpenTriggered() {
         return;
     }
     QFileInfo file(filename);
+    for (auto &p : protocols) {
+        if (p->getSource() == file) {
+            QMessageBox::warning(this, "Load error", "このファイルはすでに読み込まれています。");
+            return;
+        }
+    }
     try {
-        currentProtocol = std::make_unique<Protocol>(file, imports);
-        ui.currentProtoLabel->setText(file.fileName());
-
-        auto model = new ProtocolModel(ui.treeView, currentProtocol.get());
-        ui.treeView->setModel(model);
-        ui.treeView->expandAll();
+        const auto protocol = std::make_shared<Protocol>(file, imports);
+        protocols.push_back(protocol);
+        const auto index = protocolTreeModel->addProtocol(*protocol);
+        ui.treeView->expandRecursively(index);
     } catch (ProtocolLoadException &e) {
         QString message = "Protoファイルの読込中にエラーが発生しました。\n";
         QTextStream stream(&message);
@@ -97,12 +105,12 @@ void MainWindow::onActionManageProtoTriggered() {
 }
 
 void MainWindow::onTreeViewClicked(const QModelIndex &index) {
-    if (!index.parent().isValid() || !index.flags().testFlag(Qt::ItemFlag::ItemIsEnabled)) {
-        // is not method node or disabled
+    if (!index.parent().isValid() || !index.flags().testFlag(Qt::ItemFlag::ItemIsSelectable)) {
+        // disabled node
         return;
     }
 
-    currentMethod = ProtocolModel::indexToMethodDescriptor(index);
+    currentMethod = ProtocolTreeModel::indexToMethodDescriptor(index);
     ui.currentMethodLabel->setText(QString::fromStdString(currentMethod->full_name()));
     ui.executeButton->setEnabled(true);
 
