@@ -9,6 +9,8 @@
 #include <QTextStream>
 #include <QFontDatabase>
 #include <QClipboard>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <Theme>
 #include <memory>
 #include <google/protobuf/dynamic_message.h>
@@ -30,6 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     const auto fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui.requestEdit->setFont(fixedFont);
+    ui.requestMetadataEdit->setFont(fixedFont);
     ui.responseEdit->setFont(fixedFont);
     ui.errorDetailsEdit->setFont(fixedFont);
 
@@ -37,6 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
     if (jsonDefinition.isValid()) {
         const auto theme = (palette().color(QPalette::Base).lightness() < 128) ? syntaxDefinitions.defaultTheme(KSyntaxHighlighting::Repository::DarkTheme) : syntaxDefinitions.defaultTheme(KSyntaxHighlighting::Repository::LightTheme);
         requestHighlighter = setupHighlighter(*ui.requestEdit, jsonDefinition, theme);
+        requestMetadataHighlighter = setupHighlighter(*ui.requestMetadataEdit, jsonDefinition, theme);
         responseHighlighter = setupHighlighter(*ui.responseEdit, jsonDefinition, theme);
     }
 
@@ -131,13 +135,10 @@ void MainWindow::onExecuteButtonClicked() {
         return;
     }
 
-    ui.responseEdit->clear();
-    ui.responseMetadataTable->clearContents();
-    ui.responseMetadataTable->setRowCount(0);
-    ui.responseTabs->setTabText(ui.responseTabs->indexOf(ui.responseMetadataTab), "Metadata");
+    clearResponseView();
 
+    // Parse request body
     google::protobuf::DynamicMessageFactory dmf;
-
     auto reqProto = dmf.GetPrototype(currentMethod->input_type());
     auto reqMessage = std::unique_ptr<google::protobuf::Message>(reqProto->New());
     google::protobuf::util::JsonParseOptions parseOptions;
@@ -145,20 +146,45 @@ void MainWindow::onExecuteButtonClicked() {
     parseOptions.case_insensitive_enum_parsing = true;
     auto parseStatus = google::protobuf::util::JsonStringToMessage(ui.requestEdit->toPlainText().toStdString(), reqMessage.get(), parseOptions);
     if (!parseStatus.ok()) {
-        ui.errorCodeLabel->setText("-");
-        ui.errorMessageLabel->setText("Request Parse Error");
-        ui.errorDetailsEdit->setText(QString::fromStdString(parseStatus.error_message()));
-
-        ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseBodyTab));
-        ui.responseTabs->insertTab(0, ui.responseErrorTab, "Error");
-        ui.responseTabs->setCurrentIndex(0);
+        setErrorToResponseView("-", "Request Parse Error", QString::fromStdString(parseStatus.error_message()));
         return;
+    }
+
+    // Parse request metadata
+    grpc::ClientContext ctx;
+    if (const auto metadataInput = ui.requestMetadataEdit->toPlainText(); !metadataInput.isEmpty()) {
+        QJsonParseError parseError = {};
+        QJsonDocument metadataJson = QJsonDocument::fromJson(metadataInput.toUtf8(), &parseError);
+        if (metadataJson.isNull()) {
+            setErrorToResponseView("-", "Request Metadata Parse Error", parseError.errorString());
+            return;
+        }
+        if (!metadataJson.isObject()) {
+            setErrorToResponseView("-", "Request Metadata Parse Error", "Metadata input must be an object.");
+            return;
+        }
+
+        const QJsonObject &object = metadataJson.object();
+        for (auto iter = object.constBegin(); iter != object.constEnd(); iter++) {
+            const auto key = iter.key();
+            const auto value = iter.value().toString();
+            if (value == nullptr) {
+                setErrorToResponseView("-", "Request Metadata Parse Error",
+                                       QLatin1String("Metadata '") + key + QLatin1String("' must be a string."));
+                return;
+            }
+
+            if (key.endsWith("-bin")) {
+                ctx.AddMetadata(key.toStdString(), QByteArray::fromBase64(value.toUtf8()).toStdString());
+            } else {
+                ctx.AddMetadata(key.toStdString(), value.toStdString());
+            }
+        }
     }
 
     std::unique_ptr<grpc::ByteBuffer> sendBuffer = GrpcUtility::serializeMessage(*reqMessage);
     auto ch = grpc::CreateChannel(ui.serverAddressEdit->text().toStdString(), grpc::InsecureChannelCredentials());
     grpc::GenericStub stub(ch);
-    grpc::ClientContext ctx;
     const std::string methodName = "/" + currentMethod->service()->full_name() + "/" + currentMethod->name();
 
     grpc_impl::CompletionQueue cq;
@@ -189,13 +215,9 @@ void MainWindow::onExecuteButtonClicked() {
             ui.responseTabs->insertTab(0, ui.responseBodyTab, "Body");
             ui.responseTabs->setCurrentIndex(0);
         } else {
-            ui.errorCodeLabel->setText(GrpcUtility::errorCodeToString(status.error_code()));
-            ui.errorMessageLabel->setText(QString::fromStdString(status.error_message()));
-            ui.errorDetailsEdit->setText(QString::fromStdString(status.error_details()));
-
-            ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseBodyTab));
-            ui.responseTabs->insertTab(0, ui.responseErrorTab, "Error");
-            ui.responseTabs->setCurrentIndex(0);
+            setErrorToResponseView(GrpcUtility::errorCodeToString(status.error_code()),
+                                   QString::fromStdString(status.error_message()),
+                                   QString::fromStdString(status.error_details()));
         }
 
         for (auto [key, value] : ctx.GetServerInitialMetadata()) {
@@ -241,4 +263,21 @@ void MainWindow::addMetadataRow(const grpc::string_ref &key, const grpc::string_
     } else {
         ui.responseMetadataTable->setItem(row, 1, new QTableWidgetItem(QString::fromLatin1(value.data(), value.size())));
     }
+}
+
+void MainWindow::clearResponseView() {
+    ui.responseEdit->clear();
+    ui.responseMetadataTable->clearContents();
+    ui.responseMetadataTable->setRowCount(0);
+    ui.responseTabs->setTabText(ui.responseTabs->indexOf(ui.responseMetadataTab), "Metadata");
+}
+
+void MainWindow::setErrorToResponseView(const QString &code, const QString &message, const QString &details) {
+    ui.errorCodeLabel->setText(code);
+    ui.errorMessageLabel->setText(message);
+    ui.errorDetailsEdit->setText(details);
+
+    ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseBodyTab));
+    ui.responseTabs->insertTab(0, ui.responseErrorTab, "Error");
+    ui.responseTabs->setCurrentIndex(0);
 }
