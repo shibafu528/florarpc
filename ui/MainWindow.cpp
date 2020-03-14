@@ -72,7 +72,7 @@ void MainWindow::onActionOpenTriggered() {
         currentProtocol = std::make_unique<Protocol>(file, imports);
         ui.currentProtoLabel->setText(file.fileName());
 
-        auto model = new ProtocolModel(ui.treeView, currentProtocol.get());
+        auto model = new ProtocolTreeModel(ui.treeView, currentProtocol.get());
         ui.treeView->setModel(model);
         ui.treeView->expandAll();
     } catch (ProtocolLoadException &e) {
@@ -102,7 +102,7 @@ void MainWindow::onTreeViewClicked(const QModelIndex &index) {
         return;
     }
 
-    currentMethod = ProtocolModel::indexToMethodDescriptor(index);
+    currentMethod = ProtocolTreeModel::indexToMethodDescriptor(index);
     ui.currentMethodLabel->setText(QString::fromStdString(currentMethod->full_name()));
     ui.executeButton->setEnabled(true);
 

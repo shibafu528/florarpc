@@ -24,8 +24,8 @@ add_executable(flora
         ui/ImportsManageDialog.h
         entity/Protocol.cpp
         entity/Protocol.h
-        ui/ProtocolModel.cpp
-        ui/ProtocolModel.h
+        ui/ProtocolTreeModel.cpp
+        ui/ProtocolTreeModel.h
         util/GrpcUtility.cpp
         util/GrpcUtility.h)
 

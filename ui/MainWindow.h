@@ -8,7 +8,7 @@
 #include <Definition>
 #include "ui/ui_MainWindow.h"
 #include "../entity/Protocol.h"
-#include "ProtocolModel.h"
+#include "ProtocolTreeModel.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT

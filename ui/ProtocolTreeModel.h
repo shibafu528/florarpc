@@ -1,12 +1,12 @@
-#ifndef FLORARPC_PROTOCOLMODEL_H
-#define FLORARPC_PROTOCOLMODEL_H
+#ifndef FLORARPC_PROTOCOLTREEMODEL_H
+#define FLORARPC_PROTOCOLTREEMODEL_H
 
 #include <QAbstractItemModel>
 #include "../entity/Protocol.h"
 
-class ProtocolModel : public QAbstractItemModel {
+class ProtocolTreeModel : public QAbstractItemModel {
 public:
-    ProtocolModel(QObject *parent, Protocol *protocol);
+    ProtocolTreeModel(QObject *parent, Protocol *protocol);
 
     QModelIndex index(int row, int column, const QModelIndex &parent) const override;
 
@@ -37,4 +37,4 @@ private:
 };
 
 
-#endif //FLORARPC_PROTOCOLMODEL_H
+#endif //FLORARPC_PROTOCOLTREEMODEL_H

@@ -1,4 +1,4 @@
-#include "ProtocolModel.h"
+#include "ProtocolTreeModel.h"
 
 using google::protobuf::FileDescriptor;
 using google::protobuf::ServiceDescriptor;
@@ -8,7 +8,7 @@ using std::unique_ptr;
 using std::shared_ptr;
 using std::move;
 
-struct ProtocolModel::DescriptorNode {
+struct ProtocolTreeModel::DescriptorNode {
     enum class Type {
         Service,
         Method,
@@ -20,7 +20,7 @@ protected:
     inline explicit DescriptorNode(Type type) : type(type) {}
 };
 
-struct ProtocolModel::MethodNode : public DescriptorNode {
+struct ProtocolTreeModel::MethodNode : public DescriptorNode {
     uint32_t index;
     const MethodDescriptor *descriptor;
     shared_ptr<ServiceNode> parent;
@@ -33,7 +33,7 @@ struct ProtocolModel::MethodNode : public DescriptorNode {
     }
 };
 
-struct ProtocolModel::ServiceNode : public DescriptorNode {
+struct ProtocolTreeModel::ServiceNode : public DescriptorNode {
     uint32_t index;
     const ServiceDescriptor *descriptor;
     vector<shared_ptr<MethodNode>> methods;
@@ -44,7 +44,7 @@ struct ProtocolModel::ServiceNode : public DescriptorNode {
     }
 };
 
-ProtocolModel::ProtocolModel(QObject *parent, Protocol *protocol)
+ProtocolTreeModel::ProtocolTreeModel(QObject *parent, Protocol *protocol)
         : QAbstractItemModel(parent), protocol(protocol) {
     auto fd = protocol->getFileDescriptor();
     for (uint32_t sindex = 0; sindex < fd->service_count(); sindex++) {
@@ -57,7 +57,7 @@ ProtocolModel::ProtocolModel(QObject *parent, Protocol *protocol)
     }
 }
 
-QModelIndex ProtocolModel::index(int row, int column, const QModelIndex &parent) const {
+QModelIndex ProtocolTreeModel::index(int row, int column, const QModelIndex &parent) const {
     if (column != 0 || (parent.isValid() && parent.column() != 0)) {
         return QModelIndex();
     }
@@ -70,7 +70,7 @@ QModelIndex ProtocolModel::index(int row, int column, const QModelIndex &parent)
     }
 }
 
-QModelIndex ProtocolModel::parent(const QModelIndex &child) const {
+QModelIndex ProtocolTreeModel::parent(const QModelIndex &child) const {
     if (!child.isValid()) {
         return QModelIndex();
     }
@@ -82,7 +82,7 @@ QModelIndex ProtocolModel::parent(const QModelIndex &child) const {
     return QModelIndex();
 }
 
-int ProtocolModel::rowCount(const QModelIndex &parent) const {
+int ProtocolTreeModel::rowCount(const QModelIndex &parent) const {
     if (parent.isValid()) {
         if (auto service = indexToService(parent)) {
             return service->methods.size();
@@ -94,11 +94,11 @@ int ProtocolModel::rowCount(const QModelIndex &parent) const {
     }
 }
 
-int ProtocolModel::columnCount(const QModelIndex &parent) const {
+int ProtocolTreeModel::columnCount(const QModelIndex &parent) const {
     return 1;
 }
 
-QVariant ProtocolModel::data(const QModelIndex &index, int role) const {
+QVariant ProtocolTreeModel::data(const QModelIndex &index, int role) const {
     if (!index.isValid()) {
         return QVariant();
     }
@@ -121,7 +121,7 @@ QVariant ProtocolModel::data(const QModelIndex &index, int role) const {
     return QVariant();
 }
 
-Qt::ItemFlags ProtocolModel::flags(const QModelIndex &index) const {
+Qt::ItemFlags ProtocolTreeModel::flags(const QModelIndex &index) const {
     if (!index.isValid()) {
         return QAbstractItemModel::flags(index);
     }
@@ -139,15 +139,15 @@ Qt::ItemFlags ProtocolModel::flags(const QModelIndex &index) const {
     }
 }
 
-const ServiceDescriptor* ProtocolModel::indexToServiceDescriptor(const QModelIndex &index) {
+const ServiceDescriptor* ProtocolTreeModel::indexToServiceDescriptor(const QModelIndex &index) {
     return indexToService(index)->descriptor;
 }
 
-const MethodDescriptor* ProtocolModel::indexToMethodDescriptor(const QModelIndex &index) {
+const MethodDescriptor* ProtocolTreeModel::indexToMethodDescriptor(const QModelIndex &index) {
     return indexToMethod(index)->descriptor;
 }
 
-const ProtocolModel::ServiceNode* ProtocolModel::indexToService(const QModelIndex &index) {
+const ProtocolTreeModel::ServiceNode* ProtocolTreeModel::indexToService(const QModelIndex &index) {
     auto node = static_cast<DescriptorNode*>(index.internalPointer());
     if (node->type == DescriptorNode::Type::Service) {
         return reinterpret_cast<ServiceNode*>(node);
@@ -155,7 +155,7 @@ const ProtocolModel::ServiceNode* ProtocolModel::indexToService(const QModelInde
     return nullptr;
 }
 
-const ProtocolModel::MethodNode* ProtocolModel::indexToMethod(const QModelIndex &index) {
+const ProtocolTreeModel::MethodNode* ProtocolTreeModel::indexToMethod(const QModelIndex &index) {
     auto node = static_cast<DescriptorNode*>(index.internalPointer());
     if (node->type == DescriptorNode::Type::Method) {
         return reinterpret_cast<MethodNode*>(node);
