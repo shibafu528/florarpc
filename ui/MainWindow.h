@@ -32,6 +32,7 @@ private:
     QMenu *responseMetadataContextMenu;
     KSyntaxHighlighting::Repository syntaxDefinitions;
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> requestHighlighter;
+    std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> requestMetadataHighlighter;
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> responseHighlighter;
 
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> setupHighlighter(QTextEdit &edit,

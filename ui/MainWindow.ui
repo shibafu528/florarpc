@@ -101,7 +101,35 @@
             </widget>
            </item>
            <item>
-            <widget class="QTextEdit" name="requestEdit"/>
+            <widget class="QTabWidget" name="tabWidget">
+             <property name="currentIndex">
+              <number>0</number>
+             </property>
+             <widget class="QWidget" name="requestBodyTab">
+              <attribute name="title">
+               <string>Body</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_9">
+               <item>
+                <widget class="QTextEdit" name="requestEdit"/>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="requestMetadataTab">
+              <attribute name="title">
+               <string>Metadata</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_10">
+               <item>
+                <widget class="QTextEdit" name="requestMetadataEdit">
+                 <property name="placeholderText">
+                  <string>{&quot;text-meta&quot;: &quot;value&quot;, &quot;binary-meta-bin&quot;: &quot;base64 value&quot;, ...}</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </widget>
            </item>
           </layout>
          </widget>

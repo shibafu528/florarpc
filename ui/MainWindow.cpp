@@ -30,6 +30,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     const auto fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui.requestEdit->setFont(fixedFont);
+    ui.requestMetadataEdit->setFont(fixedFont);
     ui.responseEdit->setFont(fixedFont);
     ui.errorDetailsEdit->setFont(fixedFont);
 
@@ -37,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent)
     if (jsonDefinition.isValid()) {
         const auto theme = (palette().color(QPalette::Base).lightness() < 128) ? syntaxDefinitions.defaultTheme(KSyntaxHighlighting::Repository::DarkTheme) : syntaxDefinitions.defaultTheme(KSyntaxHighlighting::Repository::LightTheme);
         requestHighlighter = setupHighlighter(*ui.requestEdit, jsonDefinition, theme);
+        requestMetadataHighlighter = setupHighlighter(*ui.requestMetadataEdit, jsonDefinition, theme);
         responseHighlighter = setupHighlighter(*ui.responseEdit, jsonDefinition, theme);
     }
 
