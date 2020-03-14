@@ -52,7 +52,6 @@ ProtocolTreeModel::ProtocolTreeModel(QObject *parent) : QAbstractItemModel(paren
 void ProtocolTreeModel::addProtocol(const Protocol &protocol) {
     // TODO: Resetじゃなくてもよさそう
     beginResetModel();
-    nodes.clear();
 
     const auto fd = protocol.getFileDescriptor();
     const auto fileNode = std::make_shared<Node>(nodes.size(), fd);

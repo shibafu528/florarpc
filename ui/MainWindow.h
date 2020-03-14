@@ -24,7 +24,8 @@ private slots:
 
 private:
     Ui::MainWindow ui;
-    std::unique_ptr<Protocol> currentProtocol;
+    std::vector<std::shared_ptr<Protocol>> protocols;
+    std::unique_ptr<ProtocolTreeModel> protocolTreeModel;
     google::protobuf::MethodDescriptor const *currentMethod = nullptr;
     QStringList imports;
     QMenu *responseMetadataContextMenu;

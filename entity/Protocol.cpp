@@ -116,13 +116,13 @@ private:
     OpenFrom lastOpenFrom = OpenFrom::Resource;
 };
 
-Protocol::Protocol(QFileInfo &file, QStringList &imports) {
+Protocol::Protocol(const QFileInfo &file, const QStringList &imports) : source(file) {
     auto errorCollectorStub = std::make_unique<ErrorCollectorStub>();
     auto wellKnownSourceTree = std::make_unique<WellKnownSourceTree<DiskSourceTree>>(std::make_unique<DiskSourceTree>());
     importer = std::make_unique<Importer>(wellKnownSourceTree.get(), errorCollectorStub.get());
 
     wellKnownSourceTree->getFallback()->MapPath("", file.dir().absolutePath().toStdString());
-    for (QString &include : imports) {
+    for (const QString &include : imports) {
         wellKnownSourceTree->getFallback()->MapPath("", include.toStdString());
     }
     auto fd = importer->Import(file.fileName().toStdString());

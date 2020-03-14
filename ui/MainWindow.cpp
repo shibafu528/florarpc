@@ -16,13 +16,17 @@
 #include <grpcpp/generic/generic_stub.h>
 #include <google/protobuf/util/json_util.h>
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), responseMetadataContextMenu(new QMenu(this)) {
+MainWindow::MainWindow(QWidget *parent)
+        : QMainWindow(parent), protocolTreeModel(std::make_unique<ProtocolTreeModel>(this)),
+          responseMetadataContextMenu(new QMenu(this)) {
     ui.setupUi(this);
 
     connect(ui.actionOpen, &QAction::triggered, this, &MainWindow::onActionOpenTriggered);
     connect(ui.actionManageProto, &QAction::triggered, this, &MainWindow::onActionManageProtoTriggered);
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
     connect(ui.executeButton, &QPushButton::clicked, this, &MainWindow::onExecuteButtonClicked);
+
+    ui.treeView->setModel(protocolTreeModel.get());
 
     const auto fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui.requestEdit->setFont(fixedFont);
@@ -68,12 +72,16 @@ void MainWindow::onActionOpenTriggered() {
         return;
     }
     QFileInfo file(filename);
+    for (auto &p : protocols) {
+        if (p->getSource() == file) {
+            QMessageBox::warning(this, "Load error", "このファイルはすでに読み込まれています。");
+            return;
+        }
+    }
     try {
-        currentProtocol = std::make_unique<Protocol>(file, imports);
-
-        auto model = new ProtocolTreeModel(ui.treeView);
-        model->addProtocol(*currentProtocol);
-        ui.treeView->setModel(model);
+        const auto protocol = std::make_shared<Protocol>(file, imports);
+        protocols.push_back(protocol);
+        protocolTreeModel->addProtocol(*protocol);
         ui.treeView->expandAll();
     } catch (ProtocolLoadException &e) {
         QString message = "Protoファイルの読込中にエラーが発生しました。\n";
