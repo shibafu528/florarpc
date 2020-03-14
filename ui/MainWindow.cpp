@@ -81,8 +81,8 @@ void MainWindow::onActionOpenTriggered() {
     try {
         const auto protocol = std::make_shared<Protocol>(file, imports);
         protocols.push_back(protocol);
-        protocolTreeModel->addProtocol(*protocol);
-        ui.treeView->expandAll();
+        const auto index = protocolTreeModel->addProtocol(*protocol);
+        ui.treeView->expandRecursively(index);
     } catch (ProtocolLoadException &e) {
         QString message = "Protoファイルの読込中にエラーが発生しました。\n";
         QTextStream stream(&message);

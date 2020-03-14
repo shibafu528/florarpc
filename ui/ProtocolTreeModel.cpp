@@ -49,9 +49,8 @@ struct ProtocolTreeModel::Node {
 
 ProtocolTreeModel::ProtocolTreeModel(QObject *parent) : QAbstractItemModel(parent) {}
 
-void ProtocolTreeModel::addProtocol(const Protocol &protocol) {
-    // TODO: Resetじゃなくてもよさそう
-    beginResetModel();
+QModelIndex ProtocolTreeModel::addProtocol(const Protocol &protocol) {
+    beginInsertRows(QModelIndex(), nodes.size(), nodes.size());
 
     const auto fd = protocol.getFileDescriptor();
     const auto fileNode = std::make_shared<Node>(nodes.size(), fd);
@@ -65,7 +64,8 @@ void ProtocolTreeModel::addProtocol(const Protocol &protocol) {
         }
     }
 
-    endResetModel();
+    endInsertRows();
+    return index(nodes.size() - 1, 0, QModelIndex());
 }
 
 QModelIndex ProtocolTreeModel::index(int row, int column, const QModelIndex &parent) const {
