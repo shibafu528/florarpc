@@ -6,7 +6,9 @@
 
 class ProtocolTreeModel : public QAbstractItemModel {
 public:
-    ProtocolTreeModel(QObject *parent, Protocol *protocol);
+    ProtocolTreeModel(QObject *parent);
+
+    void addProtocol(const Protocol &protocol);
 
     QModelIndex index(int row, int column, const QModelIndex &parent) const override;
 
@@ -29,7 +31,6 @@ private:
     struct ServiceNode;
     struct MethodNode;
 
-    Protocol *protocol;
     std::vector<std::shared_ptr<ServiceNode>> nodes;
 
     static const ServiceNode* indexToService(const QModelIndex &index);

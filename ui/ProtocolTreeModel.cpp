@@ -44,9 +44,14 @@ struct ProtocolTreeModel::ServiceNode : public DescriptorNode {
     }
 };
 
-ProtocolTreeModel::ProtocolTreeModel(QObject *parent, Protocol *protocol)
-        : QAbstractItemModel(parent), protocol(protocol) {
-    auto fd = protocol->getFileDescriptor();
+ProtocolTreeModel::ProtocolTreeModel(QObject *parent) : QAbstractItemModel(parent) {
+}
+
+void ProtocolTreeModel::addProtocol(const Protocol &protocol) {
+    beginResetModel();
+
+    nodes.clear();
+    auto fd = protocol.getFileDescriptor();
     for (uint32_t sindex = 0; sindex < fd->service_count(); sindex++) {
         auto sd = fd->service(sindex);
         auto sn = std::make_shared<ServiceNode>(sindex, sd);
@@ -55,6 +60,8 @@ ProtocolTreeModel::ProtocolTreeModel(QObject *parent, Protocol *protocol)
             sn->methods.push_back(move(std::make_shared<MethodNode>(sn, mindex, sd->method(mindex))));
         }
     }
+
+    endResetModel();
 }
 
 QModelIndex ProtocolTreeModel::index(int row, int column, const QModelIndex &parent) const {

@@ -72,7 +72,8 @@ void MainWindow::onActionOpenTriggered() {
         currentProtocol = std::make_unique<Protocol>(file, imports);
         ui.currentProtoLabel->setText(file.fileName());
 
-        auto model = new ProtocolTreeModel(ui.treeView, currentProtocol.get());
+        auto model = new ProtocolTreeModel(ui.treeView);
+        model->addProtocol(*currentProtocol);
         ui.treeView->setModel(model);
         ui.treeView->expandAll();
     } catch (ProtocolLoadException &e) {

@@ -8,7 +8,7 @@
 class Protocol {
 public:
     Protocol(QFileInfo &file, QStringList &imports);
-    inline const google::protobuf::FileDescriptor* getFileDescriptor() { return fileDescriptor; };
+    inline const google::protobuf::FileDescriptor* getFileDescriptor() const { return fileDescriptor; };
 
 private:
     std::unique_ptr<google::protobuf::compiler::SourceTree> sourceTree;
