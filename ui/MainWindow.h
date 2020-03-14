@@ -38,6 +38,8 @@ private:
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> setupHighlighter(QTextEdit &edit,
             const KSyntaxHighlighting::Definition &definition, const KSyntaxHighlighting::Theme &theme);
     void addMetadataRow(const grpc::string_ref &key, const grpc::string_ref &value);
+    void clearResponseView();
+    void setErrorToResponseView(const QString &code, const QString &message, const QString &details);
 };
 
 
