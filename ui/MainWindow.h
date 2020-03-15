@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QFileInfo>
+#include <QShortcut>
 #include <SyntaxHighlighter>
 #include <Repository>
 #include <Definition>
@@ -31,6 +32,7 @@ private:
     std::unique_ptr<ProtocolTreeModel> protocolTreeModel;
     QStringList imports;
     KSyntaxHighlighting::Repository syntaxDefinitions;
+    QShortcut tabCloseShortcut;
 };
 
 

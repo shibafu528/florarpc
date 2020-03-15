@@ -15,7 +15,8 @@
 #include <google/protobuf/dynamic_message.h>
 
 MainWindow::MainWindow(QWidget *parent)
-        : QMainWindow(parent), protocolTreeModel(std::make_unique<ProtocolTreeModel>(this)) {
+        : QMainWindow(parent), protocolTreeModel(std::make_unique<ProtocolTreeModel>(this)),
+          tabCloseShortcut(QKeySequence(Qt::CTRL + Qt::Key_W), this) {
     ui.setupUi(this);
 
     connect(ui.actionOpen, &QAction::triggered, this, &MainWindow::onActionOpenTriggered);
@@ -29,6 +30,14 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     ui.treeView->setModel(protocolTreeModel.get());
+
+    connect(&tabCloseShortcut, &QShortcut::activated, [=]() {
+        auto editor = ui.editorTabs->currentWidget();
+        if (editor) {
+            ui.editorTabs->removeTab(ui.editorTabs->currentIndex());
+            delete editor;
+        }
+    });
 
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(),
             QGuiApplication::primaryScreen()->availableGeometry()));
