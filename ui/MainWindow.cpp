@@ -27,34 +27,43 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 void MainWindow::onActionOpenTriggered() {
-    auto filename = QFileDialog::getOpenFileName(this, "Open proto", "",
-            "Proto definition files (*.proto)", nullptr);
-    if (filename.isEmpty()) {
+    auto filenames = QFileDialog::getOpenFileNames(this, "Open proto", "",
+                                                   "Proto definition files (*.proto)", nullptr);
+    if (filenames.isEmpty()) {
         return;
     }
-    QFileInfo file(filename);
-    for (auto &p : protocols) {
-        if (p->getSource() == file) {
-            QMessageBox::warning(this, "Load error", "このファイルはすでに読み込まれています。");
+    std::vector<std::shared_ptr<Protocol>> successes;
+    for (const auto &filename : filenames) {
+        QFileInfo file(filename);
+
+        if (std::any_of(protocols.begin(), protocols.end(), [file](std::shared_ptr<Protocol> &p) { return p->getSource() == file; })) {
+            if (filenames.size() == 1) {
+                QMessageBox::warning(this, "Load error", "このファイルはすでに読み込まれています。");
+            }
+            continue;
+        }
+
+        try {
+            const auto protocol = std::make_shared<Protocol>(file, imports);
+            successes.push_back(protocol);
+        } catch (ProtocolLoadException &e) {
+            QString message = "Protoファイルの読込中にエラーが発生しました。\n";
+            QTextStream stream(&message);
+
+            for (const auto& err : *e.errors) {
+                if (&err != &e.errors->front()) {
+                    stream << '\n';
+                }
+                stream << QString::fromStdString(err);
+            }
+            QMessageBox::critical(this, "Load error", message);
             return;
         }
     }
-    try {
-        const auto protocol = std::make_shared<Protocol>(file, imports);
+    for (const auto &protocol : successes) {
         protocols.push_back(protocol);
         const auto index = protocolTreeModel->addProtocol(*protocol);
         ui.treeView->expandRecursively(index);
-    } catch (ProtocolLoadException &e) {
-        QString message = "Protoファイルの読込中にエラーが発生しました。\n";
-        QTextStream stream(&message);
-
-        for (const auto& err : *e.errors) {
-            if (&err != &e.errors->front()) {
-                stream << '\n';
-            }
-            stream << QString::fromStdString(err);
-        }
-        QMessageBox::critical(this, "Load error", message);
     }
 }
 
