@@ -15,6 +15,7 @@ public:
     Editor(const google::protobuf::MethodDescriptor *descriptor,
            KSyntaxHighlighting::Repository &repository,
            QWidget *parent = nullptr);
+    inline const google::protobuf::MethodDescriptor* getDescriptor() const { return descriptor; }
 
 private slots:
     void onExecuteButtonClicked();
