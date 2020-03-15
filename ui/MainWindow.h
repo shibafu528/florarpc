@@ -25,6 +25,8 @@ private slots:
     void onActionOpenTriggered();
     void onActionManageProtoTriggered();
     void onTreeViewClicked(const QModelIndex &index);
+    void onEditorTabCloseRequested(const int index);
+    void onTabCloseShortcutActivated();
 
 private:
     Ui::MainWindow ui;

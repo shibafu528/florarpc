@@ -23,21 +23,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui.actionManageProto, &QAction::triggered, this, &MainWindow::onActionManageProtoTriggered);
     connect(ui.actionQuit, &QAction::triggered, this, &MainWindow::close);
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
-    connect(ui.editorTabs, &QTabWidget::tabCloseRequested, [=](int index) {
-        auto editor = ui.editorTabs->widget(index);
-        ui.editorTabs->removeTab(index);
-        delete editor;
-    });
+    connect(ui.editorTabs, &QTabWidget::tabCloseRequested, this, &MainWindow::onEditorTabCloseRequested);
+    connect(&tabCloseShortcut, &QShortcut::activated, this, &MainWindow::onTabCloseShortcutActivated);
 
     ui.treeView->setModel(protocolTreeModel.get());
-
-    connect(&tabCloseShortcut, &QShortcut::activated, [=]() {
-        auto editor = ui.editorTabs->currentWidget();
-        if (editor) {
-            ui.editorTabs->removeTab(ui.editorTabs->currentIndex());
-            delete editor;
-        }
-    });
 
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(),
             QGuiApplication::primaryScreen()->availableGeometry()));
@@ -109,4 +98,18 @@ void MainWindow::onTreeViewClicked(const QModelIndex &index) {
     auto editor = new Editor(descriptor, syntaxDefinitions);
     const auto addedIndex = ui.editorTabs->addTab(editor, QString::fromStdString(descriptor->full_name()));
     ui.editorTabs->setCurrentIndex(addedIndex);
+}
+
+void MainWindow::onEditorTabCloseRequested(const int index) {
+    auto editor = ui.editorTabs->widget(index);
+    ui.editorTabs->removeTab(index);
+    delete editor;
+}
+
+void MainWindow::onTabCloseShortcutActivated() {
+    auto editor = ui.editorTabs->currentWidget();
+    if (editor) {
+        ui.editorTabs->removeTab(ui.editorTabs->currentIndex());
+        delete editor;
+    }
 }
