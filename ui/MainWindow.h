@@ -2,12 +2,8 @@
 #define FLORARPC_MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QFileInfo>
 #include <QShortcut>
-#include <SyntaxHighlighter>
-#include <Repository>
-#include <Definition>
-#include <grpcpp/grpcpp.h>
+#include <KSyntaxHighlighting/Repository>
 #include "ui/ui_MainWindow.h"
 #include "../entity/Protocol.h"
 #include "ProtocolTreeModel.h"

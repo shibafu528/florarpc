@@ -1,18 +1,12 @@
 #include "MainWindow.h"
-#include "../entity/Protocol.h"
 #include "ImportsManageDialog.h"
 #include "Editor.h"
 #include <QStyle>
 #include <QScreen>
+#include <QFileInfo>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QTextStream>
-#include <QClipboard>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <Theme>
-#include <memory>
-#include <google/protobuf/dynamic_message.h>
 
 MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent), protocolTreeModel(std::make_unique<ProtocolTreeModel>(this)),
