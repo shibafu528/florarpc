@@ -87,19 +87,20 @@ void MainWindow::onTreeViewClicked(const QModelIndex &index) {
         return;
     }
 
-    auto descriptor = ProtocolTreeModel::indexToMethodDescriptor(index);
+    auto method = std::make_unique<Method>(ProtocolTreeModel::indexToMethod(index));
+    auto methodName = method->getFullName();
 
     // Find exists tab
     for (int i = 0; i < ui.editorTabs->count(); i++) {
         auto editor = qobject_cast<Editor*>(ui.editorTabs->widget(i));
-        if (editor != nullptr && editor->getDescriptor()->full_name() == descriptor->full_name()) {
+        if (editor != nullptr && editor->getMethod().getFullName() == methodName) {
             ui.editorTabs->setCurrentIndex(ui.editorTabs->indexOf(editor));
             return;
         }
     }
 
-    auto editor = new Editor(descriptor, syntaxDefinitions);
-    const auto addedIndex = ui.editorTabs->addTab(editor, QString::fromStdString(descriptor->full_name()));
+    auto editor = new Editor(std::move(method), syntaxDefinitions);
+    const auto addedIndex = ui.editorTabs->addTab(editor, QString::fromStdString(methodName));
     ui.editorTabs->setCurrentIndex(addedIndex);
 }
 

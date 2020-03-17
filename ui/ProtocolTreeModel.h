@@ -3,6 +3,7 @@
 
 #include <QAbstractItemModel>
 #include "../entity/Protocol.h"
+#include "../entity/Method.h"
 
 class ProtocolTreeModel : public QAbstractItemModel {
 public:
@@ -22,9 +23,7 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-    static const google::protobuf::ServiceDescriptor* indexToServiceDescriptor(const QModelIndex &index);
-
-    static const google::protobuf::MethodDescriptor* indexToMethodDescriptor(const QModelIndex &index);
+    static Method indexToMethod(const QModelIndex &index);
 
 private:
     struct Node;

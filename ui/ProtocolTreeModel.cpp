@@ -156,12 +156,8 @@ Qt::ItemFlags ProtocolTreeModel::flags(const QModelIndex &index) const {
     return Qt::ItemFlag::ItemIsEnabled;
 }
 
-const ServiceDescriptor* ProtocolTreeModel::indexToServiceDescriptor(const QModelIndex &index) {
-    return indexToNode(index)->getServiceDescriptor();
-}
-
-const MethodDescriptor* ProtocolTreeModel::indexToMethodDescriptor(const QModelIndex &index) {
-    return indexToNode(index)->getMethodDescriptor();
+Method ProtocolTreeModel::indexToMethod(const QModelIndex &index) {
+    return Method(indexToNode(index)->getMethodDescriptor());
 }
 
 const ProtocolTreeModel::Node* ProtocolTreeModel::indexToNode(const QModelIndex &index) {

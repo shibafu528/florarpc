@@ -27,6 +27,8 @@ add_executable(flora
         ui/Editor.h
         entity/Protocol.cpp
         entity/Protocol.h
+        entity/Method.cpp
+        entity/Method.h
         ui/ProtocolTreeModel.cpp
         ui/ProtocolTreeModel.h
         util/GrpcUtility.cpp

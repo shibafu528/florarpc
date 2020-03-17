@@ -1,6 +1,7 @@
 #ifndef FLORARPC_EDITOR_H
 #define FLORARPC_EDITOR_H
 
+#include "../entity/Method.h"
 #include <QWidget>
 #include <google/protobuf/descriptor.h>
 #include <KSyntaxHighlighting/SyntaxHighlighter>
@@ -12,10 +13,10 @@ class Editor : public QWidget {
     Q_OBJECT
 
 public:
-    Editor(const google::protobuf::MethodDescriptor *descriptor,
+    Editor(std::unique_ptr<Method> &&method,
            KSyntaxHighlighting::Repository &repository,
            QWidget *parent = nullptr);
-    inline const google::protobuf::MethodDescriptor* getDescriptor() const { return descriptor; }
+    inline Method& getMethod() { return *method; }
 
 private slots:
     void onExecuteButtonClicked();
@@ -24,7 +25,7 @@ private:
     Ui_Editor ui;
     QMenu *responseMetadataContextMenu;
 
-    const google::protobuf::MethodDescriptor *descriptor;
+    std::unique_ptr<Method> method;
 
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> requestHighlighter;
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> requestMetadataHighlighter;

@@ -1,20 +1,20 @@
 #include "Editor.h"
 #include "../util/GrpcUtility.h"
+#include "../entity/Method.h"
 #include <KSyntaxHighlighting/Definition>
 #include <KSyntaxHighlighting/Theme>
 #include <QMenu>
 #include <QClipboard>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <google/protobuf/dynamic_message.h>
 #include <google/protobuf/util/json_util.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/generic/generic_stub.h>
 
-Editor::Editor(const google::protobuf::MethodDescriptor *descriptor,
+Editor::Editor(std::unique_ptr<Method> &&method,
                KSyntaxHighlighting::Repository &repository,
                QWidget *parent)
-        : QWidget(parent), descriptor(descriptor), responseMetadataContextMenu(new QMenu(this)) {
+        : QWidget(parent), method(std::move(method)), responseMetadataContextMenu(new QMenu(this)) {
     ui.setupUi(this);
 
     connect(ui.executeButton, &QPushButton::clicked, this, &Editor::onExecuteButtonClicked);
@@ -56,15 +56,7 @@ Editor::Editor(const google::protobuf::MethodDescriptor *descriptor,
         }
     })->setIcon(QIcon::fromTheme("edit-copy"));
 
-    google::protobuf::DynamicMessageFactory dmf;
-    auto proto = dmf.GetPrototype(descriptor->input_type());
-    auto message = std::unique_ptr<google::protobuf::Message>(proto->New());
-    google::protobuf::util::JsonOptions opts;
-    opts.add_whitespace = true;
-    opts.always_print_primitive_fields = true;
-    std::string out;
-    google::protobuf::util::MessageToJsonString(*message, &out, opts);
-    ui.requestEdit->setText(QString::fromStdString(out));
+    ui.requestEdit->setText(QString::fromStdString(this->method->makeRequestSkeleton()));
     requestHighlighter->rehighlight();
 }
 
@@ -73,14 +65,11 @@ void Editor::onExecuteButtonClicked() {
 
     // Parse request body
     google::protobuf::DynamicMessageFactory dmf;
-    auto reqProto = dmf.GetPrototype(descriptor->input_type());
-    auto reqMessage = std::unique_ptr<google::protobuf::Message>(reqProto->New());
-    google::protobuf::util::JsonParseOptions parseOptions;
-    parseOptions.ignore_unknown_fields = true;
-    parseOptions.case_insensitive_enum_parsing = true;
-    auto parseStatus = google::protobuf::util::JsonStringToMessage(ui.requestEdit->toPlainText().toStdString(), reqMessage.get(), parseOptions);
-    if (!parseStatus.ok()) {
-        setErrorToResponseView("-", "Request Parse Error", QString::fromStdString(parseStatus.error_message()));
+    std::unique_ptr<google::protobuf::Message> reqMessage;
+    try {
+        reqMessage = method->parseRequest(dmf, ui.requestEdit->toPlainText().toStdString());
+    } catch (Method::ParseError &e) {
+        setErrorToResponseView("-", "Request Parse Error", QString::fromStdString(e.getMessage()));
         return;
     }
 
@@ -119,10 +108,9 @@ void Editor::onExecuteButtonClicked() {
     std::unique_ptr<grpc::ByteBuffer> sendBuffer = GrpcUtility::serializeMessage(*reqMessage);
     auto ch = grpc::CreateChannel(ui.serverAddressEdit->text().toStdString(), grpc::InsecureChannelCredentials());
     grpc::GenericStub stub(ch);
-    const std::string methodName = "/" + descriptor->service()->full_name() + "/" + descriptor->name();
 
     grpc_impl::CompletionQueue cq;
-    auto call = stub.PrepareUnaryCall(&ctx, methodName, *sendBuffer, &cq);
+    auto call = stub.PrepareUnaryCall(&ctx, method->getRequestPath(), *sendBuffer, &cq);
     call->StartCall();
     grpc::ByteBuffer receiveBuffer;
     grpc::Status status;
@@ -134,9 +122,7 @@ void Editor::onExecuteButtonClicked() {
     cq.Next(&gotTag, &ok);
     if (ok && gotTag == tag) {
         if (status.ok()) {
-            auto resProto = dmf.GetPrototype(descriptor->output_type());
-            auto resMessage = std::unique_ptr<google::protobuf::Message>(resProto->New());
-            GrpcUtility::parseMessage(receiveBuffer, *resMessage);
+            auto resMessage = method->parseResponse(dmf, receiveBuffer);
             std::string out;
             google::protobuf::util::JsonOptions opts;
             opts.add_whitespace = true;
