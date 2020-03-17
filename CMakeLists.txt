@@ -32,7 +32,7 @@ add_executable(flora
         ui/ProtocolTreeModel.cpp
         ui/ProtocolTreeModel.h
         util/GrpcUtility.cpp
-        util/GrpcUtility.h)
+        util/GrpcUtility.h util/ProtobufIterator.h)
 
 target_link_libraries(flora
         Qt5::Widgets
