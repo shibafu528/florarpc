@@ -32,10 +32,15 @@ add_executable(flora
         ui/ProtocolTreeModel.cpp
         ui/ProtocolTreeModel.h
         util/GrpcUtility.cpp
-        util/GrpcUtility.h util/ProtobufIterator.h)
+        util/GrpcUtility.h
+        util/ProtobufIterator.h
+        util/ProtobufJsonPrinter.cpp
+        util/ProtobufJsonPrinter.h)
 
 target_link_libraries(flora
         Qt5::Widgets
         KF5::SyntaxHighlighting
         protobuf::libprotobuf
         grpc++)
+
+target_include_directories(flora PRIVATE ${PROJECT_SOURCE_DIR}/vendor/minijson_writer)

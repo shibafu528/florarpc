@@ -1,0 +1,3 @@
+[submodule "vendor/minijson_writer"]
+	path = vendor/minijson_writer
+	url = https://github.com/giacomodrago/minijson_writer.git

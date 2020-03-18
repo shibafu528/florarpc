@@ -1,5 +1,6 @@
 #include "Method.h"
 #include "../util/GrpcUtility.h"
+#include "../util/ProtobufJsonPrinter.h"
 #include <sstream>
 #include <google/protobuf/dynamic_message.h>
 #include <google/protobuf/util/json_util.h>
@@ -17,15 +18,7 @@ std::string Method::getRequestPath() {
 }
 
 std::string Method::makeRequestSkeleton() {
-    google::protobuf::DynamicMessageFactory dmf;
-    auto proto = dmf.GetPrototype(descriptor->input_type());
-    auto message = std::unique_ptr<google::protobuf::Message>(proto->New());
-    google::protobuf::util::JsonOptions opts;
-    opts.add_whitespace = true;
-    opts.always_print_primitive_fields = true;
-    std::string out;
-    google::protobuf::util::MessageToJsonString(*message, &out, opts);
-    return out;
+    return ProtobufJsonPrinter::makeRequestSkeleton(descriptor->input_type());
 }
 
 std::unique_ptr<google::protobuf::Message>
