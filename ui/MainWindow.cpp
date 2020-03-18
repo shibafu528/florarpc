@@ -10,17 +10,36 @@
 
 MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent), protocolTreeModel(std::make_unique<ProtocolTreeModel>(this)),
-          tabCloseShortcut(QKeySequence(Qt::CTRL + Qt::Key_W), this) {
+          tabCloseShortcut(QKeySequence(Qt::CTRL + Qt::Key_W), this),
+          treeMethodContextMenu(this) {
     ui.setupUi(this);
 
     connect(ui.actionOpen, &QAction::triggered, this, &MainWindow::onActionOpenTriggered);
     connect(ui.actionManageProto, &QAction::triggered, this, &MainWindow::onActionManageProtoTriggered);
     connect(ui.actionQuit, &QAction::triggered, this, &MainWindow::close);
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
+    connect(ui.treeView, &QWidget::customContextMenuRequested, [=](const QPoint &pos) {
+        const QModelIndex &index = ui.treeView->indexAt(pos);
+        if (!index.parent().isValid() || !index.flags().testFlag(Qt::ItemFlag::ItemIsSelectable)) {
+            // disabled node
+            return;
+        }
+
+        treeMethodContextMenu.exec(ui.treeView->viewport()->mapToGlobal(pos));
+    });
     connect(ui.editorTabs, &QTabWidget::tabCloseRequested, this, &MainWindow::onEditorTabCloseRequested);
     connect(&tabCloseShortcut, &QShortcut::activated, this, &MainWindow::onTabCloseShortcutActivated);
 
     ui.treeView->setModel(protocolTreeModel.get());
+
+    treeMethodContextMenu.addAction("開く(&O)", [=]() {
+        const QModelIndex &index = ui.treeView->indexAt(ui.treeView->viewport()->mapFromGlobal(treeMethodContextMenu.pos()));
+        openMethod(index, false);
+    });
+    treeMethodContextMenu.addAction("新しいタブで開く(&N)", [=]() {
+        const QModelIndex &index = ui.treeView->indexAt(ui.treeView->viewport()->mapFromGlobal(treeMethodContextMenu.pos()));
+        openMethod(index, true);
+    });
 
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(),
             QGuiApplication::primaryScreen()->availableGeometry()));
@@ -82,26 +101,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 }
 
 void MainWindow::onTreeViewClicked(const QModelIndex &index) {
-    if (!index.parent().isValid() || !index.flags().testFlag(Qt::ItemFlag::ItemIsSelectable)) {
-        // disabled node
-        return;
-    }
-
-    auto method = std::make_unique<Method>(ProtocolTreeModel::indexToMethod(index));
-    auto methodName = method->getFullName();
-
-    // Find exists tab
-    for (int i = 0; i < ui.editorTabs->count(); i++) {
-        auto editor = qobject_cast<Editor*>(ui.editorTabs->widget(i));
-        if (editor != nullptr && editor->getMethod().getFullName() == methodName) {
-            ui.editorTabs->setCurrentIndex(ui.editorTabs->indexOf(editor));
-            return;
-        }
-    }
-
-    auto editor = new Editor(std::move(method), syntaxDefinitions);
-    const auto addedIndex = ui.editorTabs->addTab(editor, QString::fromStdString(methodName));
-    ui.editorTabs->setCurrentIndex(addedIndex);
+    openMethod(index, false);
 }
 
 void MainWindow::onEditorTabCloseRequested(const int index) {
@@ -116,4 +116,29 @@ void MainWindow::onTabCloseShortcutActivated() {
         ui.editorTabs->removeTab(ui.editorTabs->currentIndex());
         delete editor;
     }
+}
+
+void MainWindow::openMethod(const QModelIndex &index, bool forceNewTab) {
+    if (!index.parent().isValid() || !index.flags().testFlag(Qt::ItemFlag::ItemIsSelectable)) {
+        // disabled node
+        return;
+    }
+
+    auto method = std::make_unique<Method>(ProtocolTreeModel::indexToMethod(index));
+    auto methodName = method->getFullName();
+
+    // Find exists tab
+    if (!forceNewTab) {
+        for (int i = 0; i < ui.editorTabs->count(); i++) {
+            auto editor = qobject_cast<Editor *>(ui.editorTabs->widget(i));
+            if (editor != nullptr && editor->getMethod().getFullName() == methodName) {
+                ui.editorTabs->setCurrentIndex(ui.editorTabs->indexOf(editor));
+                return;
+            }
+        }
+    }
+
+    auto editor = new Editor(std::move(method), syntaxDefinitions);
+    const auto addedIndex = ui.editorTabs->addTab(editor, QString::fromStdString(methodName));
+    ui.editorTabs->setCurrentIndex(addedIndex);
 }

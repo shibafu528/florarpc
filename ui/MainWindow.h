@@ -31,6 +31,9 @@ private:
     QStringList imports;
     KSyntaxHighlighting::Repository syntaxDefinitions;
     QShortcut tabCloseShortcut;
+    QMenu treeMethodContextMenu;
+
+    void openMethod(const QModelIndex &index, bool forceNewTab);
 };
 
 
