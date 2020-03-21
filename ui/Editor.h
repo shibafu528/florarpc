@@ -36,6 +36,8 @@ private:
     void addMetadataRow(const grpc::string_ref &key, const grpc::string_ref &value);
     void clearResponseView();
     void setErrorToResponseView(const QString &code, const QString &message, const QString &details);
+    void showStreamingButtons();
+    void hideStreamingButtons();
 };
 
 

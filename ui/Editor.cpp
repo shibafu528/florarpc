@@ -58,6 +58,8 @@ Editor::Editor(std::unique_ptr<Method> &&method,
 
     ui.requestEdit->setText(QString::fromStdString(this->method->makeRequestSkeleton()));
     requestHighlighter->rehighlight();
+
+    hideStreamingButtons();
 }
 
 void Editor::onExecuteButtonClicked() {
@@ -200,4 +202,18 @@ void Editor::setErrorToResponseView(const QString &code, const QString &message,
     ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseBodyTab));
     ui.responseTabs->insertTab(0, ui.responseErrorTab, "Error");
     ui.responseTabs->setCurrentIndex(0);
+}
+
+void Editor::showStreamingButtons() {
+    ui.executeButton->hide();
+    ui.sendButton->show();
+    ui.finishButton->show();
+    ui.cancelButton->show();
+}
+
+void Editor::hideStreamingButtons() {
+    ui.executeButton->show();
+    ui.sendButton->hide();
+    ui.finishButton->hide();
+    ui.cancelButton->hide();
 }
