@@ -22,6 +22,7 @@ public:
     std::string makeRequestSkeleton();
     std::unique_ptr<google::protobuf::Message> parseRequest(google::protobuf::DynamicMessageFactory &factory, const std::string &json);
     std::unique_ptr<google::protobuf::Message> parseResponse(google::protobuf::DynamicMessageFactory &factory, grpc::ByteBuffer &buffer);
+    bool isChildOf(const google::protobuf::FileDescriptor *fileDescriptor);
 
 private:
     const google::protobuf::MethodDescriptor *descriptor;

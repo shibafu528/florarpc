@@ -11,6 +11,7 @@
 MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent), protocolTreeModel(std::make_unique<ProtocolTreeModel>(this)),
           tabCloseShortcut(QKeySequence(Qt::CTRL + Qt::Key_W), this),
+          treeFileContextMenu(this),
           treeMethodContextMenu(this) {
     ui.setupUi(this);
 
@@ -20,17 +21,48 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
     connect(ui.treeView, &QWidget::customContextMenuRequested, [=](const QPoint &pos) {
         const QModelIndex &index = ui.treeView->indexAt(pos);
-        if (!index.parent().isValid() || !index.flags().testFlag(Qt::ItemFlag::ItemIsSelectable)) {
-            // disabled node
-            return;
+        if (!index.parent().isValid()) {
+            // file node
+            treeFileContextMenu.exec(ui.treeView->viewport()->mapToGlobal(pos));
         }
 
-        treeMethodContextMenu.exec(ui.treeView->viewport()->mapToGlobal(pos));
+        else if (index.parent().isValid() && index.flags().testFlag(Qt::ItemFlag::ItemIsSelectable)) {
+            // method node
+            treeMethodContextMenu.exec(ui.treeView->viewport()->mapToGlobal(pos));
+        }
     });
     connect(ui.editorTabs, &QTabWidget::tabCloseRequested, this, &MainWindow::onEditorTabCloseRequested);
     connect(&tabCloseShortcut, &QShortcut::activated, this, &MainWindow::onTabCloseShortcutActivated);
 
     ui.treeView->setModel(protocolTreeModel.get());
+
+    treeFileContextMenu.addAction("ワークスペースから削除(&D)", [=]() {
+        const QModelIndex &index = ui.treeView->indexAt(ui.treeView->viewport()->mapFromGlobal(treeFileContextMenu.pos()));
+        if (index.parent().isValid()) {
+            return;
+        }
+
+        if (QMessageBox::warning(this, "ワークスペースから削除",
+                "このファイルに含まれるメソッドのタブは閉じられますが、よろしいですか？",
+                QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Ok) {
+            auto fileDescriptor = ProtocolTreeModel::indexToFile(index);
+
+            for (int i = ui.editorTabs->count() - 1; i >= 0; i--) {
+                auto editor = qobject_cast<Editor*>(ui.editorTabs->widget(i));
+                if (editor->getMethod().isChildOf(fileDescriptor)) {
+                    ui.editorTabs->removeTab(i);
+                    delete editor;
+                }
+            }
+
+            protocolTreeModel->remove(index);
+
+            auto remove = std::remove_if(protocols.begin(), protocols.end(), [fileDescriptor](std::shared_ptr<Protocol> &p) {
+                return p->getFileDescriptor() == fileDescriptor;
+            });
+            protocols.erase(remove, protocols.end());
+        }
+    });
 
     treeMethodContextMenu.addAction("開く(&O)", [=]() {
         const QModelIndex &index = ui.treeView->indexAt(ui.treeView->viewport()->mapFromGlobal(treeMethodContextMenu.pos()));

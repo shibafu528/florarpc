@@ -68,6 +68,22 @@ QModelIndex ProtocolTreeModel::addProtocol(const Protocol &protocol) {
     return index(nodes.size() - 1, 0, QModelIndex());
 }
 
+void ProtocolTreeModel::remove(const QModelIndex &index) {
+    beginRemoveRows(index.parent(), index.row(), index.row());
+
+    auto file = indexToFile(index);
+    auto remove = std::remove_if(nodes.begin(), nodes.end(), [file](std::shared_ptr<Node> &node) {
+        return node->getFileDescriptor() == file;
+    });
+    nodes.erase(remove, nodes.end());
+
+    for (auto iter = nodes.begin() + index.row(); iter != nodes.end(); iter++) {
+        (*iter)->index--;
+    }
+
+    endRemoveRows();
+}
+
 QModelIndex ProtocolTreeModel::index(int row, int column, const QModelIndex &parent) const {
     if (column != 0 || (parent.isValid() && parent.column() != 0)) {
         return QModelIndex();
@@ -154,6 +170,10 @@ Qt::ItemFlags ProtocolTreeModel::flags(const QModelIndex &index) const {
     }
 
     return Qt::ItemFlag::ItemIsEnabled;
+}
+
+const google::protobuf::FileDescriptor *ProtocolTreeModel::indexToFile(const QModelIndex &index) {
+    return indexToNode(index)->getFileDescriptor();
 }
 
 Method ProtocolTreeModel::indexToMethod(const QModelIndex &index) {
