@@ -113,60 +113,56 @@ void Editor::onExecuteButtonClicked() {
     }
 
     session = new Session(*method, ui.serverAddressEdit->text(), metadata, this);
-    connect(session, &Session::messageReceived, [this](const grpc::ByteBuffer &buffer) {
-        google::protobuf::DynamicMessageFactory dmf;
-        auto resMessage = method->parseResponse(dmf, buffer);
-        std::string out;
-        google::protobuf::util::JsonOptions opts;
-        opts.add_whitespace = true;
-        opts.always_print_primitive_fields = true;
-        google::protobuf::util::MessageToJsonString(*resMessage, &out, opts);
-        ui.responseEdit->setText(QString::fromStdString(out));
-        responseHighlighter->rehighlight();
-
-        ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseErrorTab));
-        ui.responseTabs->insertTab(0, ui.responseBodyTab, "Body");
-        ui.responseTabs->setCurrentIndex(0);
-
-        emit session->finish();
-    });
-    connect(session, &Session::initialMetadataReceived, [this](const Session::Metadata &metadata) {
-        for (auto iter = metadata.cbegin(); iter != metadata.cend(); iter++) {
-            addMetadataRow(iter.key(), iter.value());
-        }
-
-        if (ui.responseMetadataTable->rowCount() > 0) {
-            ui.responseTabs->setTabText(ui.responseTabs->indexOf(ui.responseMetadataTab),
-                                        QString::asprintf("Metadata (%d)", ui.responseMetadataTable->rowCount()));
-        }
-    });
-    connect(session, &Session::trailingMetadataReceived, [this](const Session::Metadata &metadata) {
-        for (auto iter = metadata.cbegin(); iter != metadata.cend(); iter++) {
-            addMetadataRow(iter.key(), iter.value());
-        }
-
-        if (ui.responseMetadataTable->rowCount() > 0) {
-            ui.responseTabs->setTabText(ui.responseTabs->indexOf(ui.responseMetadataTab),
-                                        QString::asprintf("Metadata (%d)", ui.responseMetadataTable->rowCount()));
-        }
-    });
-    connect(session, &Session::finished, [this](int code, const QString &message, const QByteArray &details) {
-        if (code != grpc::StatusCode::OK) {
-            setErrorToResponseView(GrpcUtility::errorCodeToString((grpc::StatusCode) code), message, details);
-        }
-
-        ui.executeButton->setDisabled(false);
-        delete session;
-        session = nullptr;
-    });
-    connect(session, &Session::aborted, [this]() {
-        ui.executeButton->setDisabled(false);
-        delete session;
-        session = nullptr;
-    });
+    connect(session, &Session::messageReceived, this, &Editor::onMessageReceived);
+    connect(session, &Session::initialMetadataReceived, this, &Editor::onMetadataReceived);
+    connect(session, &Session::trailingMetadataReceived, this, &Editor::onMetadataReceived);
+    connect(session, &Session::finished, this, &Editor::onSessionFinished);
+    connect(session, &Session::aborted, this, &Editor::cleanupSession);
 
     emit session->send(*sendBuffer);
     ui.executeButton->setDisabled(true);
+}
+
+void Editor::onMessageReceived(const grpc::ByteBuffer &buffer) {
+    google::protobuf::DynamicMessageFactory dmf;
+    auto resMessage = method->parseResponse(dmf, buffer);
+    std::string out;
+    google::protobuf::util::JsonOptions opts;
+    opts.add_whitespace = true;
+    opts.always_print_primitive_fields = true;
+    google::protobuf::util::MessageToJsonString(*resMessage, &out, opts);
+    ui.responseEdit->setText(QString::fromStdString(out));
+    responseHighlighter->rehighlight();
+
+    ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseErrorTab));
+    ui.responseTabs->insertTab(0, ui.responseBodyTab, "Body");
+    ui.responseTabs->setCurrentIndex(0);
+
+    emit session->finish();
+}
+
+void Editor::onMetadataReceived(const Session::Metadata &metadata) {
+    for (auto iter = metadata.cbegin(); iter != metadata.cend(); iter++) {
+        addMetadataRow(iter.key(), iter.value());
+    }
+
+    if (ui.responseMetadataTable->rowCount() > 0) {
+        ui.responseTabs->setTabText(ui.responseTabs->indexOf(ui.responseMetadataTab),
+                                    QString::asprintf("Metadata (%d)", ui.responseMetadataTable->rowCount()));
+    }
+}
+
+void Editor::onSessionFinished(int code, const QString &message, const QByteArray &details) {
+    if (code != grpc::StatusCode::OK) {
+        setErrorToResponseView(GrpcUtility::errorCodeToString((grpc::StatusCode) code), message, details);
+    }
+    cleanupSession();
+}
+
+void Editor::cleanupSession() {
+    ui.executeButton->setDisabled(false);
+    delete session;
+    session = nullptr;
 }
 
 std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> Editor::setupHighlighter(
