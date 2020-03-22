@@ -7,7 +7,7 @@
 
 namespace GrpcUtility {
     std::unique_ptr<grpc::ByteBuffer> serializeMessage(const google::protobuf::Message &message);
-    bool parseMessage(grpc::ByteBuffer &buffer, google::protobuf::Message &message);
+    bool parseMessage(const grpc::ByteBuffer &buffer, google::protobuf::Message &message);
     QString errorCodeToString(grpc::StatusCode statusCode);
 }
 

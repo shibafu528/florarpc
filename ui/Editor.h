@@ -2,6 +2,7 @@
 #define FLORARPC_EDITOR_H
 
 #include "../entity/Method.h"
+#include "../entity/Session.h"
 #include <QWidget>
 #include <google/protobuf/descriptor.h>
 #include <KSyntaxHighlighting/SyntaxHighlighter>
@@ -24,6 +25,7 @@ private slots:
 private:
     Ui_Editor ui;
     QMenu *responseMetadataContextMenu;
+    Session *session;
 
     std::unique_ptr<Method> method;
 
@@ -33,7 +35,7 @@ private:
 
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> setupHighlighter(
             QTextEdit &edit, const KSyntaxHighlighting::Definition &definition, const KSyntaxHighlighting::Theme &theme);
-    void addMetadataRow(const grpc::string_ref &key, const grpc::string_ref &value);
+    void addMetadataRow(const QString &key, const QString &value);
     void clearResponseView();
     void setErrorToResponseView(const QString &code, const QString &message, const QString &details);
     void showStreamingButtons();
