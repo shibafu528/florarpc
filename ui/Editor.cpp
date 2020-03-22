@@ -155,15 +155,18 @@ void Editor::onExecuteButtonClicked() {
             setErrorToResponseView(GrpcUtility::errorCodeToString((grpc::StatusCode) code), message, details);
         }
 
+        ui.executeButton->setDisabled(false);
         delete session;
         session = nullptr;
     });
     connect(session, &Session::aborted, [this]() {
+        ui.executeButton->setDisabled(false);
         delete session;
         session = nullptr;
     });
 
     emit session->send(*sendBuffer);
+    ui.executeButton->setDisabled(true);
 }
 
 std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> Editor::setupHighlighter(
