@@ -112,17 +112,35 @@ void Editor::onExecuteButtonClicked() {
     grpc::GenericStub stub(ch);
 
     grpc_impl::CompletionQueue cq;
-    auto call = stub.PrepareUnaryCall(&ctx, method->getRequestPath(), *sendBuffer, &cq);
-    call->StartCall();
-    grpc::ByteBuffer receiveBuffer;
-    grpc::Status status;
-    void *tag = (void*) 1;
-    call->Finish(&receiveBuffer, &status, tag);
-
-    void* gotTag;
+    auto call = stub.PrepareCall(&ctx, method->getRequestPath(), &cq);
+    call->StartCall((void*) 1);
+    void *gotTag;
     bool ok = false;
     cq.Next(&gotTag, &ok);
-    if (ok && gotTag == tag) {
+    if (!ok) {
+        return;
+    }
+
+    call->WriteLast(*sendBuffer, grpc::WriteOptions(), (void*) 2);
+    ok = false;
+    cq.Next(&gotTag, &ok);
+    if (!ok) {
+        return;
+    }
+
+    grpc::ByteBuffer receiveBuffer;
+    call->Read(&receiveBuffer, (void*) 3);
+    ok = false;
+    cq.Next(&gotTag, &ok);
+    if (!ok) {
+        return;
+    }
+
+    grpc::Status status;
+    call->Finish(&status, (void*) 4);
+    ok = false;
+    cq.Next(&gotTag, &ok);
+    if (ok) {
         if (status.ok()) {
             auto resMessage = method->parseResponse(dmf, receiveBuffer);
             std::string out;
