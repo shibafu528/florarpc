@@ -27,6 +27,7 @@ else()
 endif()
 
 add_executable(flora
+        WIN32
         main.cpp
         resources.qrc
         ui/MainWindow.ui
