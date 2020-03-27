@@ -1,3 +1,4 @@
+#include <ostream>
 #include <google/protobuf/descriptor.h>
 #include <minijson_writer.hpp>
 #include "ProtobufIterator.h"
@@ -77,7 +78,7 @@ static void desc2json(minijson::object_writer &writer, const google::protobuf::D
 }
 
 std::string ProtobufJsonPrinter::makeRequestSkeleton(const google::protobuf::Descriptor *descriptor) {
-    std::stringstream stream;
+    std::ostringstream stream;
     minijson::object_writer writer(stream,
                                    minijson::writer_configuration().pretty_printing(true).indent_spaces(2));
     desc2json(writer, descriptor);
