@@ -1,5 +1,6 @@
 #include <google/protobuf/descriptor.h>
 #include <minijson_writer.hpp>
+#include <sstream>
 #include "ProtobufIterator.h"
 #include "ProtobufJsonPrinter.h"
 
