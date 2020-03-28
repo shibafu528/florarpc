@@ -1,4 +1,5 @@
 #include "ProtocolTreeModel.h"
+#include <variant>
 
 using google::protobuf::FileDescriptor;
 using google::protobuf::ServiceDescriptor;
@@ -19,31 +20,27 @@ struct ProtocolTreeModel::Node {
     shared_ptr<Node> parent;
     vector<shared_ptr<Node>> children;
     Type type;
-    union {
-        const FileDescriptor* file;
-        const ServiceDescriptor* service;
-        const MethodDescriptor* method;
-    } const descriptor;
+    std::variant<const FileDescriptor*, const ServiceDescriptor*, const MethodDescriptor*> descriptor;
 
     Node(uint32_t index, const FileDescriptor *descriptor)
-            : index(index), parent(nullptr), children(), type(FileNode), descriptor({.file = descriptor}) {}
+            : index(index), parent(nullptr), children(), type(FileNode), descriptor(descriptor) {}
 
     Node(uint32_t index, const ServiceDescriptor *descriptor, shared_ptr<Node> parent)
-            : index(index), parent(move(parent)), children(), type(ServiceNode), descriptor({.service = descriptor}) {}
+            : index(index), parent(move(parent)), children(), type(ServiceNode), descriptor(descriptor) {}
 
     Node(uint32_t index, const MethodDescriptor *descriptor, shared_ptr<Node> parent)
-            : index(index), parent(move(parent)), children(), type(MethodNode), descriptor({.method = descriptor}) {}
+            : index(index), parent(move(parent)), children(), type(MethodNode), descriptor(descriptor) {}
 
     const FileDescriptor* getFileDescriptor() const {
-        return type == FileNode ? descriptor.file : nullptr;
+        return *std::get_if<const FileDescriptor*>(&descriptor);
     }
 
     const ServiceDescriptor* getServiceDescriptor() const {
-        return type == ServiceNode ? descriptor.service : nullptr;
+        return *std::get_if<const ServiceDescriptor*>(&descriptor);
     }
 
     const MethodDescriptor* getMethodDescriptor() const {
-        return type == MethodNode ? descriptor.method : nullptr;
+        return *std::get_if<const MethodDescriptor*>(&descriptor);
     }
 };
 
