@@ -34,6 +34,8 @@ add_executable(flora
         entity/Protocol.h
         entity/Method.cpp
         entity/Method.h
+        entity/Session.cpp
+        entity/Session.h
         ui/ProtocolTreeModel.cpp
         ui/ProtocolTreeModel.h
         util/GrpcUtility.cpp
