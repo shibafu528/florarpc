@@ -14,7 +14,7 @@
 Editor::Editor(std::unique_ptr<Method> &&method,
                KSyntaxHighlighting::Repository &repository,
                QWidget *parent)
-        : QWidget(parent), method(std::move(method)), responseMetadataContextMenu(new QMenu(this)) {
+        : QWidget(parent), method(std::move(method)), responseMetadataContextMenu(new QMenu(this)), session(nullptr) {
     ui.setupUi(this);
 
     connect(ui.executeButton, &QPushButton::clicked, this, &Editor::onExecuteButtonClicked);
