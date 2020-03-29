@@ -21,6 +21,7 @@ public:
 
 private slots:
     void onExecuteButtonClicked();
+    void onCancelButtonClicked();
     void onMetadataReceived(const Session::Metadata &metadata);
     void onMessageReceived(const grpc::ByteBuffer &buffer);
     void onSessionFinished(int code, const QString &message, const QByteArray &details);

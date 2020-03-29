@@ -18,6 +18,7 @@ Editor::Editor(std::unique_ptr<Method> &&method,
     ui.setupUi(this);
 
     connect(ui.executeButton, &QPushButton::clicked, this, &Editor::onExecuteButtonClicked);
+    connect(ui.cancelButton, &QPushButton::clicked, this, &Editor::onCancelButtonClicked);
 
     const auto fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui.requestEdit->setFont(fixedFont);
@@ -121,6 +122,17 @@ void Editor::onExecuteButtonClicked() {
 
     emit session->send(*sendBuffer);
     ui.executeButton->setDisabled(true);
+    if (method->isClientStreaming() || method->isServerStreaming()) {
+        showStreamingButtons();
+    }
+}
+
+void Editor::onCancelButtonClicked() {
+    if (session == nullptr) {
+        return;
+    }
+
+    session->finish();
 }
 
 void Editor::onMessageReceived(const grpc::ByteBuffer &buffer) {
@@ -138,7 +150,9 @@ void Editor::onMessageReceived(const grpc::ByteBuffer &buffer) {
     ui.responseTabs->insertTab(0, ui.responseBodyTab, "Body");
     ui.responseTabs->setCurrentIndex(0);
 
-    emit session->finish();
+    if (!(method->isClientStreaming() || method->isServerStreaming())) {
+        emit session->finish();
+    }
 }
 
 void Editor::onMetadataReceived(const Session::Metadata &metadata) {
@@ -161,6 +175,7 @@ void Editor::onSessionFinished(int code, const QString &message, const QByteArra
 
 void Editor::cleanupSession() {
     ui.executeButton->setDisabled(false);
+    hideStreamingButtons();
     delete session;
     session = nullptr;
 }
@@ -216,9 +231,12 @@ void Editor::setErrorToResponseView(const QString &code, const QString &message,
 
 void Editor::showStreamingButtons() {
     ui.executeButton->hide();
-    ui.sendButton->show();
-    ui.finishButton->show();
     ui.cancelButton->show();
+
+    if (method->isClientStreaming()) {
+        ui.sendButton->show();
+        ui.finishButton->show();
+    }
 }
 
 void Editor::hideStreamingButtons() {
