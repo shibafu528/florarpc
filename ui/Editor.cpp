@@ -19,6 +19,9 @@ Editor::Editor(std::unique_ptr<Method> &&method,
 
     connect(ui.executeButton, &QPushButton::clicked, this, &Editor::onExecuteButtonClicked);
     connect(ui.cancelButton, &QPushButton::clicked, this, &Editor::onCancelButtonClicked);
+    connect(ui.responseBodyPageSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, &Editor::onResponseBodyPageChanged);
+    connect(ui.prevResponseBodyButton, &QPushButton::clicked, this, &Editor::onPrevResponseBodyButtonClicked);
+    connect(ui.nextResponseBodyButton, &QPushButton::clicked, this, &Editor::onNextResponseBodyButtonClicked);
 
     const auto fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui.requestEdit->setFont(fixedFont);
@@ -60,6 +63,11 @@ Editor::Editor(std::unique_ptr<Method> &&method,
     ui.requestEdit->setText(QString::fromStdString(this->method->makeRequestSkeleton()));
     requestHighlighter->rehighlight();
 
+    if (this->method->isServerStreaming()) {
+        ui.responseBodyPager->show();
+        ui.responseBodyPager->setDisabled(true);
+    }
+
     hideStreamingButtons();
 }
 
@@ -69,6 +77,10 @@ void Editor::onExecuteButtonClicked() {
     }
 
     clearResponseView();
+    responses.clear();
+    ui.responseBodyPageSpin->setValue(1);
+    updateResponsePager();
+    ui.responseBodyPager->setDisabled(true);
 
     // Parse request body
     google::protobuf::DynamicMessageFactory dmf;
@@ -135,9 +147,14 @@ void Editor::onCancelButtonClicked() {
     session->finish();
 }
 
-void Editor::onMessageReceived(const grpc::ByteBuffer &buffer) {
+void Editor::onResponseBodyPageChanged(int page) {
+    if (responses.isEmpty() || page < 1 || page > responses.size()) {
+        ui.responseEdit->clear();
+        return;
+    }
+
     google::protobuf::DynamicMessageFactory dmf;
-    auto resMessage = method->parseResponse(dmf, buffer);
+    auto resMessage = method->parseResponse(dmf, responses[page - 1]);
     std::string out;
     google::protobuf::util::JsonOptions opts;
     opts.add_whitespace = true;
@@ -146,9 +163,30 @@ void Editor::onMessageReceived(const grpc::ByteBuffer &buffer) {
     ui.responseEdit->setText(QString::fromStdString(out));
     responseHighlighter->rehighlight();
 
-    ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseErrorTab));
-    ui.responseTabs->insertTab(0, ui.responseBodyTab, "Body");
-    ui.responseTabs->setCurrentIndex(0);
+    updateResponsePager();
+}
+
+void Editor::onPrevResponseBodyButtonClicked() {
+    ui.responseBodyPageSpin->setValue(ui.responseBodyPageSpin->value() - 1);
+    updateResponsePager();
+}
+
+void Editor::onNextResponseBodyButtonClicked() {
+    ui.responseBodyPageSpin->setValue(ui.responseBodyPageSpin->value() + 1);
+    updateResponsePager();
+}
+
+void Editor::onMessageReceived(const grpc::ByteBuffer &buffer) {
+    responses.append(buffer);
+
+    if (responses.size() == 1) {
+        ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseErrorTab));
+        ui.responseTabs->insertTab(0, ui.responseBodyTab, "Body");
+        ui.responseTabs->setCurrentIndex(0);
+        onResponseBodyPageChanged(1);
+    }
+
+    updateResponsePager();
 
     if (!(method->isClientStreaming() || method->isServerStreaming())) {
         emit session->finish();
@@ -244,4 +282,25 @@ void Editor::hideStreamingButtons() {
     ui.sendButton->hide();
     ui.finishButton->hide();
     ui.cancelButton->hide();
+}
+
+void Editor::updateResponsePager() {
+    ui.responseBodyPager->setDisabled(false);
+    ui.responseBodyPageSpin->setMaximum(responses.isEmpty() ? 1 : responses.size());
+    ui.responseBodyMaxPageLabel->setText(QString("%1").arg(responses.size()));
+
+    if (responses.isEmpty()) {
+        ui.prevResponseBodyButton->setDisabled(true);
+        ui.nextResponseBodyButton->setDisabled(true);
+    } else {
+        ui.prevResponseBodyButton->setDisabled(false);
+        ui.nextResponseBodyButton->setDisabled(false);
+    }
+
+    if (ui.responseBodyPageSpin->value() <= 1) {
+        ui.prevResponseBodyButton->setDisabled(true);
+    }
+    if (ui.responseBodyPageSpin->value() == responses.size()) {
+        ui.nextResponseBodyButton->setDisabled(true);
+    }
 }
