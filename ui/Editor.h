@@ -21,6 +21,10 @@ public:
 
 private slots:
     void onExecuteButtonClicked();
+    void onCancelButtonClicked();
+    void onResponseBodyPageChanged(int page);
+    void onPrevResponseBodyButtonClicked();
+    void onNextResponseBodyButtonClicked();
     void onMetadataReceived(const Session::Metadata &metadata);
     void onMessageReceived(const grpc::ByteBuffer &buffer);
     void onSessionFinished(int code, const QString &message, const QByteArray &details);
@@ -30,6 +34,7 @@ private:
     Ui_Editor ui;
     QMenu *responseMetadataContextMenu;
     Session *session;
+    QVector<grpc::ByteBuffer> responses;
 
     std::unique_ptr<Method> method;
 
@@ -44,6 +49,7 @@ private:
     void setErrorToResponseView(const QString &code, const QString &message, const QString &details);
     void showStreamingButtons();
     void hideStreamingButtons();
+    void updateResponsePager();
 };
 
 
