@@ -1,8 +1,8 @@
 #include "Editor.h"
 #include "../util/GrpcUtility.h"
 #include "../entity/Method.h"
-#include <KSyntaxHighlighting/Definition>
-#include <KSyntaxHighlighting/Theme>
+#include <KSyntaxHighlighting/definition.h>
+#include <KSyntaxHighlighting/theme.h>
 #include <QMenu>
 #include <QClipboard>
 #include <QJsonDocument>

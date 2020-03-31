@@ -5,8 +5,8 @@
 #include "../entity/Session.h"
 #include <QWidget>
 #include <google/protobuf/descriptor.h>
-#include <KSyntaxHighlighting/SyntaxHighlighter>
-#include <KSyntaxHighlighting/Repository>
+#include <KSyntaxHighlighting/syntaxhighlighter.h>
+#include <KSyntaxHighlighting/repository.h>
 #include <grpc++/support/string_ref.h>
 #include "ui/ui_Editor.h"
 
