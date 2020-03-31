@@ -12,7 +12,25 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
-find_package(KF5SyntaxHighlighting REQUIRED)
+
+option(FLORA_FORCE_BUILD_KF5LIB "システムのKF5ライブラリを使用せず、常にビルドする")
+if(NOT FLORA_FORCE_BUILD_KF5LIB)
+    find_package(KF5SyntaxHighlighting)
+endif()
+if(FLORA_FORCE_BUILD_KF5LIB OR (NOT KF5SyntaxHighlighting_FOUND))
+    set(BUILD_HTML_DOCS OFF)
+    set(BUILD_MAN_DOCS OFF)
+    set(BUILD_QTHELP_DOCS OFF)
+    set(BUILD_TESTING OFF)
+    add_subdirectory(vendor/kf5-syntax-highlighting)
+    add_library(KF5::SyntaxHighlighting ALIAS KF5SyntaxHighlighting)
+
+    # Copy headers
+    file(GLOB KF5SyntaxHighlighting_headers vendor/kf5-syntax-highlighting/src/lib/*.h)
+    file(COPY ${KF5SyntaxHighlighting_headers} DESTINATION "${CMAKE_BINARY_DIR}/includes/KSyntaxHighlighting")
+    include_directories("${CMAKE_BINARY_DIR}/includes")
+endif()
+
 find_package(Protobuf REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GRPC REQUIRED grpc)

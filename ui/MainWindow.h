@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QShortcut>
-#include <KSyntaxHighlighting/Repository>
+#include <KSyntaxHighlighting/repository.h>
 #include "ui/ui_MainWindow.h"
 #include "../entity/Protocol.h"
 #include "ProtocolTreeModel.h"
