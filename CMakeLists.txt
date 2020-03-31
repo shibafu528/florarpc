@@ -32,9 +32,15 @@ if(FLORA_FORCE_BUILD_KF5LIB OR (NOT KF5SyntaxHighlighting_FOUND))
 endif()
 
 find_package(Protobuf REQUIRED)
-find_package(PkgConfig REQUIRED)
-pkg_search_module(GRPC REQUIRED grpc)
-pkg_search_module(GRPCPP REQUIRED grpc++)
+find_package(gRPC QUIET)
+if(gRPC_FOUND)
+    set(LIB_gRPC gRPC::grpc++)
+else()
+    find_package(PkgConfig REQUIRED)
+    pkg_search_module(GRPC REQUIRED grpc)
+    pkg_search_module(GRPCPP REQUIRED grpc++)
+    set(LIB_gRPC grpc++)
+endif()
 
 add_executable(flora
         main.cpp
@@ -66,6 +72,6 @@ target_link_libraries(flora
         Qt5::Widgets
         KF5::SyntaxHighlighting
         protobuf::libprotobuf
-        grpc++)
+        ${LIB_gRPC})
 
 target_include_directories(flora PRIVATE ${PROJECT_SOURCE_DIR}/vendor/minijson_writer)
