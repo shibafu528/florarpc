@@ -1,4 +1,4 @@
-#include <ostream>
+#include <sstream>
 #include <google/protobuf/descriptor.h>
 #include <minijson_writer.hpp>
 #include "ProtobufIterator.h"
