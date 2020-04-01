@@ -135,10 +135,6 @@
    </widget>
   </widget>
   <action name="actionOpen">
-   <property name="icon">
-    <iconset theme="document-open">
-     <normaloff>.</normaloff>.</iconset>
-   </property>
    <property name="text">
     <string>Protoファイルを開く(&amp;O)...</string>
    </property>
@@ -147,10 +143,6 @@
    </property>
   </action>
   <action name="actionManageProto">
-   <property name="icon">
-    <iconset theme="document-properties">
-     <normaloff>.</normaloff>.</iconset>
-   </property>
    <property name="text">
     <string>インポート パスの管理(&amp;I)...</string>
    </property>
@@ -159,15 +151,14 @@
    </property>
   </action>
   <action name="actionQuit">
-   <property name="icon">
-    <iconset theme="application-exit">
-     <normaloff>.</normaloff>.</iconset>
-   </property>
    <property name="text">
     <string>終了(&amp;Q)</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::QuitRole</enum>
    </property>
   </action>
  </widget>
