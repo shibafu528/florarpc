@@ -66,7 +66,7 @@ QModelIndex ProtocolTreeModel::addProtocol(const Protocol &protocol) {
 }
 
 QModelIndex ProtocolTreeModel::index(int row, int column, const QModelIndex &parent) const {
-    if (column != 0 || (parent.isValid() && parent.column() != 0)) {
+    if (column != 0 || (parent.isValid() && parent.column() != 0) || nodes.empty()) {
         return QModelIndex();
     }
 
