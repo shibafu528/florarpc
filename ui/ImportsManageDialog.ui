@@ -19,6 +19,9 @@
   <layout class="QVBoxLayout" name="verticalLayout_5">
    <item>
     <layout class="QGridLayout" name="gridLayout">
+     <property name="horizontalSpacing">
+      <number>8</number>
+     </property>
      <item row="0" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
@@ -30,7 +33,13 @@
       <widget class="QLineEdit" name="pathEdit"/>
      </item>
      <item row="1" column="1">
-      <widget class="QToolButton" name="browseButton">
+      <widget class="QPushButton" name="browseButton">
+       <property name="maximumSize">
+        <size>
+         <width>48</width>
+         <height>16777215</height>
+        </size>
+       </property>
        <property name="text">
         <string>...</string>
        </property>
@@ -40,7 +49,7 @@
       </widget>
      </item>
      <item row="1" column="2">
-      <widget class="QToolButton" name="addButton">
+      <widget class="QPushButton" name="addButton">
        <property name="minimumSize">
         <size>
          <width>120</width>
@@ -54,15 +63,15 @@
         <iconset theme="list-add">
          <normaloff>.</normaloff>.</iconset>
        </property>
-       <property name="toolButtonStyle">
-        <enum>Qt::ToolButtonTextBesideIcon</enum>
-       </property>
       </widget>
      </item>
     </layout>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="spacing">
+      <number>6</number>
+     </property>
      <property name="topMargin">
       <number>12</number>
      </property>
