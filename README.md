@@ -37,10 +37,13 @@ msbuild /p:Configuration=Release ALL_BUILD.vcxproj
 
 REM // copy Qt5 dlls
 %QT_DIR%\bin\windeployqt -release Release\flora.exe
-copy %QT_DIR%\bin\Qt5Network.dll Release\
+copy /Y %QT_DIR%\bin\Qt5Network.dll Release\
+
+REM // copy Qt5 translations
+copy /Y %QT_DIR%\translations\qtbase_*.qm Release\translations\
 
 REM // copy KF5SyntaxHighlighting dll
-copy bin\Release\KF5SyntaxHighlighting.dll Release\
+copy /Y bin\Release\KF5SyntaxHighlighting.dll Release\
 ```
 
 ## Build (for macOS)

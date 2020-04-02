@@ -1,4 +1,6 @@
 #include <QApplication>
+#include <QTranslator>
+#include <QLibraryInfo>
 #include "ui/MainWindow.h"
 
 #ifdef _WIN32
@@ -23,6 +25,10 @@ int main(int argc, char *argv[]) {
         }
     }
 #endif
+
+    QTranslator qtTranslator;
+    qtTranslator.load(QLocale::system(), "qtbase_", "", QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+    app.installTranslator(&qtTranslator);
 
     auto window = new MainWindow();
     window->show();
