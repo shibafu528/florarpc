@@ -28,6 +28,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="executeButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>実行(&amp;X)</string>
        </property>
@@ -199,7 +202,8 @@
                  <string>Prev</string>
                 </property>
                 <property name="icon">
-                 <iconset theme="go-previous"/>
+                 <iconset theme="go-previous">
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                </widget>
               </item>
@@ -209,7 +213,8 @@
                  <string>Next</string>
                 </property>
                 <property name="icon">
-                 <iconset theme="go-next"/>
+                 <iconset theme="go-next">
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                </widget>
               </item>

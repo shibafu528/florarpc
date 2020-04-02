@@ -17,6 +17,7 @@ Editor::Editor(std::unique_ptr<Method> &&method,
         : QWidget(parent), method(std::move(method)), responseMetadataContextMenu(new QMenu(this)), session(nullptr) {
     ui.setupUi(this);
 
+    connect(ui.serverAddressEdit, &QLineEdit::textChanged, this, &Editor::onServerAddressEditTextChanged);
     connect(ui.executeButton, &QPushButton::clicked, this, &Editor::onExecuteButtonClicked);
     connect(ui.cancelButton, &QPushButton::clicked, this, &Editor::onCancelButtonClicked);
     connect(ui.responseBodyPageSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, &Editor::onResponseBodyPageChanged);
@@ -69,6 +70,10 @@ Editor::Editor(std::unique_ptr<Method> &&method,
     }
 
     hideStreamingButtons();
+}
+
+void Editor::onServerAddressEditTextChanged(const QString &text) {
+    ui.executeButton->setEnabled(!text.isEmpty());
 }
 
 void Editor::onExecuteButtonClicked() {

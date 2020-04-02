@@ -20,6 +20,7 @@ public:
     inline Method& getMethod() { return *method; }
 
 private slots:
+    void onServerAddressEditTextChanged(const QString &text);
     void onExecuteButtonClicked();
     void onCancelButtonClicked();
     void onResponseBodyPageChanged(int page);
