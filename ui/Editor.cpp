@@ -67,6 +67,8 @@ Editor::Editor(std::unique_ptr<Method> &&method,
     if (this->method->isServerStreaming()) {
         ui.responseBodyPager->show();
         ui.responseBodyPager->setDisabled(true);
+    } else {
+        ui.responseBodyPager->hide();
     }
 
     hideStreamingButtons();
