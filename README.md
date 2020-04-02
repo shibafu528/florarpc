@@ -29,7 +29,7 @@ REM // install dependencies with vcpkg
 
 REM // add Qt5 bin directory to PATH (use to build KF5SyntaxHighlighting)
 REM // (QT_DIR -> ex. C:\Qt\Qt5.14.1\5.14.1\msvc2017_64)
-set PATH=%QT_DIR%\bin;%PATH
+set PATH=%QT_DIR%\bin;%PATH%
 
 REM // change directory to florarpc\build, and make
 cmake -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_PREFIX_PATH=%QT_DIR% -DCMAKE_BUILD_TYPE=Release -A x64 ..
