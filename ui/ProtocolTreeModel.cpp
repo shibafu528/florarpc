@@ -16,19 +16,19 @@ struct ProtocolTreeModel::Node {
         MethodNode,
     };
 
-    uint32_t index;
+    int32_t index;
     shared_ptr<Node> parent;
     vector<shared_ptr<Node>> children;
     Type type;
     std::variant<const FileDescriptor*, const ServiceDescriptor*, const MethodDescriptor*> descriptor;
 
-    Node(uint32_t index, const FileDescriptor *descriptor)
+    Node(int32_t index, const FileDescriptor *descriptor)
             : index(index), parent(nullptr), children(), type(FileNode), descriptor(descriptor) {}
 
-    Node(uint32_t index, const ServiceDescriptor *descriptor, shared_ptr<Node> parent)
+    Node(int32_t index, const ServiceDescriptor *descriptor, shared_ptr<Node> parent)
             : index(index), parent(move(parent)), children(), type(ServiceNode), descriptor(descriptor) {}
 
-    Node(uint32_t index, const MethodDescriptor *descriptor, shared_ptr<Node> parent)
+    Node(int32_t index, const MethodDescriptor *descriptor, shared_ptr<Node> parent)
             : index(index), parent(move(parent)), children(), type(MethodNode), descriptor(descriptor) {}
 
     const FileDescriptor* getFileDescriptor() const {
@@ -52,11 +52,11 @@ QModelIndex ProtocolTreeModel::addProtocol(const Protocol &protocol) {
     const auto fd = protocol.getFileDescriptor();
     const auto fileNode = std::make_shared<Node>(nodes.size(), fd);
     nodes.push_back(fileNode);
-    for (uint32_t sindex = 0; sindex < fd->service_count(); sindex++) {
+    for (int32_t sindex = 0; sindex < fd->service_count(); sindex++) {
         auto sd = fd->service(sindex);
         auto serviceNode = std::make_shared<Node>(sindex, sd, fileNode);
         fileNode->children.push_back(serviceNode);
-        for (uint32_t mindex = 0; mindex < sd->method_count(); mindex++) {
+        for (int32_t mindex = 0; mindex < sd->method_count(); mindex++) {
             serviceNode->children.push_back(move(std::make_shared<Node>(mindex, sd->method(mindex), serviceNode)));
         }
     }

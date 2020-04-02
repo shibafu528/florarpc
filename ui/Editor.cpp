@@ -14,7 +14,7 @@
 Editor::Editor(std::unique_ptr<Method> &&method,
                KSyntaxHighlighting::Repository &repository,
                QWidget *parent)
-        : QWidget(parent), method(std::move(method)), responseMetadataContextMenu(new QMenu(this)), session(nullptr) {
+        : QWidget(parent), responseMetadataContextMenu(new QMenu(this)), session(nullptr), method(std::move(method)) {
     ui.setupUi(this);
 
     connect(ui.serverAddressEdit, &QLineEdit::textChanged, this, &Editor::onServerAddressEditTextChanged);
