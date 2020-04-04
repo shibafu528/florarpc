@@ -9,11 +9,17 @@
 #include <QLocale>
 #endif
 
+#ifdef __APPLE__
+#include <QOperatingSystemVersion>
+#include <QFont>
+#include <QLocale>
+#endif
+
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
 #ifdef _WIN32
-    // ���{��Windows���g���l���~�ς���
+    // 日本語Windowsを使う人を救済する
     QLocale locale;
     if (locale.language() == QLocale::Language::Japanese) {
         QFont fontYuGothic("Yu Gothic UI", 9);
@@ -23,6 +29,19 @@ int main(int argc, char *argv[]) {
             QFont fontMeiryo("Meiryo UI", 9);
             app.setFont(fontMeiryo);
         }
+    }
+#endif
+
+#ifdef __APPLE__
+    // Catalinaでは、漢字が常に中華フォントで描画されてしまう問題がある。
+    // -> https://bugreports.qt.io/browse/QTBUG-81924
+    // そこで、とりあえずHiragino Sansにフォールバックするようにする。
+    // -> https://bugreports.qt.io/browse/QTBUG-81924?focusedCommentId=497035&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-497035
+    // TODO: UIテキストをi18nするまでは、ロケールに関係なくフォールバックを書き込んだほうがいいかもしれない。
+    QLocale locale;
+    if (locale.language() == QLocale::Language::Japanese &&
+        QOperatingSystemVersion::current() >= QOperatingSystemVersion::MacOSCatalina) {
+        QFont::insertSubstitution(".AppleSystemUIFont", "Hiragino Sans");
     }
 #endif
 
