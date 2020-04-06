@@ -22,6 +22,8 @@ public:
 private slots:
     void onServerAddressEditTextChanged(const QString &text);
     void onExecuteButtonClicked();
+    void onSendButtonClicked();
+    void onFinishButtonClicked();
     void onCancelButtonClicked();
     void onResponseBodyPageChanged(int page);
     void onPrevResponseBodyButtonClicked();

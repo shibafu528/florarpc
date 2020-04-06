@@ -4,6 +4,7 @@
 #include <KSyntaxHighlighting/definition.h>
 #include <KSyntaxHighlighting/theme.h>
 #include <QMenu>
+#include <QMessageBox>
 #include <QClipboard>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -19,6 +20,8 @@ Editor::Editor(std::unique_ptr<Method> &&method,
 
     connect(ui.serverAddressEdit, &QLineEdit::textChanged, this, &Editor::onServerAddressEditTextChanged);
     connect(ui.executeButton, &QPushButton::clicked, this, &Editor::onExecuteButtonClicked);
+    connect(ui.sendButton, &QPushButton::clicked, this, &Editor::onSendButtonClicked);
+    connect(ui.finishButton, &QPushButton::clicked, this, &Editor::onFinishButtonClicked);
     connect(ui.cancelButton, &QPushButton::clicked, this, &Editor::onCancelButtonClicked);
     connect(ui.responseBodyPageSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, &Editor::onResponseBodyPageChanged);
     connect(ui.prevResponseBodyButton, &QPushButton::clicked, this, &Editor::onPrevResponseBodyButtonClicked);
@@ -144,6 +147,33 @@ void Editor::onExecuteButtonClicked() {
     if (method->isClientStreaming() || method->isServerStreaming()) {
         showStreamingButtons();
     }
+}
+
+void Editor::onSendButtonClicked() {
+    if (session == nullptr) {
+        return;
+    }
+
+    // Parse request body
+    google::protobuf::DynamicMessageFactory dmf;
+    std::unique_ptr<google::protobuf::Message> reqMessage;
+    try {
+        reqMessage = method->parseRequest(dmf, ui.requestEdit->toPlainText().toStdString());
+    } catch (Method::ParseError &e) {
+        // TODO: setErrorToResponseViewするとbodyが消えるので使わない、もっといい出し方考える
+        QMessageBox::warning(this, "Request Parse Error", QString::fromStdString(e.getMessage()));
+        return;
+    }
+    std::unique_ptr<grpc::ByteBuffer> sendBuffer = GrpcUtility::serializeMessage(*reqMessage);
+    emit session->send(*sendBuffer);
+}
+
+void Editor::onFinishButtonClicked() {
+    if (session == nullptr) {
+        return;
+    }
+
+    session->finish();
 }
 
 void Editor::onCancelButtonClicked() {
