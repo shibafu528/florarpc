@@ -136,6 +136,7 @@ void Editor::onExecuteButtonClicked() {
     }
 
     session = new Session(*method, ui.serverAddressEdit->text(), metadata, this);
+    connect(session, &Session::messageSent, this, &Editor::onMessageSent);
     connect(session, &Session::messageReceived, this, &Editor::onMessageReceived);
     connect(session, &Session::initialMetadataReceived, this, &Editor::onMetadataReceived);
     connect(session, &Session::trailingMetadataReceived, this, &Editor::onMetadataReceived);
@@ -166,6 +167,8 @@ void Editor::onSendButtonClicked() {
     }
     std::unique_ptr<grpc::ByteBuffer> sendBuffer = GrpcUtility::serializeMessage(*reqMessage);
     emit session->send(*sendBuffer);
+
+    ui.sendButton->setDisabled(true);
 }
 
 void Editor::onFinishButtonClicked() {
@@ -173,7 +176,10 @@ void Editor::onFinishButtonClicked() {
         return;
     }
 
-    session->finish();
+    emit session->done();
+
+    ui.sendButton->setDisabled(true);
+    ui.finishButton->setDisabled(true);
 }
 
 void Editor::onCancelButtonClicked() {
@@ -181,7 +187,11 @@ void Editor::onCancelButtonClicked() {
         return;
     }
 
-    session->finish();
+    emit session->finish();
+
+    ui.sendButton->setDisabled(true);
+    ui.finishButton->setDisabled(true);
+    ui.cancelButton->setDisabled(true);
 }
 
 void Editor::onResponseBodyPageChanged(int page) {
@@ -211,6 +221,10 @@ void Editor::onPrevResponseBodyButtonClicked() {
 void Editor::onNextResponseBodyButtonClicked() {
     ui.responseBodyPageSpin->setValue(ui.responseBodyPageSpin->value() + 1);
     updateResponsePager();
+}
+
+void Editor::onMessageSent() {
+    ui.sendButton->setDisabled(false);
 }
 
 void Editor::onMessageReceived(const grpc::ByteBuffer &buffer) {
@@ -307,10 +321,13 @@ void Editor::setErrorToResponseView(const QString &code, const QString &message,
 void Editor::showStreamingButtons() {
     ui.executeButton->hide();
     ui.cancelButton->show();
+    ui.cancelButton->setDisabled(false);
 
     if (method->isClientStreaming()) {
         ui.sendButton->show();
+        ui.sendButton->setDisabled(true);
         ui.finishButton->show();
+        ui.finishButton->setDisabled(false);
     }
 }
 

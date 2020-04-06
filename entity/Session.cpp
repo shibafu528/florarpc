@@ -42,6 +42,15 @@ public slots:
                         qDebug() << "Unknown tag!! : " << gotTag;
                     }
                     break;
+                case Sequence::WritesDone:
+                    if (gotTag == session.readTag()) {
+                        onSuccessRead();
+                    } else if (gotTag == session.writeTag()) {
+                        onSuccessWritesDone();
+                    } else {
+                        qDebug() << "Unknown tag!! : " << gotTag;
+                    }
+                    break;
                 case Sequence::Finishing:
                     onSuccessFinish();
                     return;
@@ -49,6 +58,7 @@ public slots:
         }
 
         // Illegal sequence
+        qDebug() << "Session Abort!!";
         emit aborted();
     }
 
@@ -91,6 +101,10 @@ private:
         qDebug() << __FUNCTION__;
         session.writeBuffer.Clear();
         emit messageSent();
+    }
+
+    void onSuccessWritesDone() {
+        qDebug() << __FUNCTION__;
     }
 
     void onSuccessFinish() {
@@ -139,17 +153,31 @@ Session::~Session() {
 }
 
 void Session::send(const grpc::ByteBuffer &buffer) {
+    qDebug() << __FUNCTION__;
     writeBuffer = buffer;
     writeBuffer.Duplicate();
     if (sequence == Sequence::Preparing) {
         call->StartCall(writeTag());
     } else {
+        writeTag.advance();
         call->Write(writeBuffer, writeTag());
     }
 }
 
+void Session::done() {
+    qDebug() << __FUNCTION__;
+    if (sequence >= Sequence::WritesDone) {
+        qDebug() << "already done!!";
+        return;
+    }
+    sequence = Sequence::WritesDone;
+    writeTag.advance();
+    call->WritesDone(writeTag());
+}
+
 void Session::finish() {
-    if (sequence == Sequence::Finishing) {
+    qDebug() << __FUNCTION__;
+    if (sequence >= Sequence::Finishing) {
         qDebug() << "already finished!!";
         return;
     }

@@ -28,6 +28,7 @@ private slots:
     void onResponseBodyPageChanged(int page);
     void onPrevResponseBodyButtonClicked();
     void onNextResponseBodyButtonClicked();
+    void onMessageSent();
     void onMetadataReceived(const Session::Metadata &metadata);
     void onMessageReceived(const grpc::ByteBuffer &buffer);
     void onSessionFinished(int code, const QString &message, const QByteArray &details);
