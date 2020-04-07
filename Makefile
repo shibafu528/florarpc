@@ -1,38 +1,32 @@
-.PHONY: dev clean install_deps
+# Makefile for Microsoft nmake
 
-ifeq ($(OS),Windows_NT)
-    SYSTEM := Windows
-else
-    UNAME := $(shell uname -s)
-    ifeq ($(UNAME),Darwin)
-        SYSTEM := Darwin
-	endif
-    ifeq ($(UNAME),Linux)
-        SYSTEM := Linux
-    endif
-endif
+!IFNDEF Qt5_DIR
+Qt5_DIR    = C:\Qt\Qt5.14.1\5.14.1\msvc2017_64
+!ENDIF
+!IFNDEF VCPKG_ROOT
+VCPKG_ROOT = C:\local\vcpkg
+!ENDIF
 
-ifeq ($(SYSTEM),Darwin)
-Qt5_DIR   := ~/Qt5.14.1/5.14.1/clang_64
-VCPKG_DIR := ~/vcpkg
+PATH       = $(Qt5_DIR)\bin;$(PATH)
 
 dev: build
 	pushd build && \
-	cmake -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_DIR)/scripts/buildsystems/vcpkg.cmake \
-		-DCMAKE_PREFIX_PATH=$(Qt5_DIR) \
-		-DCMAKE_BUILD_TYPE=Debug .. && \
-	cmake --build . && \
-	$(Qt5_DIR)/bin/macdeployqt flora.app -always-overwrite -verbose=2 && \
-	mkdir -pv flora.app/Contents/translations && \
-	cp -fv $(Qt5_DIR)/translations/qtbase_*.qm flora.app/Contents/translations && \
+	cmake -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_ROOT)\scripts\buildsystems\vcpkg.cmake \
+		-DCMAKE_PREFIX_PATH=$(Qt5_DIR) -A x64 .. && \
+	cmake --build . --config Debug && \
+	$(Qt5_DIR)\bin\windeployqt -debug Debug\flora.exe && \
+	copy /Y $(Qt5_DIR)\bin\Qt5Networkd.dll Debug && \
+	copy /Y $(Qt5_DIR)\translations\qtbase_*.qm Debug\translations && \
+	copy /Y bin\Debug\KF5SyntaxHighlighting.dll Debug && \
 	popd
 
 install_deps:
-	$(VCPKG_DIR)/vcpkg install @vcpkg_packages.txt
-endif
+	$(VCPKG_ROOT)\vcpkg install @vcpkg_packages.txt
 
 build:
 	mkdir build
 
 clean:
-	rm -rf build
+	rd /S /Q build
+
+.PHONY: dev clean install_deps
