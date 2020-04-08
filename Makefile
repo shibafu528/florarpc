@@ -4,7 +4,7 @@
 Qt5_DIR    = C:\Qt\Qt5.14.1\5.14.1\msvc2017_64
 !ENDIF
 !IFNDEF VCPKG_ROOT
-VCPKG_ROOT = C:\local\vcpkg
+VCPKG_ROOT = vendor\vcpkg
 !ENDIF
 
 PATH       = $(Qt5_DIR)\bin;$(PATH)
@@ -20,8 +20,11 @@ dev: build
 	copy /Y bin\Debug\KF5SyntaxHighlighting.dll Debug && \
 	popd
 
-install_deps:
-	$(VCPKG_ROOT)\vcpkg install @vcpkg_packages.txt
+install_deps: $(VCPKG_ROOT)\vcpkg.exe
+	$(VCPKG_ROOT)\vcpkg install --triplet x64-windows @vcpkg_packages.txt
+
+$(VCPKG_ROOT)\vcpkg.exe:
+	call $(VCPKG_ROOT)\bootstrap-vcpkg.bat
 
 build:
 	mkdir build
