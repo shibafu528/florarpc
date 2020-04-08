@@ -4,3 +4,6 @@
 [submodule "vendor/kf5-syntax-highlighting"]
 	path = vendor/kf5-syntax-highlighting
 	url = https://github.com/KDE/syntax-highlighting.git
+[submodule "vendor/vcpkg"]
+	path = vendor/vcpkg
+	url = https://github.com/microsoft/vcpkg.git
