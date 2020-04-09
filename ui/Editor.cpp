@@ -31,6 +31,10 @@ Editor::Editor(std::unique_ptr<Method> &&method,
     connect(ui.prevResponseBodyButton, &QPushButton::clicked, this, &Editor::onPrevResponseBodyButtonClicked);
     connect(ui.nextResponseBodyButton, &QPushButton::clicked, this, &Editor::onNextResponseBodyButtonClicked);
 
+    // 1:1にする
+    // https://stackoverflow.com/a/43835396
+    ui.splitter->setSizes({INT_MAX, INT_MAX});
+
     const auto fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui.requestEdit->setFont(fixedFont);
     ui.requestMetadataEdit->setFont(fixedFont);
