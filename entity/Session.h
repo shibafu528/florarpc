@@ -8,6 +8,7 @@
 #include <grpcpp/client_context.h>
 #include <grpcpp/completion_queue.h>
 #include <grpcpp/generic/generic_stub_impl.h>
+#include <grpcpp/security/credentials.h>
 #include "Method.h"
 
 class Session : public QObject {
@@ -17,7 +18,7 @@ class Session : public QObject {
 public:
     typedef QMultiMap<QString, QString> Metadata;
 
-    Session(const Method &method, const QString &serverAddress, const Metadata &metadata, QObject *parent = nullptr);
+    Session(const Method &method, const QString &serverAddress, std::shared_ptr<grpc::ChannelCredentials> &creds, const Metadata &metadata, QObject *parent = nullptr);
     ~Session() override;
 
 signals:
