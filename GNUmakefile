@@ -5,8 +5,8 @@
 UNAME := $(shell uname -s)
 
 ifeq ($(UNAME),Darwin)
-Qt5_DIR    := ~/Qt5.14.1/5.14.1/clang_64
-VCPKG_ROOT := ~/vcpkg
+Qt5_DIR    ?= ~/Qt5.14.1/5.14.1/clang_64
+VCPKG_ROOT ?= vendor/vcpkg
 
 dev: build
 	pushd build && \
@@ -18,10 +18,13 @@ dev: build
 	mkdir -pv flora.app/Contents/translations && \
 	cp -fv $(Qt5_DIR)/translations/qtbase_*.qm flora.app/Contents/translations && \
 	popd
-
-install_deps:
-	$(VCPKG_ROOT)/vcpkg install @vcpkg_packages.txt
 endif
+
+install_deps: $(VCPKG_ROOT)/vcpkg
+	$(VCPKG_ROOT)/vcpkg install @vcpkg_packages.txt
+
+$(VCPKG_ROOT)/vcpkg:
+	sh $(VCPKG_ROOT)/bootstrap-vcpkg.sh
 
 build:
 	mkdir build

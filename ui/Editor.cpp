@@ -12,6 +12,10 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/generic/generic_stub.h>
 
+static std::shared_ptr<grpc::ChannelCredentials> getDefaultCredentials(bool useTls) {
+    return useTls ? grpc::SslCredentials(grpc::SslCredentialsOptions()) : grpc::InsecureChannelCredentials();
+}
+
 Editor::Editor(std::unique_ptr<Method> &&method,
                KSyntaxHighlighting::Repository &repository,
                QWidget *parent)
@@ -135,7 +139,8 @@ void Editor::onExecuteButtonClicked() {
         }
     }
 
-    session = new Session(*method, ui.serverAddressEdit->text(), metadata, this);
+    auto credentials = getDefaultCredentials(ui.useTlsCheck->isChecked());
+    session = new Session(*method, ui.serverAddressEdit->text(), credentials, metadata, this);
     connect(session, &Session::messageSent, this, &Editor::onMessageSent);
     connect(session, &Session::messageReceived, this, &Editor::onMessageReceived);
     connect(session, &Session::initialMetadataReceived, this, &Editor::onMetadataReceived);

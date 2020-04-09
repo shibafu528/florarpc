@@ -120,7 +120,7 @@ private:
     }
 };
 
-Session::Session(const Method &method, const QString &serverAddress, const Metadata &metadata, QObject *parent)
+Session::Session(const Method &method, const QString &serverAddress, std::shared_ptr<grpc::ChannelCredentials> &creds, const Metadata &metadata, QObject *parent)
         : QObject(parent), method(method), readTag(true), writeTag(false) {
     qRegisterMetaType<Metadata>();
     qRegisterMetaType<grpc::ByteBuffer>();
@@ -128,7 +128,7 @@ Session::Session(const Method &method, const QString &serverAddress, const Metad
         context.AddMetadata(iter.key().toStdString(), iter.value().toStdString());
     }
 
-    channel = grpc::CreateChannel(serverAddress.toStdString(), grpc::InsecureChannelCredentials());
+    channel = grpc::CreateChannel(serverAddress.toStdString(), creds);
     grpc::GenericStub stub(channel);
     call = stub.PrepareCall(&context, method.getRequestPath(), &queue);
 

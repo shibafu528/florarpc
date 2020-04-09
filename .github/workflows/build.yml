@@ -51,7 +51,7 @@ jobs:
           copy /Y bin\Release\KF5SyntaxHighlighting.dll Release
 
       - name: Upload artifact
-        if: github.ref == 'master'
+        if: github.ref == 'refs/heads/master'
         uses: actions/upload-artifact@v1
         with:
           name: FloraRPC-Windows-x64
@@ -104,7 +104,7 @@ jobs:
           cp -f ${Qt5_DIR}/translations/qtbase_*.qm flora.app/Contents/translations
 
       - name: Packaging
-        if: github.ref == 'master'
+        if: github.ref == 'refs/heads/master'
         working-directory: build
         run: |
           mkdir -p image
@@ -113,7 +113,7 @@ jobs:
           hdiutil create dist/FloraRPC.dmg -volname FloraRPC -srcfolder image
 
       - name: Upload artifact
-        if: github.ref == 'master'
+        if: github.ref == 'refs/heads/master'
         uses: actions/upload-artifact@v1
         with:
           name: FloraRPC-macOS
