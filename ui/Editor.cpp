@@ -1,9 +1,10 @@
 #include "Editor.h"
 #include "../util/GrpcUtility.h"
 #include "../entity/Method.h"
-#include <KSyntaxHighlighting/Definition>
-#include <KSyntaxHighlighting/Theme>
+#include <KSyntaxHighlighting/definition.h>
+#include <KSyntaxHighlighting/theme.h>
 #include <QMenu>
+#include <QMessageBox>
 #include <QClipboard>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -11,13 +12,28 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/generic/generic_stub.h>
 
+static std::shared_ptr<grpc::ChannelCredentials> getDefaultCredentials(bool useTls) {
+    return useTls ? grpc::SslCredentials(grpc::SslCredentialsOptions()) : grpc::InsecureChannelCredentials();
+}
+
 Editor::Editor(std::unique_ptr<Method> &&method,
                KSyntaxHighlighting::Repository &repository,
                QWidget *parent)
-        : QWidget(parent), method(std::move(method)), responseMetadataContextMenu(new QMenu(this)) {
+        : QWidget(parent), responseMetadataContextMenu(new QMenu(this)), session(nullptr), method(std::move(method)) {
     ui.setupUi(this);
 
+    connect(ui.serverAddressEdit, &QLineEdit::textChanged, this, &Editor::onServerAddressEditTextChanged);
     connect(ui.executeButton, &QPushButton::clicked, this, &Editor::onExecuteButtonClicked);
+    connect(ui.sendButton, &QPushButton::clicked, this, &Editor::onSendButtonClicked);
+    connect(ui.finishButton, &QPushButton::clicked, this, &Editor::onFinishButtonClicked);
+    connect(ui.cancelButton, &QPushButton::clicked, this, &Editor::onCancelButtonClicked);
+    connect(ui.responseBodyPageSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, &Editor::onResponseBodyPageChanged);
+    connect(ui.prevResponseBodyButton, &QPushButton::clicked, this, &Editor::onPrevResponseBodyButtonClicked);
+    connect(ui.nextResponseBodyButton, &QPushButton::clicked, this, &Editor::onNextResponseBodyButtonClicked);
+
+    // 1:1にする
+    // https://stackoverflow.com/a/43835396
+    ui.splitter->setSizes({INT_MAX, INT_MAX});
 
     const auto fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui.requestEdit->setFont(fixedFont);
@@ -35,6 +51,11 @@ Editor::Editor(std::unique_ptr<Method> &&method,
         responseHighlighter = setupHighlighter(*ui.responseEdit, jsonDefinition, theme);
     }
 
+    ui.requestHistoryTab->setupHighlighter(repository);
+
+    if (!this->method->isClientStreaming()) {
+        ui.requestTabs->removeTab(ui.requestTabs->indexOf(ui.requestHistoryTab));
+    }
     ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseErrorTab));
 
     QStringList metadataHeaderLabels;
@@ -58,10 +79,32 @@ Editor::Editor(std::unique_ptr<Method> &&method,
 
     ui.requestEdit->setText(QString::fromStdString(this->method->makeRequestSkeleton()));
     requestHighlighter->rehighlight();
+
+    if (this->method->isServerStreaming()) {
+        ui.responseBodyPager->show();
+        ui.responseBodyPager->setDisabled(true);
+    } else {
+        ui.responseBodyPager->hide();
+    }
+
+    hideStreamingButtons();
+}
+
+void Editor::onServerAddressEditTextChanged(const QString &text) {
+    ui.executeButton->setEnabled(!text.isEmpty());
 }
 
 void Editor::onExecuteButtonClicked() {
+    if (session != nullptr) {
+        return;
+    }
+
     clearResponseView();
+    responses.clear();
+    ui.requestHistoryTab->clear();
+    ui.responseBodyPageSpin->setValue(1);
+    updateResponsePager();
+    ui.responseBodyPager->setDisabled(true);
 
     // Parse request body
     google::protobuf::DynamicMessageFactory dmf;
@@ -72,9 +115,10 @@ void Editor::onExecuteButtonClicked() {
         setErrorToResponseView("-", "Request Parse Error", QString::fromStdString(e.getMessage()));
         return;
     }
+    std::unique_ptr<grpc::ByteBuffer> sendBuffer = GrpcUtility::serializeMessage(*reqMessage);
 
     // Parse request metadata
-    grpc::ClientContext ctx;
+    Session::Metadata metadata;
     if (const auto metadataInput = ui.requestMetadataEdit->toPlainText(); !metadataInput.isEmpty()) {
         QJsonParseError parseError = {};
         QJsonDocument metadataJson = QJsonDocument::fromJson(metadataInput.toUtf8(), &parseError);
@@ -98,59 +142,149 @@ void Editor::onExecuteButtonClicked() {
             }
 
             if (key.endsWith("-bin")) {
-                ctx.AddMetadata(key.toStdString(), QByteArray::fromBase64(value.toUtf8()).toStdString());
+                metadata.insert(key, QByteArray::fromBase64(value.toUtf8()));
             } else {
-                ctx.AddMetadata(key.toStdString(), value.toStdString());
+                metadata.insert(key, value);
             }
         }
     }
 
-    std::unique_ptr<grpc::ByteBuffer> sendBuffer = GrpcUtility::serializeMessage(*reqMessage);
-    auto ch = grpc::CreateChannel(ui.serverAddressEdit->text().toStdString(), grpc::InsecureChannelCredentials());
-    grpc::GenericStub stub(ch);
+    auto credentials = getDefaultCredentials(ui.useTlsCheck->isChecked());
+    session = new Session(*method, ui.serverAddressEdit->text(), credentials, metadata, this);
+    connect(session, &Session::messageSent, this, &Editor::onMessageSent);
+    connect(session, &Session::messageReceived, this, &Editor::onMessageReceived);
+    connect(session, &Session::initialMetadataReceived, this, &Editor::onMetadataReceived);
+    connect(session, &Session::trailingMetadataReceived, this, &Editor::onMetadataReceived);
+    connect(session, &Session::finished, this, &Editor::onSessionFinished);
+    connect(session, &Session::aborted, this, &Editor::cleanupSession);
 
-    grpc_impl::CompletionQueue cq;
-    auto call = stub.PrepareUnaryCall(&ctx, method->getRequestPath(), *sendBuffer, &cq);
-    call->StartCall();
-    grpc::ByteBuffer receiveBuffer;
-    grpc::Status status;
-    void *tag = (void*) 1;
-    call->Finish(&receiveBuffer, &status, tag);
-
-    void* gotTag;
-    bool ok = false;
-    cq.Next(&gotTag, &ok);
-    if (ok && gotTag == tag) {
-        if (status.ok()) {
-            auto resMessage = method->parseResponse(dmf, receiveBuffer);
-            std::string out;
-            google::protobuf::util::JsonOptions opts;
-            opts.add_whitespace = true;
-            opts.always_print_primitive_fields = true;
-            google::protobuf::util::MessageToJsonString(*resMessage, &out, opts);
-            ui.responseEdit->setText(QString::fromStdString(out));
-            responseHighlighter->rehighlight();
-
-            ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseErrorTab));
-            ui.responseTabs->insertTab(0, ui.responseBodyTab, "Body");
-            ui.responseTabs->setCurrentIndex(0);
-        } else {
-            setErrorToResponseView(GrpcUtility::errorCodeToString(status.error_code()),
-                                   QString::fromStdString(status.error_message()),
-                                   QString::fromStdString(status.error_details()));
-        }
-
-        for (auto [key, value] : ctx.GetServerInitialMetadata()) {
-            addMetadataRow(key, value);
-        }
-        for (auto [key, value] : ctx.GetServerTrailingMetadata()) {
-            addMetadataRow(key, value);
-        }
-        if (ui.responseMetadataTable->rowCount() > 0) {
-            ui.responseTabs->setTabText(ui.responseTabs->indexOf(ui.responseMetadataTab),
-                                        QString::asprintf("Metadata (%d)", ui.responseMetadataTable->rowCount()));
-        }
+    emit session->send(*sendBuffer);
+    ui.executeButton->setDisabled(true);
+    if (method->isClientStreaming() || method->isServerStreaming()) {
+        showStreamingButtons();
     }
+
+    ui.requestHistoryTab->append(ui.requestEdit->toPlainText());
+}
+
+void Editor::onSendButtonClicked() {
+    if (session == nullptr) {
+        return;
+    }
+
+    // Parse request body
+    google::protobuf::DynamicMessageFactory dmf;
+    std::unique_ptr<google::protobuf::Message> reqMessage;
+    try {
+        reqMessage = method->parseRequest(dmf, ui.requestEdit->toPlainText().toStdString());
+    } catch (Method::ParseError &e) {
+        // TODO: setErrorToResponseViewするとbodyが消えるので使わない、もっといい出し方考える
+        QMessageBox::warning(this, "Request Parse Error", QString::fromStdString(e.getMessage()));
+        return;
+    }
+    std::unique_ptr<grpc::ByteBuffer> sendBuffer = GrpcUtility::serializeMessage(*reqMessage);
+    emit session->send(*sendBuffer);
+
+    ui.sendButton->setDisabled(true);
+    ui.requestHistoryTab->append(ui.requestEdit->toPlainText());
+}
+
+void Editor::onFinishButtonClicked() {
+    if (session == nullptr) {
+        return;
+    }
+
+    emit session->done();
+
+    ui.sendButton->setDisabled(true);
+    ui.finishButton->setDisabled(true);
+}
+
+void Editor::onCancelButtonClicked() {
+    if (session == nullptr) {
+        return;
+    }
+
+    emit session->finish();
+
+    ui.sendButton->setDisabled(true);
+    ui.finishButton->setDisabled(true);
+    ui.cancelButton->setDisabled(true);
+}
+
+void Editor::onResponseBodyPageChanged(int page) {
+    if (responses.isEmpty() || page < 1 || page > responses.size()) {
+        ui.responseEdit->clear();
+        return;
+    }
+
+    google::protobuf::DynamicMessageFactory dmf;
+    auto resMessage = method->parseResponse(dmf, responses[page - 1]);
+    std::string out;
+    google::protobuf::util::JsonOptions opts;
+    opts.add_whitespace = true;
+    opts.always_print_primitive_fields = true;
+    google::protobuf::util::MessageToJsonString(*resMessage, &out, opts);
+    ui.responseEdit->setText(QString::fromStdString(out));
+    responseHighlighter->rehighlight();
+
+    updateResponsePager();
+}
+
+void Editor::onPrevResponseBodyButtonClicked() {
+    ui.responseBodyPageSpin->setValue(ui.responseBodyPageSpin->value() - 1);
+    updateResponsePager();
+}
+
+void Editor::onNextResponseBodyButtonClicked() {
+    ui.responseBodyPageSpin->setValue(ui.responseBodyPageSpin->value() + 1);
+    updateResponsePager();
+}
+
+void Editor::onMessageSent() {
+    ui.sendButton->setDisabled(false);
+}
+
+void Editor::onMessageReceived(const grpc::ByteBuffer &buffer) {
+    responses.append(buffer);
+
+    if (responses.size() == 1) {
+        ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseErrorTab));
+        ui.responseTabs->insertTab(0, ui.responseBodyTab, "Body");
+        ui.responseTabs->setCurrentIndex(0);
+        onResponseBodyPageChanged(1);
+    }
+
+    updateResponsePager();
+
+    if (!(method->isClientStreaming() || method->isServerStreaming())) {
+        emit session->finish();
+    }
+}
+
+void Editor::onMetadataReceived(const Session::Metadata &metadata) {
+    for (auto iter = metadata.cbegin(); iter != metadata.cend(); iter++) {
+        addMetadataRow(iter.key(), iter.value());
+    }
+
+    if (ui.responseMetadataTable->rowCount() > 0) {
+        ui.responseTabs->setTabText(ui.responseTabs->indexOf(ui.responseMetadataTab),
+                                    QString::asprintf("Metadata (%d)", ui.responseMetadataTable->rowCount()));
+    }
+}
+
+void Editor::onSessionFinished(int code, const QString &message, const QByteArray &details) {
+    if (code != grpc::StatusCode::OK) {
+        setErrorToResponseView(GrpcUtility::errorCodeToString((grpc::StatusCode) code), message, details);
+    }
+    cleanupSession();
+}
+
+void Editor::cleanupSession() {
+    ui.executeButton->setDisabled(false);
+    hideStreamingButtons();
+    delete session;
+    session = nullptr;
 }
 
 std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> Editor::setupHighlighter(
@@ -171,17 +305,17 @@ std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> Editor::setupHighlighter
     return highlighter;
 }
 
-void Editor::addMetadataRow(const grpc::string_ref &key, const grpc::string_ref &value) {
+void Editor::addMetadataRow(const QString &key, const QString &value) {
     int row = ui.responseMetadataTable->rowCount();
     ui.responseMetadataTable->insertRow(row);
-    const QString &keyString = QString::fromLatin1(key.data(), key.size());
+    const QString &keyString = key;
     ui.responseMetadataTable->setItem(row, 0, new QTableWidgetItem(keyString));
 
     if (keyString.endsWith("-bin")) {
-        QByteArray byteValue(value.data(), value.size());
+        QByteArray byteValue(value.toUtf8());
         ui.responseMetadataTable->setItem(row, 1, new QTableWidgetItem(QString::fromLatin1(byteValue.toBase64())));
     } else {
-        ui.responseMetadataTable->setItem(row, 1, new QTableWidgetItem(QString::fromLatin1(value.data(), value.size())));
+        ui.responseMetadataTable->setItem(row, 1, new QTableWidgetItem(value));
     }
 }
 
@@ -200,4 +334,45 @@ void Editor::setErrorToResponseView(const QString &code, const QString &message,
     ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseBodyTab));
     ui.responseTabs->insertTab(0, ui.responseErrorTab, "Error");
     ui.responseTabs->setCurrentIndex(0);
+}
+
+void Editor::showStreamingButtons() {
+    ui.executeButton->hide();
+    ui.cancelButton->show();
+    ui.cancelButton->setDisabled(false);
+
+    if (method->isClientStreaming()) {
+        ui.sendButton->show();
+        ui.sendButton->setDisabled(true);
+        ui.finishButton->show();
+        ui.finishButton->setDisabled(false);
+    }
+}
+
+void Editor::hideStreamingButtons() {
+    ui.executeButton->show();
+    ui.sendButton->hide();
+    ui.finishButton->hide();
+    ui.cancelButton->hide();
+}
+
+void Editor::updateResponsePager() {
+    ui.responseBodyPager->setDisabled(false);
+    ui.responseBodyPageSpin->setMaximum(responses.isEmpty() ? 1 : responses.size());
+    ui.responseBodyMaxPageLabel->setText(QString("%1").arg(responses.size()));
+
+    if (responses.isEmpty()) {
+        ui.prevResponseBodyButton->setDisabled(true);
+        ui.nextResponseBodyButton->setDisabled(true);
+    } else {
+        ui.prevResponseBodyButton->setDisabled(false);
+        ui.nextResponseBodyButton->setDisabled(false);
+    }
+
+    if (ui.responseBodyPageSpin->value() <= 1) {
+        ui.prevResponseBodyButton->setDisabled(true);
+    }
+    if (ui.responseBodyPageSpin->value() == responses.size()) {
+        ui.nextResponseBodyButton->setDisabled(true);
+    }
 }

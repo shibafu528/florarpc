@@ -27,12 +27,71 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="useTlsCheck">
+       <property name="text">
+        <string>TLS</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>8</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
       <widget class="QPushButton" name="executeButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>実行(&amp;X)</string>
        </property>
        <property name="icon">
         <iconset theme="go-next">
+         <normaloff>.</normaloff>.</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="sendButton">
+       <property name="text">
+        <string>送信(&amp;S)</string>
+       </property>
+       <property name="icon">
+        <iconset theme="go-next">
+         <normaloff>.</normaloff>.</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="finishButton">
+       <property name="text">
+        <string>終了(&amp;F)</string>
+       </property>
+       <property name="icon">
+        <iconset theme="dialog-ok">
+         <normaloff>.</normaloff>.</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="cancelButton">
+       <property name="text">
+        <string>キャンセル(&amp;C)</string>
+       </property>
+       <property name="icon">
+        <iconset theme="dialog-cancel">
          <normaloff>.</normaloff>.</iconset>
        </property>
       </widget>
@@ -72,7 +131,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QTabWidget" name="tabWidget">
+        <widget class="QTabWidget" name="requestTabs">
          <property name="currentIndex">
           <number>0</number>
          </property>
@@ -82,7 +141,11 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_9">
            <item>
-            <widget class="QTextEdit" name="requestEdit"/>
+            <widget class="QTextEdit" name="requestEdit">
+             <property name="acceptRichText">
+              <bool>false</bool>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -93,12 +156,20 @@
           <layout class="QVBoxLayout" name="verticalLayout_10">
            <item>
             <widget class="QTextEdit" name="requestMetadataEdit">
+             <property name="acceptRichText">
+              <bool>false</bool>
+             </property>
              <property name="placeholderText">
               <string>{&quot;text-meta&quot;: &quot;value&quot;, &quot;binary-meta-bin&quot;: &quot;base64 value&quot;, ...}</string>
              </property>
             </widget>
            </item>
           </layout>
+         </widget>
+         <widget class="MultiPageJsonView" name="requestHistoryTab">
+          <attribute name="title">
+           <string>History</string>
+          </attribute>
          </widget>
         </widget>
        </item>
@@ -138,6 +209,92 @@
            <string>Body</string>
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <widget class="QWidget" name="responseBodyPager" native="true">
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPushButton" name="prevResponseBodyButton">
+                <property name="text">
+                 <string>Prev</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="go-previous">
+                  <normaloff>.</normaloff>.</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="nextResponseBodyButton">
+                <property name="text">
+                 <string>Next</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="go-next">
+                  <normaloff>.</normaloff>.</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="responseBodyPageSpin">
+                <property name="minimumSize">
+                 <size>
+                  <width>100</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="buttonSymbols">
+                 <enum>QAbstractSpinBox::NoButtons</enum>
+                </property>
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <number>1</number>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_5">
+                <property name="text">
+                 <string>/</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="responseBodyMaxPageLabel">
+                <property name="text">
+                 <string>1</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+           </item>
            <item>
             <widget class="QTextEdit" name="responseEdit">
              <property name="readOnly">
@@ -296,6 +453,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MultiPageJsonView</class>
+   <extends>QWidget</extends>
+   <header>ui/MultiPageJsonView.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

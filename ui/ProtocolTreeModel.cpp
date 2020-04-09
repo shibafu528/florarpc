@@ -1,4 +1,5 @@
 #include "ProtocolTreeModel.h"
+#include <variant>
 
 using google::protobuf::FileDescriptor;
 using google::protobuf::ServiceDescriptor;
@@ -15,35 +16,31 @@ struct ProtocolTreeModel::Node {
         MethodNode,
     };
 
-    uint32_t index;
+    int32_t index;
     shared_ptr<Node> parent;
     vector<shared_ptr<Node>> children;
     Type type;
-    union {
-        const FileDescriptor* file;
-        const ServiceDescriptor* service;
-        const MethodDescriptor* method;
-    } const descriptor;
+    std::variant<const FileDescriptor*, const ServiceDescriptor*, const MethodDescriptor*> descriptor;
 
-    Node(uint32_t index, const FileDescriptor *descriptor)
-            : index(index), parent(nullptr), children(), type(FileNode), descriptor({.file = descriptor}) {}
+    Node(int32_t index, const FileDescriptor *descriptor)
+            : index(index), parent(nullptr), children(), type(FileNode), descriptor(descriptor) {}
 
-    Node(uint32_t index, const ServiceDescriptor *descriptor, shared_ptr<Node> parent)
-            : index(index), parent(move(parent)), children(), type(ServiceNode), descriptor({.service = descriptor}) {}
+    Node(int32_t index, const ServiceDescriptor *descriptor, shared_ptr<Node> parent)
+            : index(index), parent(move(parent)), children(), type(ServiceNode), descriptor(descriptor) {}
 
-    Node(uint32_t index, const MethodDescriptor *descriptor, shared_ptr<Node> parent)
-            : index(index), parent(move(parent)), children(), type(MethodNode), descriptor({.method = descriptor}) {}
+    Node(int32_t index, const MethodDescriptor *descriptor, shared_ptr<Node> parent)
+            : index(index), parent(move(parent)), children(), type(MethodNode), descriptor(descriptor) {}
 
     const FileDescriptor* getFileDescriptor() const {
-        return type == FileNode ? descriptor.file : nullptr;
+        return *std::get_if<const FileDescriptor*>(&descriptor);
     }
 
     const ServiceDescriptor* getServiceDescriptor() const {
-        return type == ServiceNode ? descriptor.service : nullptr;
+        return *std::get_if<const ServiceDescriptor*>(&descriptor);
     }
 
     const MethodDescriptor* getMethodDescriptor() const {
-        return type == MethodNode ? descriptor.method : nullptr;
+        return *std::get_if<const MethodDescriptor*>(&descriptor);
     }
 };
 
@@ -55,11 +52,11 @@ QModelIndex ProtocolTreeModel::addProtocol(const Protocol &protocol) {
     const auto fd = protocol.getFileDescriptor();
     const auto fileNode = std::make_shared<Node>(nodes.size(), fd);
     nodes.push_back(fileNode);
-    for (uint32_t sindex = 0; sindex < fd->service_count(); sindex++) {
+    for (int32_t sindex = 0; sindex < fd->service_count(); sindex++) {
         auto sd = fd->service(sindex);
         auto serviceNode = std::make_shared<Node>(sindex, sd, fileNode);
         fileNode->children.push_back(serviceNode);
-        for (uint32_t mindex = 0; mindex < sd->method_count(); mindex++) {
+        for (int32_t mindex = 0; mindex < sd->method_count(); mindex++) {
             serviceNode->children.push_back(move(std::make_shared<Node>(mindex, sd->method(mindex), serviceNode)));
         }
     }
@@ -85,7 +82,7 @@ void ProtocolTreeModel::remove(const QModelIndex &index) {
 }
 
 QModelIndex ProtocolTreeModel::index(int row, int column, const QModelIndex &parent) const {
-    if (column != 0 || (parent.isValid() && parent.column() != 0)) {
+    if (column != 0 || (parent.isValid() && parent.column() != 0) || nodes.empty()) {
         return QModelIndex();
     }
 
@@ -139,8 +136,8 @@ QVariant ProtocolTreeModel::data(const QModelIndex &index, int role) const {
                     return QString::fromStdString(node->getServiceDescriptor()->full_name());
                 case Node::MethodNode: {
                     const auto descriptor = node->getMethodDescriptor();
-                    if (role == Qt::ToolTipRole && (descriptor->client_streaming() || descriptor->server_streaming())) {
-                        return QString::fromStdString(descriptor->name()) + "<hr><b>Streaming RPC is not supported yet.</b>";
+                    if (role == Qt::ToolTipRole && descriptor->client_streaming() && descriptor->server_streaming()) {
+                        return QString::fromStdString(descriptor->name()) + "<hr><b>Bidirectional Streaming RPC is not supported yet.</b>";
                     }
                     return QString::fromStdString(descriptor->name());
                 }
@@ -161,7 +158,7 @@ Qt::ItemFlags ProtocolTreeModel::flags(const QModelIndex &index) const {
     const auto node = indexToNode(index);
     if (node->type == Node::MethodNode) {
         const auto descriptor = node->getMethodDescriptor();
-        if (descriptor->client_streaming() || descriptor->server_streaming()) {
+        if (descriptor->client_streaming() && descriptor->server_streaming()) {
             // Streaming RPC is not supported yet
             return Qt::ItemFlag::NoItemFlags;
         }

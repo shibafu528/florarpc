@@ -7,11 +7,11 @@
 
 Method::Method(const google::protobuf::MethodDescriptor *descriptor) : descriptor(descriptor) {}
 
-const std::string &Method::getFullName() {
+const std::string &Method::getFullName() const {
     return descriptor->full_name();
 }
 
-std::string Method::getRequestPath() {
+std::string Method::getRequestPath() const {
     std::stringstream str;
     str << "/" << descriptor->service()->full_name() << "/" << descriptor->name();
     return std::string(str.str());
@@ -36,7 +36,7 @@ Method::parseRequest(google::protobuf::DynamicMessageFactory &factory, const std
 }
 
 std::unique_ptr<google::protobuf::Message>
-Method::parseResponse(google::protobuf::DynamicMessageFactory &factory, grpc::ByteBuffer &buffer) {
+Method::parseResponse(google::protobuf::DynamicMessageFactory &factory, const grpc::ByteBuffer &buffer) {
     auto resProto = factory.GetPrototype(descriptor->output_type());
     auto resMessage = std::unique_ptr<google::protobuf::Message>(resProto->New());
     GrpcUtility::parseMessage(buffer, *resMessage);

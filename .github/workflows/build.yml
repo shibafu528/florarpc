@@ -1,0 +1,126 @@
+name: build
+on: push
+jobs:
+  build_windows_x64:
+    name: Build on Windows x64
+    runs-on: windows-2016
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2
+        with:
+          version: '5.14.1'
+          arch: 'win64_msvc2017_64'
+
+      - name: Cache vcpkg
+        uses: actions/cache@v1.0.3
+        env:
+          cache-revision: 3
+        with:
+          path: ${{ github.workspace }}/vendor/vcpkg/
+          key: ${{ hashFiles('vcpkg_packages.txt') }}-${{ hashFiles('.git/modules/vendor/vcpkg/HEAD') }}-${{ runner.os }}-${{ env.cache-revision }}
+          restore-keys: |
+            ${{ hashFiles('vcpkg_packages.txt') }}-${{ hashFiles('.git/modules/vendor/vcpkg/HEAD') }}-${{ runner.os }}
+
+      - name: Install packages with vcpkg
+        uses: lukka/run-vcpkg@v1
+        with:
+          vcpkgArguments: '@${{ github.workspace }}/vcpkg_packages.txt'
+          vcpkgDirectory: '${{ github.workspace }}/vendor/vcpkg'
+          vcpkgTriplet: 'x64-windows'
+
+      - name: Make build directory
+        shell: cmd
+        run: mkdir build
+
+      - name: Build
+        shell: cmd
+        working-directory: build
+        run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          set PATH=%Qt5_DIR%\bin;%PATH%
+          cmake -DFLORA_FORCE_BUILD_KF5LIB=true -DCMAKE_TOOLCHAIN_FILE=%RUNVCPKG_VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake -A x64 ..
+          cmake --build . --config Release
+          %Qt5_DIR%\bin\windeployqt -release Release\flora.exe
+          copy /Y "%Qt5_DIR%\bin\Qt5Network.dll" Release
+          copy /Y "%Qt5_DIR%\translations\qtbase_*.qm" Release\translations
+          copy /Y bin\Release\KF5SyntaxHighlighting.dll Release
+
+      - name: Upload artifact
+        if: github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@v1
+        with:
+          name: FloraRPC-Windows-x64
+          path: build/Release
+
+      - name: Cleanup vcpkg
+        shell: cmd
+        run: |
+          if exist ${{ github.workspace }}\vendor\vcpkg\buildtrees rd /s /q ${{ github.workspace }}\vendor\vcpkg\buildtrees
+          if exist ${{ github.workspace }}\vendor\vcpkg\packages rd /s /q ${{ github.workspace }}\vendor\vcpkg\packages
+          if exist ${{ github.workspace }}\vendor\vcpkg\downloads rd /s /q ${{ github.workspace }}\vendor\vcpkg\downloads
+
+  build_osx:
+    name: Build on macOS Catalina
+    runs-on: macos-10.15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2
+        with:
+          version: '5.14.1'
+
+      - name: Cache vcpkg
+        uses: actions/cache@v1
+        with:
+          path: ${{ github.workspace }}/vendor/vcpkg/
+          key: ${{ hashFiles('vcpkg_packages.txt') }}-${{ hashFiles('.git/modules/vendor/vcpkg/HEAD') }}-${{ runner.os }}
+
+      - name: Install packages with vcpkg
+        uses: lukka/run-vcpkg@v1
+        with:
+          vcpkgArguments: '@${{ github.workspace }}/vcpkg_packages.txt'
+          vcpkgDirectory: '${{ github.workspace }}/vendor/vcpkg'
+          vcpkgTriplet: 'x64-osx'
+
+      - name: Make build directory
+        run: mkdir build
+
+      - name: Build
+        working-directory: build
+        run: |
+          cmake -DFLORA_FORCE_BUILD_KF5LIB=true -DCMAKE_TOOLCHAIN_FILE=${RUNVCPKG_VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release ..
+          cmake --build .
+          ${Qt5_DIR}/bin/macdeployqt flora.app -always-overwrite
+          mkdir -p flora.app/Contents/translations
+          cp -f ${Qt5_DIR}/translations/qtbase_*.qm flora.app/Contents/translations
+
+      - name: Packaging
+        if: github.ref == 'refs/heads/master'
+        working-directory: build
+        run: |
+          mkdir -p image
+          mkdir -p dist
+          mv flora.app image/FloraRPC.app
+          hdiutil create dist/FloraRPC.dmg -volname FloraRPC -srcfolder image
+
+      - name: Upload artifact
+        if: github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@v1
+        with:
+          name: FloraRPC-macOS
+          path: build/dist
+
+      - name: Cleanup vcpkg
+        run: |
+          rm -rf ${{ github.workspace }}/vendor/vcpkg/buildtrees
+          rm -rf ${{ github.workspace }}/vendor/vcpkg/packages
+          rm -rf ${{ github.workspace }}/vendor/vcpkg/downloads

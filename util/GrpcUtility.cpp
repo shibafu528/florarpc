@@ -7,7 +7,7 @@ std::unique_ptr<grpc::ByteBuffer> GrpcUtility::serializeMessage(const google::pr
     return std::make_unique<grpc::ByteBuffer>(&slice, 1);
 }
 
-bool GrpcUtility::parseMessage(grpc::ByteBuffer &buffer, google::protobuf::Message &message) {
+bool GrpcUtility::parseMessage(const grpc::ByteBuffer &buffer, google::protobuf::Message &message) {
     std::vector<grpc::Slice> slices;
     buffer.Dump(&slices);
     std::string buf;

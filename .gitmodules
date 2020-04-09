@@ -1,3 +1,9 @@
 [submodule "vendor/minijson_writer"]
 	path = vendor/minijson_writer
 	url = https://github.com/giacomodrago/minijson_writer.git
+[submodule "vendor/kf5-syntax-highlighting"]
+	path = vendor/kf5-syntax-highlighting
+	url = https://github.com/KDE/syntax-highlighting.git
+[submodule "vendor/vcpkg"]
+	path = vendor/vcpkg
+	url = https://github.com/microsoft/vcpkg.git
