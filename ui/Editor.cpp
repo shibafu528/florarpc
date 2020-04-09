@@ -47,6 +47,11 @@ Editor::Editor(std::unique_ptr<Method> &&method,
         responseHighlighter = setupHighlighter(*ui.responseEdit, jsonDefinition, theme);
     }
 
+    ui.requestHistoryTab->setupHighlighter(repository);
+
+    if (!this->method->isClientStreaming()) {
+        ui.requestTabs->removeTab(ui.requestTabs->indexOf(ui.requestHistoryTab));
+    }
     ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseErrorTab));
 
     QStringList metadataHeaderLabels;
@@ -92,6 +97,7 @@ void Editor::onExecuteButtonClicked() {
 
     clearResponseView();
     responses.clear();
+    ui.requestHistoryTab->clear();
     ui.responseBodyPageSpin->setValue(1);
     updateResponsePager();
     ui.responseBodyPager->setDisabled(true);
@@ -153,6 +159,8 @@ void Editor::onExecuteButtonClicked() {
     if (method->isClientStreaming() || method->isServerStreaming()) {
         showStreamingButtons();
     }
+
+    ui.requestHistoryTab->append(ui.requestEdit->toPlainText());
 }
 
 void Editor::onSendButtonClicked() {
@@ -174,6 +182,7 @@ void Editor::onSendButtonClicked() {
     emit session->send(*sendBuffer);
 
     ui.sendButton->setDisabled(true);
+    ui.requestHistoryTab->append(ui.requestEdit->toPlainText());
 }
 
 void Editor::onFinishButtonClicked() {

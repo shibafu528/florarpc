@@ -63,6 +63,9 @@ add_executable(flora
         ui/Editor.ui
         ui/Editor.cpp
         ui/Editor.h
+        ui/MultiPageJsonView.ui
+        ui/MultiPageJsonView.cpp
+        ui/MultiPageJsonView.h
         entity/Protocol.cpp
         entity/Protocol.h
         entity/Method.cpp
@@ -83,7 +86,7 @@ target_link_libraries(flora
         protobuf::libprotobuf
         ${LIB_gRPC})
 
-target_include_directories(flora PRIVATE ${PROJECT_SOURCE_DIR}/vendor/minijson_writer)
+target_include_directories(flora PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/vendor/minijson_writer)
 
 if(APPLE)
     set_target_properties(flora PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/AppleInfo.plist)
