@@ -119,11 +119,7 @@ QVariant ProtocolTreeModel::data(const QModelIndex &index, int role) const {
                 case Node::ServiceNode:
                     return QString::fromStdString(node->getServiceDescriptor()->full_name());
                 case Node::MethodNode: {
-                    const auto descriptor = node->getMethodDescriptor();
-                    if (role == Qt::ToolTipRole && descriptor->client_streaming() && descriptor->server_streaming()) {
-                        return QString::fromStdString(descriptor->name()) + "<hr><b>Bidirectional Streaming RPC is not supported yet.</b>";
-                    }
-                    return QString::fromStdString(descriptor->name());
+                    return QString::fromStdString(node->getMethodDescriptor()->name());
                 }
             }
             break;
@@ -141,12 +137,6 @@ Qt::ItemFlags ProtocolTreeModel::flags(const QModelIndex &index) const {
 
     const auto node = indexToNode(index);
     if (node->type == Node::MethodNode) {
-        const auto descriptor = node->getMethodDescriptor();
-        if (descriptor->client_streaming() && descriptor->server_streaming()) {
-            // Streaming RPC is not supported yet
-            return Qt::ItemFlag::NoItemFlags;
-        }
-
         return QAbstractItemModel::flags(index);
     }
 
