@@ -131,7 +131,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QTabWidget" name="tabWidget">
+        <widget class="QTabWidget" name="requestTabs">
          <property name="currentIndex">
           <number>0</number>
          </property>
@@ -165,6 +165,11 @@
             </widget>
            </item>
           </layout>
+         </widget>
+         <widget class="MultiPageJsonView" name="requestHistoryTab">
+          <attribute name="title">
+           <string>History</string>
+          </attribute>
          </widget>
         </widget>
        </item>
@@ -448,6 +453,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MultiPageJsonView</class>
+   <extends>QWidget</extends>
+   <header>ui/MultiPageJsonView.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

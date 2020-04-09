@@ -4,6 +4,7 @@
 #include <KSyntaxHighlighting/definition.h>
 #include <KSyntaxHighlighting/theme.h>
 #include <QMenu>
+#include <QMessageBox>
 #include <QClipboard>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -23,10 +24,16 @@ Editor::Editor(std::unique_ptr<Method> &&method,
 
     connect(ui.serverAddressEdit, &QLineEdit::textChanged, this, &Editor::onServerAddressEditTextChanged);
     connect(ui.executeButton, &QPushButton::clicked, this, &Editor::onExecuteButtonClicked);
+    connect(ui.sendButton, &QPushButton::clicked, this, &Editor::onSendButtonClicked);
+    connect(ui.finishButton, &QPushButton::clicked, this, &Editor::onFinishButtonClicked);
     connect(ui.cancelButton, &QPushButton::clicked, this, &Editor::onCancelButtonClicked);
     connect(ui.responseBodyPageSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, &Editor::onResponseBodyPageChanged);
     connect(ui.prevResponseBodyButton, &QPushButton::clicked, this, &Editor::onPrevResponseBodyButtonClicked);
     connect(ui.nextResponseBodyButton, &QPushButton::clicked, this, &Editor::onNextResponseBodyButtonClicked);
+
+    // 1:1にする
+    // https://stackoverflow.com/a/43835396
+    ui.splitter->setSizes({INT_MAX, INT_MAX});
 
     const auto fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui.requestEdit->setFont(fixedFont);
@@ -44,6 +51,11 @@ Editor::Editor(std::unique_ptr<Method> &&method,
         responseHighlighter = setupHighlighter(*ui.responseEdit, jsonDefinition, theme);
     }
 
+    ui.requestHistoryTab->setupHighlighter(repository);
+
+    if (!this->method->isClientStreaming()) {
+        ui.requestTabs->removeTab(ui.requestTabs->indexOf(ui.requestHistoryTab));
+    }
     ui.responseTabs->removeTab(ui.responseTabs->indexOf(ui.responseErrorTab));
 
     QStringList metadataHeaderLabels;
@@ -89,6 +101,7 @@ void Editor::onExecuteButtonClicked() {
 
     clearResponseView();
     responses.clear();
+    ui.requestHistoryTab->clear();
     ui.responseBodyPageSpin->setValue(1);
     updateResponsePager();
     ui.responseBodyPager->setDisabled(true);
@@ -138,6 +151,7 @@ void Editor::onExecuteButtonClicked() {
 
     auto credentials = getDefaultCredentials(ui.useTlsCheck->isChecked());
     session = new Session(*method, ui.serverAddressEdit->text(), credentials, metadata, this);
+    connect(session, &Session::messageSent, this, &Editor::onMessageSent);
     connect(session, &Session::messageReceived, this, &Editor::onMessageReceived);
     connect(session, &Session::initialMetadataReceived, this, &Editor::onMetadataReceived);
     connect(session, &Session::trailingMetadataReceived, this, &Editor::onMetadataReceived);
@@ -149,6 +163,41 @@ void Editor::onExecuteButtonClicked() {
     if (method->isClientStreaming() || method->isServerStreaming()) {
         showStreamingButtons();
     }
+
+    ui.requestHistoryTab->append(ui.requestEdit->toPlainText());
+}
+
+void Editor::onSendButtonClicked() {
+    if (session == nullptr) {
+        return;
+    }
+
+    // Parse request body
+    google::protobuf::DynamicMessageFactory dmf;
+    std::unique_ptr<google::protobuf::Message> reqMessage;
+    try {
+        reqMessage = method->parseRequest(dmf, ui.requestEdit->toPlainText().toStdString());
+    } catch (Method::ParseError &e) {
+        // TODO: setErrorToResponseViewするとbodyが消えるので使わない、もっといい出し方考える
+        QMessageBox::warning(this, "Request Parse Error", QString::fromStdString(e.getMessage()));
+        return;
+    }
+    std::unique_ptr<grpc::ByteBuffer> sendBuffer = GrpcUtility::serializeMessage(*reqMessage);
+    emit session->send(*sendBuffer);
+
+    ui.sendButton->setDisabled(true);
+    ui.requestHistoryTab->append(ui.requestEdit->toPlainText());
+}
+
+void Editor::onFinishButtonClicked() {
+    if (session == nullptr) {
+        return;
+    }
+
+    emit session->done();
+
+    ui.sendButton->setDisabled(true);
+    ui.finishButton->setDisabled(true);
 }
 
 void Editor::onCancelButtonClicked() {
@@ -156,7 +205,11 @@ void Editor::onCancelButtonClicked() {
         return;
     }
 
-    session->finish();
+    emit session->finish();
+
+    ui.sendButton->setDisabled(true);
+    ui.finishButton->setDisabled(true);
+    ui.cancelButton->setDisabled(true);
 }
 
 void Editor::onResponseBodyPageChanged(int page) {
@@ -186,6 +239,10 @@ void Editor::onPrevResponseBodyButtonClicked() {
 void Editor::onNextResponseBodyButtonClicked() {
     ui.responseBodyPageSpin->setValue(ui.responseBodyPageSpin->value() + 1);
     updateResponsePager();
+}
+
+void Editor::onMessageSent() {
+    ui.sendButton->setDisabled(false);
 }
 
 void Editor::onMessageReceived(const grpc::ByteBuffer &buffer) {
@@ -282,10 +339,13 @@ void Editor::setErrorToResponseView(const QString &code, const QString &message,
 void Editor::showStreamingButtons() {
     ui.executeButton->hide();
     ui.cancelButton->show();
+    ui.cancelButton->setDisabled(false);
 
     if (method->isClientStreaming()) {
         ui.sendButton->show();
+        ui.sendButton->setDisabled(true);
         ui.finishButton->show();
+        ui.finishButton->setDisabled(false);
     }
 }
 

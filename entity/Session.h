@@ -32,12 +32,14 @@ signals:
 
 public slots:
     void send(const grpc::ByteBuffer &buffer);
+    void done();
     void finish();
 
 private:
     enum class Sequence {
         Preparing,
         Connected,
+        WritesDone,
         Finishing,
     };
     class SequentialTag {
