@@ -1,4 +1,5 @@
 #include "Session.h"
+#include <chrono>
 #include <grpcpp/create_channel.h>
 #include <grpcpp/generic/generic_stub.h>
 #include <QRunnable>
@@ -21,9 +22,21 @@ signals:
 
 public slots:
     void doWork() {
+        using std::chrono::system_clock;
+
         void *gotTag;
         bool ok;
-        while (session.queue.Next(&gotTag, &ok)) {
+        while (auto event = session.queue.AsyncNext(&gotTag, &ok, system_clock::now())) {
+            if (event == grpc_impl::CompletionQueue::SHUTDOWN) {
+                break;
+            }
+            if (event == grpc_impl::CompletionQueue::TIMEOUT) {
+                if (QThread::currentThread()->isInterruptionRequested()) {
+                    break;
+                }
+                continue;
+            }
+
             if (!ok) {
                 emit finish();
                 continue;
@@ -148,6 +161,7 @@ Session::Session(const Method &method, const QString &serverAddress, std::shared
 }
 
 Session::~Session() {
+    queueWatcherWorker.requestInterruption();
     queueWatcherWorker.quit();
     queueWatcherWorker.wait();
 }
