@@ -86,6 +86,11 @@ target_link_libraries(flora
         protobuf::libprotobuf
         ${LIB_gRPC})
 
+if(WIN32)
+    find_package(OpenSSL REQUIRED)
+    target_link_libraries(flora OpenSSL::Crypto crypt32)
+endif()
+
 target_include_directories(flora PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/vendor/minijson_writer)
 
 if(APPLE)
