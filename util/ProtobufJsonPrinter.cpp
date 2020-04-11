@@ -16,7 +16,14 @@ static void write2json(minijson::object_writer &writer, const std::string &name,
     }
 }
 
-static void desc2json(minijson::object_writer &writer, const google::protobuf::Descriptor *descriptor) {
+static void desc2json(minijson::object_writer &writer, const google::protobuf::Descriptor *descriptor, std::vector<const google::protobuf::Descriptor*> &path) {
+    // stop if detected recursive message
+    for (auto desc : path) {
+        if (desc == descriptor) {
+            return;
+        }
+    }
+
     ProtobufIterator::Iterable<google::protobuf::FieldDescriptor> rootFields(descriptor);
     for (auto field : rootFields) {
         // TODO: better map support
@@ -55,17 +62,19 @@ static void desc2json(minijson::object_writer &writer, const google::protobuf::D
                 break;
             case google::protobuf::FieldDescriptor::TYPE_MESSAGE: {
                 // TODO: better well-known type supports (e.g. google.protobuf.Timestamp)
+                path.push_back(descriptor);
                 if (field->is_repeated()) {
                     auto array = writer.nested_array(field->camelcase_name().c_str());
                     auto message = array.nested_object();
-                    desc2json(message, field->message_type());
+                    desc2json(message, field->message_type(), path);
                     message.close();
                     array.close();
                 } else {
                     auto message = writer.nested_object(field->camelcase_name().c_str());
-                    desc2json(message, field->message_type());
+                    desc2json(message, field->message_type(), path);
                     message.close();
                 }
+                path.pop_back();
                 break;
             }
             case google::protobuf::FieldDescriptor::TYPE_BYTES:
@@ -82,7 +91,8 @@ std::string ProtobufJsonPrinter::makeRequestSkeleton(const google::protobuf::Des
     std::ostringstream stream;
     minijson::object_writer writer(stream,
                                    minijson::writer_configuration().pretty_printing(true).indent_spaces(2));
-    desc2json(writer, descriptor);
+    std::vector<const google::protobuf::Descriptor*> path;
+    desc2json(writer, descriptor, path);
     writer.close();
     return std::string(stream.str());
 }
