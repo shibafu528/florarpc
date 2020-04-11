@@ -12,27 +12,40 @@
 #include "Method.h"
 
 class Session : public QObject {
-    Q_OBJECT
+Q_OBJECT
+
     Q_DISABLE_COPY(Session)
 
 public:
     typedef QMultiMap<QString, QString> Metadata;
 
-    Session(const Method &method, const QString &serverAddress, std::shared_ptr<grpc::ChannelCredentials> &creds, const Metadata &metadata, QObject *parent = nullptr);
+    Session(const Method &method, const QString &serverAddress, std::shared_ptr<grpc::ChannelCredentials> &creds,
+            const Metadata &metadata, QObject *parent = nullptr);
+
     ~Session() override;
 
 signals:
+
     void messageSent();
+
     void messageReceived(const grpc::ByteBuffer &buffer);
+
     void initialMetadataReceived(const Session::Metadata &metadata);
+
     void trailingMetadataReceived(const Session::Metadata &metadata);
+
     void finished(int code, const QString &message, const QByteArray &details);
+
     void aborted();
+
     void start();
 
 public slots:
+
     void send(const grpc::ByteBuffer &buffer);
+
     void done();
+
     void finish();
 
 private:
@@ -42,22 +55,27 @@ private:
         WritesDone,
         Finishing,
     };
+
     class SequentialTag {
     public:
         explicit SequentialTag(bool reverse) : reverse(reverse) {}
-        void* operator()() {
+
+        void *operator()() {
             intptr_t tag = reverse ? -count : count;
-            return (void*)tag;
+            return (void *) tag;
         }
+
         void advance() {
             if (++count >= INT32_MAX) {
                 count = 1;
             }
         }
+
     private:
         int32_t count = 1;
         bool reverse;
     };
+
     class QueueWatcher;
 
     const Method &method;
@@ -80,6 +98,7 @@ private:
 };
 
 Q_DECLARE_METATYPE(Session::Metadata)
+
 Q_DECLARE_METATYPE(grpc::ByteBuffer)
 
 #endif //FLORARPC_SESSION_H

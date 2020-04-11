@@ -11,27 +11,41 @@
 #include "ui/ui_Editor.h"
 
 class Editor : public QWidget {
-    Q_OBJECT
+Q_OBJECT
 
 public:
     Editor(std::unique_ptr<Method> &&method,
            KSyntaxHighlighting::Repository &repository,
            QWidget *parent = nullptr);
-    inline Method& getMethod() { return *method; }
+
+    inline Method &getMethod() { return *method; }
 
 private slots:
+
     void onServerAddressEditTextChanged(const QString &text);
+
     void onExecuteButtonClicked();
+
     void onSendButtonClicked();
+
     void onFinishButtonClicked();
+
     void onCancelButtonClicked();
+
     void onResponseBodyPageChanged(int page);
+
     void onPrevResponseBodyButtonClicked();
+
     void onNextResponseBodyButtonClicked();
+
     void onMessageSent();
+
     void onMetadataReceived(const Session::Metadata &metadata);
+
     void onMessageReceived(const grpc::ByteBuffer &buffer);
+
     void onSessionFinished(int code, const QString &message, const QByteArray &details);
+
     void cleanupSession();
 
 private:
@@ -47,12 +61,19 @@ private:
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> responseHighlighter;
 
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> setupHighlighter(
-            QTextEdit &edit, const KSyntaxHighlighting::Definition &definition, const KSyntaxHighlighting::Theme &theme);
+            QTextEdit &edit, const KSyntaxHighlighting::Definition &definition,
+            const KSyntaxHighlighting::Theme &theme);
+
     void addMetadataRow(const QString &key, const QString &value);
+
     void clearResponseView();
+
     void setErrorToResponseView(const QString &code, const QString &message, const QString &details);
+
     void showStreamingButtons();
+
     void hideStreamingButtons();
+
     void updateResponsePager();
 };
 

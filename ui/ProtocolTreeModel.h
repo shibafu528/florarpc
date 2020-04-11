@@ -30,7 +30,7 @@ private:
 
     std::vector<std::shared_ptr<Node>> nodes;
 
-    static const Node* indexToNode(const QModelIndex &index);
+    static const Node *indexToNode(const QModelIndex &index);
 };
 
 

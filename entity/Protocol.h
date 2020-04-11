@@ -8,8 +8,10 @@
 class Protocol {
 public:
     Protocol(const QFileInfo &file, const QStringList &imports);
-    inline const QFileInfo& getSource() const { return source; }
-    inline const google::protobuf::FileDescriptor* getFileDescriptor() const { return fileDescriptor; };
+
+    inline const QFileInfo &getSource() const { return source; }
+
+    inline const google::protobuf::FileDescriptor *getFileDescriptor() const { return fileDescriptor; };
 
 private:
     const QFileInfo source;

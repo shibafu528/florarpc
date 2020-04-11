@@ -27,7 +27,8 @@ Editor::Editor(std::unique_ptr<Method> &&method,
     connect(ui.sendButton, &QPushButton::clicked, this, &Editor::onSendButtonClicked);
     connect(ui.finishButton, &QPushButton::clicked, this, &Editor::onFinishButtonClicked);
     connect(ui.cancelButton, &QPushButton::clicked, this, &Editor::onCancelButtonClicked);
-    connect(ui.responseBodyPageSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, &Editor::onResponseBodyPageChanged);
+    connect(ui.responseBodyPageSpin, QOverload<int>::of(&QSpinBox::valueChanged), this,
+            &Editor::onResponseBodyPageChanged);
     connect(ui.prevResponseBodyButton, &QPushButton::clicked, this, &Editor::onPrevResponseBodyButtonClicked);
     connect(ui.nextResponseBodyButton, &QPushButton::clicked, this, &Editor::onNextResponseBodyButtonClicked);
 
@@ -44,8 +45,8 @@ Editor::Editor(std::unique_ptr<Method> &&method,
     const auto jsonDefinition = repository.definitionForMimeType("application/json");
     if (jsonDefinition.isValid()) {
         const auto theme = (palette().color(QPalette::Base).lightness() < 128) ?
-                repository.defaultTheme(KSyntaxHighlighting::Repository::DarkTheme) :
-                repository.defaultTheme(KSyntaxHighlighting::Repository::LightTheme);
+                           repository.defaultTheme(KSyntaxHighlighting::Repository::DarkTheme) :
+                           repository.defaultTheme(KSyntaxHighlighting::Repository::LightTheme);
         requestHighlighter = setupHighlighter(*ui.requestEdit, jsonDefinition, theme);
         requestMetadataHighlighter = setupHighlighter(*ui.requestMetadataEdit, jsonDefinition, theme);
         responseHighlighter = setupHighlighter(*ui.responseEdit, jsonDefinition, theme);
@@ -70,7 +71,7 @@ Editor::Editor(std::unique_ptr<Method> &&method,
             responseMetadataContextMenu->exec(ui.responseMetadataTable->viewport()->mapToGlobal(pos));
         }
     });
-    responseMetadataContextMenu->addAction("コピー(&C)", [=](){
+    responseMetadataContextMenu->addAction("コピー(&C)", [=]() {
         auto selected = ui.responseMetadataTable->selectedItems();
         if (!selected.isEmpty()) {
             QApplication::clipboard()->setText(selected.first()->text());

@@ -9,7 +9,7 @@
 #include "ProtocolTreeModel.h"
 
 class MainWindow : public QMainWindow {
-    Q_OBJECT
+Q_OBJECT
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
@@ -18,10 +18,15 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private slots:
+
     void onActionOpenTriggered();
+
     void onActionManageProtoTriggered();
+
     void onTreeViewClicked(const QModelIndex &index);
+
     void onEditorTabCloseRequested(const int index);
+
     void onTabCloseShortcutActivated();
 
 private:

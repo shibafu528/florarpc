@@ -33,16 +33,18 @@ MainWindow::MainWindow(QWidget *parent)
     ui.treeView->setModel(protocolTreeModel.get());
 
     treeMethodContextMenu.addAction("開く(&O)", [=]() {
-        const QModelIndex &index = ui.treeView->indexAt(ui.treeView->viewport()->mapFromGlobal(treeMethodContextMenu.pos()));
+        const QModelIndex &index = ui.treeView->indexAt(
+                ui.treeView->viewport()->mapFromGlobal(treeMethodContextMenu.pos()));
         openMethod(index, false);
     });
     treeMethodContextMenu.addAction("新しいタブで開く(&N)", [=]() {
-        const QModelIndex &index = ui.treeView->indexAt(ui.treeView->viewport()->mapFromGlobal(treeMethodContextMenu.pos()));
+        const QModelIndex &index = ui.treeView->indexAt(
+                ui.treeView->viewport()->mapFromGlobal(treeMethodContextMenu.pos()));
         openMethod(index, true);
     });
 
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(),
-            QGuiApplication::primaryScreen()->availableGeometry()));
+                                    QGuiApplication::primaryScreen()->availableGeometry()));
 }
 
 void MainWindow::onActionOpenTriggered() {
@@ -55,7 +57,8 @@ void MainWindow::onActionOpenTriggered() {
     for (const auto &filename : filenames) {
         QFileInfo file(filename);
 
-        if (std::any_of(protocols.begin(), protocols.end(), [file](std::shared_ptr<Protocol> &p) { return p->getSource() == file; })) {
+        if (std::any_of(protocols.begin(), protocols.end(),
+                        [file](std::shared_ptr<Protocol> &p) { return p->getSource() == file; })) {
             if (filenames.size() == 1) {
                 QMessageBox::warning(this, "Load error", "このファイルはすでに読み込まれています。");
             }
@@ -69,7 +72,7 @@ void MainWindow::onActionOpenTriggered() {
             QString message = "Protoファイルの読込中にエラーが発生しました。\n";
             QTextStream stream(&message);
 
-            for (const auto& err : *e.errors) {
+            for (const auto &err : *e.errors) {
                 if (&err != &e.errors->front()) {
                     stream << '\n';
                 }
@@ -95,7 +98,7 @@ void MainWindow::onActionManageProtoTriggered() {
 
 void MainWindow::closeEvent(QCloseEvent *event) {
     if (QMessageBox::information(this, "確認", "アプリケーションを終了します。よろしいですか？",
-            QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel) {
+                                 QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel) {
         event->ignore();
     }
 }

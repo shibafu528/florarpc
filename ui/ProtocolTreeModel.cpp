@@ -20,7 +20,7 @@ struct ProtocolTreeModel::Node {
     shared_ptr<Node> parent;
     vector<shared_ptr<Node>> children;
     Type type;
-    std::variant<const FileDescriptor*, const ServiceDescriptor*, const MethodDescriptor*> descriptor;
+    std::variant<const FileDescriptor *, const ServiceDescriptor *, const MethodDescriptor *> descriptor;
 
     Node(int32_t index, const FileDescriptor *descriptor)
             : index(index), parent(nullptr), children(), type(FileNode), descriptor(descriptor) {}
@@ -31,16 +31,16 @@ struct ProtocolTreeModel::Node {
     Node(int32_t index, const MethodDescriptor *descriptor, shared_ptr<Node> parent)
             : index(index), parent(move(parent)), children(), type(MethodNode), descriptor(descriptor) {}
 
-    const FileDescriptor* getFileDescriptor() const {
-        return *std::get_if<const FileDescriptor*>(&descriptor);
+    const FileDescriptor *getFileDescriptor() const {
+        return *std::get_if<const FileDescriptor *>(&descriptor);
     }
 
-    const ServiceDescriptor* getServiceDescriptor() const {
-        return *std::get_if<const ServiceDescriptor*>(&descriptor);
+    const ServiceDescriptor *getServiceDescriptor() const {
+        return *std::get_if<const ServiceDescriptor *>(&descriptor);
     }
 
-    const MethodDescriptor* getMethodDescriptor() const {
-        return *std::get_if<const MethodDescriptor*>(&descriptor);
+    const MethodDescriptor *getMethodDescriptor() const {
+        return *std::get_if<const MethodDescriptor *>(&descriptor);
     }
 };
 
@@ -147,6 +147,6 @@ Method ProtocolTreeModel::indexToMethod(const QModelIndex &index) {
     return Method(indexToNode(index)->getMethodDescriptor());
 }
 
-const ProtocolTreeModel::Node* ProtocolTreeModel::indexToNode(const QModelIndex &index) {
-    return static_cast<Node*>(index.internalPointer());
+const ProtocolTreeModel::Node *ProtocolTreeModel::indexToNode(const QModelIndex &index) {
+    return static_cast<Node *>(index.internalPointer());
 }

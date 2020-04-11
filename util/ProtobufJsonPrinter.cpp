@@ -5,7 +5,7 @@
 #include "ProtobufIterator.h"
 #include "ProtobufJsonPrinter.h"
 
-template <typename T>
+template<typename T>
 static void write2json(minijson::object_writer &writer, const std::string &name, bool repeated, const T &value) {
     if (repeated) {
         auto array = writer.nested_array(name.c_str());
@@ -16,7 +16,8 @@ static void write2json(minijson::object_writer &writer, const std::string &name,
     }
 }
 
-static void desc2json(minijson::object_writer &writer, const google::protobuf::Descriptor *descriptor, std::vector<const google::protobuf::Descriptor*> &path) {
+static void desc2json(minijson::object_writer &writer, const google::protobuf::Descriptor *descriptor,
+                      std::vector<const google::protobuf::Descriptor *> &path) {
     // stop if detected recursive message
     for (auto desc : path) {
         if (desc == descriptor) {
@@ -91,7 +92,7 @@ std::string ProtobufJsonPrinter::makeRequestSkeleton(const google::protobuf::Des
     std::ostringstream stream;
     minijson::object_writer writer(stream,
                                    minijson::writer_configuration().pretty_printing(true).indent_spaces(2));
-    std::vector<const google::protobuf::Descriptor*> path;
+    std::vector<const google::protobuf::Descriptor *> path;
     desc2json(writer, descriptor, path);
     writer.close();
     return std::string(stream.str());
