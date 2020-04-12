@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(florarpc)
+project(florarpc VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 if(MSVC)
@@ -49,10 +49,21 @@ else()
     set(LIB_gRPC grpc++)
 endif()
 
+set(FLORA_VERSION_MAJOR ${florarpc_VERSION_MAJOR})
+set(FLORA_VERSION_MINOR ${florarpc_VERSION_MINOR})
+set(FLORA_VERSION_PATCH ${florarpc_VERSION_PATCH})
+if("${florarpc_VERSION_TWEAK}" STREQUAL "")
+    set(FLORA_VERSION_TWEAK 0)
+else()
+    set(FLORA_VERSION_TWEAK ${florarpc_VERSION_TWEAK})
+endif()
+configure_file(${PROJECT_SOURCE_DIR}/flora_constants.h.in flora_constants.h)
+
 add_executable(flora
         WIN32
         MACOSX_BUNDLE
         main.cpp
+        flora_constants.h
         resources.qrc
         ui/MainWindow.ui
         ui/MainWindow.cpp
