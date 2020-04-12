@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package florarpc;
+
+import "florarpc/uuid.proto";
+import "florarpc/version.proto";
+
+message Workspace {
+  Version app_version = 1;
+  repeated ProtoFile proto_files = 2;
+  repeated ImportPath import_paths = 3;
+  repeated Request requests = 4;
+}
+
+message ProtoFile {
+  UUID file_id = 1; // Identity for internal use
+  string path = 2; // The full path of a file
+}
+
+message ImportPath {
+  string path = 1; // The full path of an import directory
+}
+
+message MethodRef {
+  UUID file_id = 1;
+  string service_name = 2;
+  string method_name = 3;
+}
+
+message Request {
+  MethodRef method = 1;
+  string body_draft = 2;
+  string metadata_draft = 3;
+}

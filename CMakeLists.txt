@@ -59,6 +59,34 @@ else()
 endif()
 configure_file(${PROJECT_SOURCE_DIR}/flora_constants.h.in flora_constants.h)
 
+set(FLORA_PROTOBUF_INCLUDE "${PROJECT_SOURCE_DIR}/proto")
+set(FLORA_PROTOBUF_GENERATED "${PROJECT_BINARY_DIR}/proto_generated")
+set(FLORA_PROTOBUF_PROTOS
+        ${FLORA_PROTOBUF_INCLUDE}/florarpc/uuid.proto
+        ${FLORA_PROTOBUF_INCLUDE}/florarpc/version.proto
+        ${FLORA_PROTOBUF_INCLUDE}/florarpc/workspace.proto)
+set(FLORA_PROTOBUF_SOURCES
+        ${FLORA_PROTOBUF_GENERATED}/florarpc/uuid.pb.cc
+        ${FLORA_PROTOBUF_GENERATED}/florarpc/version.pb.cc
+        ${FLORA_PROTOBUF_GENERATED}/florarpc/workspace.pb.cc)
+set(FLORA_PROTOBUF_HEADERS
+        ${FLORA_PROTOBUF_GENERATED}/florarpc/uuid.pb.h
+        ${FLORA_PROTOBUF_GENERATED}/florarpc/version.pb.h
+        ${FLORA_PROTOBUF_GENERATED}/florarpc/workspace.pb.h)
+file(MAKE_DIRECTORY "${FLORA_PROTOBUF_GENERATED}")
+add_custom_command(
+        OUTPUT
+        ${FLORA_PROTOBUF_SOURCES}
+        ${FLORA_PROTOBUF_HEADERS}
+        COMMAND
+        ${PROTOBUF_PROTOC_EXECUTABLE}
+        ARGS
+        --cpp_out "${FLORA_PROTOBUF_GENERATED}"
+        -I "${FLORA_PROTOBUF_INCLUDE}"
+        ${FLORA_PROTOBUF_PROTOS}
+        MAIN_DEPENDENCY
+        ${FLORA_PROTOBUF_PROTOS})
+
 add_executable(flora
         WIN32
         MACOSX_BUNDLE
@@ -89,7 +117,9 @@ add_executable(flora
         util/GrpcUtility.h
         util/ProtobufIterator.h
         util/ProtobufJsonPrinter.cpp
-        util/ProtobufJsonPrinter.h)
+        util/ProtobufJsonPrinter.h
+        ${FLORA_PROTOBUF_SOURCES}
+        ${FLORA_PROTOBUF_HEADERS})
 
 target_link_libraries(flora
         Qt5::Widgets
@@ -102,7 +132,11 @@ if(WIN32)
     target_link_libraries(flora OpenSSL::Crypto crypt32)
 endif()
 
-target_include_directories(flora PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/vendor/minijson_writer)
+target_include_directories(flora
+        PRIVATE
+        ${PROJECT_SOURCE_DIR}
+        ${PROJECT_SOURCE_DIR}/vendor/minijson_writer
+        ${FLORA_PROTOBUF_GENERATED})
 
 if(APPLE)
     set_target_properties(flora PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/AppleInfo.plist)
