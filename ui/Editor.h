@@ -12,18 +12,18 @@
 #include "ui/ui_Editor.h"
 
 class Editor : public QWidget {
-Q_OBJECT
+    Q_OBJECT
 
-public:
-    Editor(std::unique_ptr<Method> &&method,
-           KSyntaxHighlighting::Repository &repository,
-           QWidget *parent = nullptr);
+    public:
+    Editor(std::unique_ptr<Method> &&method, KSyntaxHighlighting::Repository &repository, QWidget *parent = nullptr);
 
     inline Method &getMethod() { return *method; }
 
+    void readRequest(const florarpc::Request &request);
+
     void writeRequest(florarpc::Request &request);
 
-private slots:
+    private slots:
 
     void onServerAddressEditTextChanged(const QString &text);
 

@@ -6,10 +6,12 @@
 #include "../entity/Method.h"
 
 class ProtocolTreeModel : public QAbstractItemModel {
-public:
+    public:
     ProtocolTreeModel(QObject *parent);
 
     QModelIndex addProtocol(const std::shared_ptr<Protocol> &protocol);
+
+    void clear();
 
     QModelIndex index(int row, int column, const QModelIndex &parent) const override;
 

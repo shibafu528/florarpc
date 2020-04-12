@@ -1,35 +1,40 @@
 #ifndef FLORARPC_MAINWINDOW_H
 #define FLORARPC_MAINWINDOW_H
 
+#include <KSyntaxHighlighting/repository.h>
+
 #include <QMainWindow>
 #include <QShortcut>
-#include <KSyntaxHighlighting/repository.h>
-#include "ui/ui_MainWindow.h"
+
 #include "../entity/Protocol.h"
+#include "Editor.h"
 #include "ProtocolTreeModel.h"
+#include "ui/ui_MainWindow.h"
 
 class MainWindow : public QMainWindow {
 Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
+explicit MainWindow(QWidget *parent = nullptr);
 
 protected:
-    void closeEvent(QCloseEvent *event) override;
+void closeEvent(QCloseEvent *event) override;
 
 private slots:
 
-    void onActionOpenTriggered();
+void onActionOpenTriggered();
 
-    void onActionSaveWorkspaceTriggered();
+void onActionOpenWorkspaceTriggered();
 
-    void onActionManageProtoTriggered();
+void onActionSaveWorkspaceTriggered();
 
-    void onTreeViewClicked(const QModelIndex &index);
+void onActionManageProtoTriggered();
 
-    void onEditorTabCloseRequested(const int index);
+void onTreeViewClicked(const QModelIndex &index);
 
-    void onTabCloseShortcutActivated();
+void onEditorTabCloseRequested(const int index);
+
+void onTabCloseShortcutActivated();
 
 private:
     Ui::MainWindow ui;
@@ -40,7 +45,9 @@ private:
     QShortcut tabCloseShortcut;
     QMenu treeMethodContextMenu;
 
+    void openProtos(const QStringList &filenames, bool abortOnLoadError);
     void openMethod(const QModelIndex &index, bool forceNewTab);
+    Editor *openEditor(std::unique_ptr<Method> method, bool forceNewTab);
 };
 
 

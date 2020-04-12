@@ -70,6 +70,12 @@ QModelIndex ProtocolTreeModel::addProtocol(const std::shared_ptr<Protocol> &prot
     return index(nodes.size() - 1, 0, QModelIndex());
 }
 
+void ProtocolTreeModel::clear() {
+    beginResetModel();
+    nodes.clear();
+    endResetModel();
+}
+
 QModelIndex ProtocolTreeModel::index(int row, int column, const QModelIndex &parent) const {
     if (column != 0 || (parent.isValid() && parent.column() != 0) || nodes.empty()) {
         return QModelIndex();
