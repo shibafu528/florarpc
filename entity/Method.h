@@ -1,6 +1,7 @@
 #ifndef FLORARPC_METHOD_H
 #define FLORARPC_METHOD_H
 
+#include "florarpc/workspace.pb.h"
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/dynamic_message.h>
 #include <grpcpp/support/byte_buffer.h>
@@ -38,6 +39,8 @@ public:
 
     std::unique_ptr<google::protobuf::Message>
     parseResponse(google::protobuf::DynamicMessageFactory &factory, const grpc::ByteBuffer &buffer);
+
+    void writeMethodRef(florarpc::MethodRef &ref);
 
 private:
     const google::protobuf::MethodDescriptor *descriptor;

@@ -91,6 +91,14 @@ Editor::Editor(std::unique_ptr<Method> &&method,
     hideStreamingButtons();
 }
 
+void Editor::writeRequest(florarpc::Request &request) {
+    florarpc::MethodRef *methodRef = request.mutable_method();
+    method->writeMethodRef(*methodRef);
+
+    request.set_body_draft(ui.requestEdit->toPlainText().toStdString());
+    request.set_metadata_draft(ui.requestMetadataEdit->toPlainText().toStdString());
+}
+
 void Editor::onServerAddressEditTextChanged(const QString &text) {
     ui.executeButton->setEnabled(!text.isEmpty());
 }

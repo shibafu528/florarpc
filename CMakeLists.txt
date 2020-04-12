@@ -57,20 +57,17 @@ if("${florarpc_VERSION_TWEAK}" STREQUAL "")
 else()
     set(FLORA_VERSION_TWEAK ${florarpc_VERSION_TWEAK})
 endif()
-configure_file(${PROJECT_SOURCE_DIR}/flora_constants.h.in flora_constants.h)
+configure_file(${PROJECT_SOURCE_DIR}/flora_constants.h.in ${PROJECT_BINARY_DIR}/flora_generated/flora_constants.h)
 
 set(FLORA_PROTOBUF_INCLUDE "${PROJECT_SOURCE_DIR}/proto")
 set(FLORA_PROTOBUF_GENERATED "${PROJECT_BINARY_DIR}/proto_generated")
 set(FLORA_PROTOBUF_PROTOS
-        ${FLORA_PROTOBUF_INCLUDE}/florarpc/uuid.proto
         ${FLORA_PROTOBUF_INCLUDE}/florarpc/version.proto
         ${FLORA_PROTOBUF_INCLUDE}/florarpc/workspace.proto)
 set(FLORA_PROTOBUF_SOURCES
-        ${FLORA_PROTOBUF_GENERATED}/florarpc/uuid.pb.cc
         ${FLORA_PROTOBUF_GENERATED}/florarpc/version.pb.cc
         ${FLORA_PROTOBUF_GENERATED}/florarpc/workspace.pb.cc)
 set(FLORA_PROTOBUF_HEADERS
-        ${FLORA_PROTOBUF_GENERATED}/florarpc/uuid.pb.h
         ${FLORA_PROTOBUF_GENERATED}/florarpc/version.pb.h
         ${FLORA_PROTOBUF_GENERATED}/florarpc/workspace.pb.h)
 file(MAKE_DIRECTORY "${FLORA_PROTOBUF_GENERATED}")
@@ -136,6 +133,7 @@ target_include_directories(flora
         PRIVATE
         ${PROJECT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/vendor/minijson_writer
+        ${PROJECT_BINARY_DIR}/flora_generated
         ${FLORA_PROTOBUF_GENERATED})
 
 if(APPLE)

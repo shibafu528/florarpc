@@ -3,6 +3,7 @@
 
 #include "../entity/Method.h"
 #include "../entity/Session.h"
+#include "florarpc/workspace.pb.h"
 #include <QWidget>
 #include <google/protobuf/descriptor.h>
 #include <KSyntaxHighlighting/syntaxhighlighter.h>
@@ -19,6 +20,8 @@ public:
            QWidget *parent = nullptr);
 
     inline Method &getMethod() { return *method; }
+
+    void writeRequest(florarpc::Request &request);
 
 private slots:
 

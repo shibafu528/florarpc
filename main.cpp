@@ -56,6 +56,8 @@ grpc_ssl_roots_override_result callbackSSLRootsOverrideWin32(char** pem_root_cer
 #endif
 
 int main(int argc, char *argv[]) {
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+
     QApplication app(argc, argv);
 
 #ifdef _WIN32

@@ -21,6 +21,8 @@ private slots:
 
     void onActionOpenTriggered();
 
+    void onActionSaveWorkspaceTriggered();
+
     void onActionManageProtoTriggered();
 
     void onTreeViewClicked(const QModelIndex &index);

@@ -1,12 +1,15 @@
 #include "MainWindow.h"
 #include "ImportsManageDialog.h"
 #include "Editor.h"
+#include "flora_constants.h"
+#include "florarpc/workspace.pb.h"
 #include <QStyle>
 #include <QScreen>
 #include <QFileInfo>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QTextStream>
+#include <google/protobuf/util/json_util.h>
 
 MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent), protocolTreeModel(std::make_unique<ProtocolTreeModel>(this)),
@@ -15,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui.setupUi(this);
 
     connect(ui.actionOpen, &QAction::triggered, this, &MainWindow::onActionOpenTriggered);
+    connect(ui.actionSaveWorkspace, &QAction::triggered, this, &MainWindow::onActionSaveWorkspaceTriggered);
     connect(ui.actionManageProto, &QAction::triggered, this, &MainWindow::onActionManageProtoTriggered);
     connect(ui.actionQuit, &QAction::triggered, this, &MainWindow::close);
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
@@ -87,6 +91,55 @@ void MainWindow::onActionOpenTriggered() {
         const auto index = protocolTreeModel->addProtocol(*protocol);
         ui.treeView->expandRecursively(index);
     }
+}
+
+void MainWindow::onActionSaveWorkspaceTriggered() {
+    auto filename = QFileDialog::getSaveFileName(this, "Save workspace", "",
+                                                 "FloraRPC Workspace (*.floraws)");
+    if (filename.isEmpty()) {
+        return;
+    }
+
+    florarpc::Workspace workspace;
+    florarpc::Version *version = workspace.mutable_app_version();
+    version->set_major(FLORA_VERSION_MAJOR);
+    version->set_minor(FLORA_VERSION_MINOR);
+    version->set_patch(FLORA_VERSION_PATCH);
+    version->set_tweak(FLORA_VERSION_TWEAK);
+    
+    for (auto &protocol : protocols) {
+        florarpc::ProtoFile *file = workspace.add_proto_files();
+        file->set_path(protocol->getSource().absoluteFilePath().toStdString());
+    }
+    
+    for (auto &path : imports) {
+        florarpc::ImportPath *importPath = workspace.add_import_paths();
+        importPath->set_path(path.toStdString());
+    }
+
+    for (int i = 0; i < ui.editorTabs->count(); i++) {
+        auto editor = qobject_cast<Editor *>(ui.editorTabs->widget(i));
+        if (editor != nullptr) {
+            florarpc::Request *request = workspace.add_requests();
+            editor->writeRequest(*request);
+        }
+    }
+
+    std::string output;
+    if (!workspace.SerializeToString(&output)) {
+        QMessageBox::critical(this, "Save error", "ワークスペースの保存中にエラーが発生しました。\nワークスペース情報の書き出し準備に失敗しました。");
+        return;
+    }
+
+    QFile file(filename);
+    if (!file.open(QFile::WriteOnly)) {
+        QMessageBox::critical(this, "Save error", "ワークスペースの保存中にエラーが発生しました。\n保存先のファイルを作成できません。");
+        return;
+    }
+    file.write(QByteArray::fromStdString(output));
+    file.close();
+
+    ui.statusbar->showMessage("ワークスペースを保存しました!", 5000);
 }
 
 void MainWindow::onActionManageProtoTriggered() {

@@ -43,6 +43,13 @@ Method::parseResponse(google::protobuf::DynamicMessageFactory &factory, const gr
     return resMessage;
 }
 
+void Method::writeMethodRef(florarpc::MethodRef &ref) {
+    ref.set_service_name(descriptor->service()->full_name());
+    ref.set_method_name(descriptor->name());
+    // TODO: フルパス出力したいので、MethodにQFileInfoかProtocolの参照を引き回す
+    ref.set_file_name(descriptor->file()->name());
+}
+
 Method::ParseError::ParseError(std::unique_ptr<std::string> message) : message(std::move(message)) {}
 
 const std::string &Method::ParseError::getMessage() {
