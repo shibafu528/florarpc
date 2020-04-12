@@ -9,14 +9,14 @@
 #include "florarpc/workspace.pb.h"
 
 class Method {
-    public:
+public:
     class ParseError : public std::exception {
-        public:
+    public:
         explicit ParseError(std::unique_ptr<std::string> message);
 
         const std::string &getMessage();
 
-        private:
+    private:
         std::unique_ptr<std::string> message;
     };
 
@@ -26,13 +26,9 @@ class Method {
 
     std::string getRequestPath() const;
 
-    inline bool isClientStreaming() const {
-        return descriptor->client_streaming();
-    }
+    inline bool isClientStreaming() const { return descriptor->client_streaming(); }
 
-    inline bool isServerStreaming() const {
-        return descriptor->server_streaming();
-    }
+    inline bool isServerStreaming() const { return descriptor->server_streaming(); }
 
     std::string makeRequestSkeleton();
 
@@ -44,9 +40,9 @@ class Method {
 
     void writeMethodRef(florarpc::MethodRef &ref);
 
-    private:
+private:
     const std::shared_ptr<Protocol> protocol;
     const google::protobuf::MethodDescriptor *descriptor;
 };
 
-#endif //FLORARPC_METHOD_H
+#endif  // FLORARPC_METHOD_H

@@ -6,70 +6,77 @@
 namespace ProtobufIterator {
     using namespace google::protobuf;
 
-    template<class T>
-    struct Adapter {
+    template <class Parent, class Child>
+    struct Adapter {};
+
+    template <>
+    struct Adapter<Descriptor, FieldDescriptor> {
+        static inline const FieldDescriptor *lookup(const Descriptor *d, int i) { return d->field(i); }
+
+        static inline int count(const Descriptor *d) { return d->field_count(); }
     };
 
-    template<>
-    struct Adapter<FieldDescriptor> {
-        static inline const FieldDescriptor *lookup(const Descriptor *d, int i) {
-            return d->field(i);
-        }
+    template <>
+    struct Adapter<const FileDescriptor, const ServiceDescriptor> {
+        static inline const ServiceDescriptor *lookup(const FileDescriptor *d, int i) { return d->service(i); }
 
-        static inline int count(const Descriptor *d) {
-            return d->field_count();
-        }
+        static inline int count(const FileDescriptor *d) { return d->service_count(); }
     };
 
-    template<class T>
+    template <>
+    struct Adapter<const ServiceDescriptor, const MethodDescriptor> {
+        static inline const MethodDescriptor *lookup(const ServiceDescriptor *d, int i) { return d->method(i); }
+
+        static inline int count(const ServiceDescriptor *d) { return d->method_count(); }
+    };
+
+    template <class Parent, class Child>
     class Iterator {
     public:
-        Iterator(const Descriptor *d, int index) : d(d), index(index) {}
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = Child;
+        using pointer = Child *;
+        using reference = Child &;
+        using difference_type = std::ptrdiff_t;
 
-        const T *operator*() {
-            return Adapter<T>::lookup(d, index);
-        }
+        Iterator(const Parent *d, int index) : d(d), index(index) {}
 
-        const T *operator->() {
-            return Adapter<T>::lookup(d, index);
-        }
+        const Child *operator*() { return Adapter<Parent, Child>::lookup(d, index); }
 
-        Iterator<T> &operator++() {
+        const Child *operator->() { return Adapter<Parent, Child>::lookup(d, index); }
+
+        Iterator<Parent, Child> &operator++() {
             index++;
             return *this;
         }
 
-        Iterator<T> operator++(int) {
-            Iterator<T> res = *this;
+        Iterator<Parent, Child> operator++(int) {
+            Iterator<Parent, Child> res = *this;
             index++;
             return res;
         }
 
-        bool operator!=(const Iterator<T> &iter) {
-            return this->d != iter.d || this->index != iter.index;
-        }
+        bool operator==(const Iterator<Parent, Child> &iter) { return this->d == iter.d && this->index == iter.index; }
+
+        bool operator!=(const Iterator<Parent, Child> &iter) { return this->d != iter.d || this->index != iter.index; }
 
     private:
-        const Descriptor *d;
+        const Parent *d;
         int index;
     };
 
-    template<class T>
+    template <class Parent, class Child>
     class Iterable {
     public:
-        Iterable(const Descriptor *d) : d(d) {}
+        Iterable(const Parent *d) : d(d) {}
 
-        Iterator<T> begin() {
-            return Iterator<T>(d, 0);
-        }
+        Iterator<Parent, Child> begin() { return Iterator<Parent, Child>(d, 0); }
 
-        Iterator<T> end() {
-            return Iterator<T>(d, Adapter<T>::count(d));
-        }
+        Iterator<Parent, Child> end() { return Iterator<Parent, Child>(d, Adapter<Parent, Child>::count(d)); }
 
     private:
-        const Descriptor *d;
+        const Parent *d;
     };
-}
+}  // namespace ProtobufIterator
 
-#endif //FLORARPC_PROTOBUFITERATOR_H
+#endif  // FLORARPC_PROTOBUFITERATOR_H

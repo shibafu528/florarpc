@@ -12,29 +12,29 @@
 #include "ui/ui_MainWindow.h"
 
 class MainWindow : public QMainWindow {
-Q_OBJECT
+    Q_OBJECT
 
 public:
-explicit MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget *parent = nullptr);
 
 protected:
-void closeEvent(QCloseEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 private slots:
 
-void onActionOpenTriggered();
+    void onActionOpenTriggered();
 
-void onActionOpenWorkspaceTriggered();
+    void onActionOpenWorkspaceTriggered();
 
-void onActionSaveWorkspaceTriggered();
+    void onActionSaveWorkspaceTriggered();
 
-void onActionManageProtoTriggered();
+    void onActionManageProtoTriggered();
 
-void onTreeViewClicked(const QModelIndex &index);
+    void onTreeViewClicked(const QModelIndex &index);
 
-void onEditorTabCloseRequested(const int index);
+    void onEditorTabCloseRequested(const int index);
 
-void onTabCloseShortcutActivated();
+    void onTabCloseShortcutActivated();
 
 private:
     Ui::MainWindow ui;
@@ -50,5 +50,4 @@ private:
     Editor *openEditor(std::unique_ptr<Method> method, bool forceNewTab);
 };
 
-
-#endif //FLORARPC_MAINWINDOW_H
+#endif  // FLORARPC_MAINWINDOW_H

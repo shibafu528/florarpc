@@ -25,7 +25,7 @@ static void desc2json(minijson::object_writer &writer, const google::protobuf::D
         }
     }
 
-    ProtobufIterator::Iterable<google::protobuf::FieldDescriptor> rootFields(descriptor);
+    ProtobufIterator::Iterable<google::protobuf::Descriptor, google::protobuf::FieldDescriptor> rootFields(descriptor);
     for (auto field : rootFields) {
         // TODO: better map support
         switch (field->type()) {

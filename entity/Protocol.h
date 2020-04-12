@@ -1,12 +1,15 @@
 #ifndef FLORARPC_PROTOCOL_H
 #define FLORARPC_PROTOCOL_H
 
-#include <QFileInfo>
-#include <memory>
 #include <google/protobuf/compiler/importer.h>
 
+#include <QFileInfo>
+#include <memory>
+
+#include "florarpc/workspace.pb.h"
+
 class Protocol {
-    public:
+public:
     Protocol(const QFileInfo &file, const QStringList &imports);
 
     inline const QFileInfo &getSource() const { return source; }
@@ -15,7 +18,9 @@ class Protocol {
 
     inline const google::protobuf::FileDescriptor *getFileDescriptor() const { return fileDescriptor; };
 
-    private:
+    const google::protobuf::MethodDescriptor *findMethodByRef(const florarpc::MethodRef &ref);
+
+private:
     const QFileInfo source;
     std::unique_ptr<google::protobuf::compiler::SourceTree> sourceTree;
     std::unique_ptr<google::protobuf::compiler::Importer> importer;

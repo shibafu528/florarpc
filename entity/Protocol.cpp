@@ -1,16 +1,23 @@
 #include "Protocol.h"
+
 #include <google/protobuf/compiler/importer.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
-#include <sstream>
-#include <QDir>
+
 #include <QDataStream>
+#include <QDir>
+#include <sstream>
+
+#include "util/ProtobufIterator.h"
 
 using namespace google::protobuf::compiler;
+using google::protobuf::FileDescriptor;
+using google::protobuf::MethodDescriptor;
+using google::protobuf::ServiceDescriptor;
 using google::protobuf::io::ZeroCopyInputStream;
-using std::unique_ptr;
-using std::shared_ptr;
-using std::vector;
 using std::move;
+using std::shared_ptr;
+using std::unique_ptr;
+using std::vector;
 
 class ErrorCollectorStub : public MultiFileErrorCollector {
 public:
@@ -136,5 +143,23 @@ Protocol::Protocol(const QFileInfo &file, const QStringList &imports) : source(f
     fileDescriptor = fd;
 }
 
+const google::protobuf::MethodDescriptor *Protocol::findMethodByRef(const florarpc::MethodRef &ref) {
+    ProtobufIterator::Iterable<const FileDescriptor, const ServiceDescriptor> services(fileDescriptor);
+    for (const auto &service : services) {
+        if (service->full_name() != ref.service_name()) {
+            continue;
+        }
+
+        ProtobufIterator::Iterable<const ServiceDescriptor, const MethodDescriptor> methods(service);
+        for (const auto &method : methods) {
+            if (method->name() == ref.method_name()) {
+                return method;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
 ProtocolLoadException::ProtocolLoadException(std::unique_ptr<std::vector<std::string>> errors)
-        : std::exception(), errors(move(errors)) {}
+    : std::exception(), errors(move(errors)) {}

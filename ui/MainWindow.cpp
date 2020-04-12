@@ -1,14 +1,18 @@
 #include "MainWindow.h"
+
+#include <google/protobuf/util/json_util.h>
+
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QMessageBox>
+#include <QScreen>
+#include <QStyle>
+#include <QTextStream>
+
 #include "ImportsManageDialog.h"
 #include "flora_constants.h"
 #include "florarpc/workspace.pb.h"
-#include <QStyle>
-#include <QScreen>
-#include <QFileInfo>
-#include <QFileDialog>
-#include <QMessageBox>
-#include <QTextStream>
-#include <google/protobuf/util/json_util.h>
+#include "util/ProtobufIterator.h"
 
 MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent), protocolTreeModel(std::make_unique<ProtocolTreeModel>(this)),
@@ -112,27 +116,17 @@ void MainWindow::onActionOpenWorkspaceTriggered() {
 
     for (const auto &request : workspace.requests()) {
         const auto &methodRef = request.method();
-        auto foundProtocol = std::find_if(
-            protocols.begin(), protocols.end(),
-            [methodRef](std::shared_ptr<Protocol> &p) { return p->getSourceAbsolutePath() == methodRef.file_name(); });
-        if (foundProtocol != protocols.end()) {
-            const auto fd = (*foundProtocol)->getFileDescriptor();
-            for (int serviceIndex = 0; serviceIndex < fd->service_count(); serviceIndex++) {
-                const auto service = fd->service(serviceIndex);
-                if (service->full_name() != methodRef.service_name()) {
-                    continue;
-                }
-
-                for (int methodIndex = 0; methodIndex < service->method_count(); methodIndex++) {
-                    const auto method = service->method(methodIndex);
-                    if (method->name() == methodRef.method_name()) {
-                        auto editor = openEditor(std::make_unique<Method>(*foundProtocol, method), true);
-                        editor->readRequest(request);
-                        goto break_find_method;
-                    }
-                }
+        for (const auto &protocol : protocols) {
+            if (protocol->getSourceAbsolutePath() != methodRef.file_name()) {
+                continue;
             }
-        break_find_method:;
+
+            auto method = protocol->findMethodByRef(methodRef);
+            if (method != nullptr) {
+                auto editor = openEditor(std::make_unique<Method>(protocol, method), true);
+                editor->readRequest(request);
+                break;
+            }
         }
     }
 
