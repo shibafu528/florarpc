@@ -1,24 +1,26 @@
 #ifndef FLORARPC_METHOD_H
 #define FLORARPC_METHOD_H
 
-#include "florarpc/workspace.pb.h"
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/dynamic_message.h>
 #include <grpcpp/support/byte_buffer.h>
 
+#include "Protocol.h"
+#include "florarpc/workspace.pb.h"
+
 class Method {
-public:
-    class ParseError : public std::exception {
     public:
+    class ParseError : public std::exception {
+        public:
         explicit ParseError(std::unique_ptr<std::string> message);
 
         const std::string &getMessage();
 
-    private:
+        private:
         std::unique_ptr<std::string> message;
     };
 
-    explicit Method(const google::protobuf::MethodDescriptor *descriptor);
+    Method(std::shared_ptr<Protocol> protocol, const google::protobuf::MethodDescriptor *descriptor);
 
     const std::string &getFullName() const;
 
@@ -34,15 +36,16 @@ public:
 
     std::string makeRequestSkeleton();
 
-    std::unique_ptr<google::protobuf::Message>
-    parseRequest(google::protobuf::DynamicMessageFactory &factory, const std::string &json);
+    std::unique_ptr<google::protobuf::Message> parseRequest(google::protobuf::DynamicMessageFactory &factory,
+                                                            const std::string &json);
 
-    std::unique_ptr<google::protobuf::Message>
-    parseResponse(google::protobuf::DynamicMessageFactory &factory, const grpc::ByteBuffer &buffer);
+    std::unique_ptr<google::protobuf::Message> parseResponse(google::protobuf::DynamicMessageFactory &factory,
+                                                             const grpc::ByteBuffer &buffer);
 
     void writeMethodRef(florarpc::MethodRef &ref);
 
-private:
+    private:
+    const std::shared_ptr<Protocol> protocol;
     const google::protobuf::MethodDescriptor *descriptor;
 };
 

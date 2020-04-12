@@ -21,36 +21,41 @@ struct ProtocolTreeModel::Node {
     vector<shared_ptr<Node>> children;
     Type type;
     std::variant<const FileDescriptor *, const ServiceDescriptor *, const MethodDescriptor *> descriptor;
+    shared_ptr<Protocol> protocol;
 
-    Node(int32_t index, const FileDescriptor *descriptor)
-            : index(index), parent(nullptr), children(), type(FileNode), descriptor(descriptor) {}
+    Node(int32_t index, const FileDescriptor *descriptor, shared_ptr<Protocol> protocol)
+        : index(index), parent(nullptr), children(), type(FileNode), descriptor(descriptor), protocol(move(protocol)) {}
 
     Node(int32_t index, const ServiceDescriptor *descriptor, shared_ptr<Node> parent)
-            : index(index), parent(move(parent)), children(), type(ServiceNode), descriptor(descriptor) {}
+        : index(index), parent(move(parent)), children(), type(ServiceNode), descriptor(descriptor) {}
 
     Node(int32_t index, const MethodDescriptor *descriptor, shared_ptr<Node> parent)
-            : index(index), parent(move(parent)), children(), type(MethodNode), descriptor(descriptor) {}
+        : index(index), parent(move(parent)), children(), type(MethodNode), descriptor(descriptor) {}
 
-    const FileDescriptor *getFileDescriptor() const {
-        return *std::get_if<const FileDescriptor *>(&descriptor);
-    }
+    const FileDescriptor *getFileDescriptor() const { return *std::get_if<const FileDescriptor *>(&descriptor); }
 
     const ServiceDescriptor *getServiceDescriptor() const {
         return *std::get_if<const ServiceDescriptor *>(&descriptor);
     }
 
-    const MethodDescriptor *getMethodDescriptor() const {
-        return *std::get_if<const MethodDescriptor *>(&descriptor);
+    const MethodDescriptor *getMethodDescriptor() const { return *std::get_if<const MethodDescriptor *>(&descriptor); }
+
+    std::shared_ptr<Protocol> getProtocol() const {
+        if (std::holds_alternative<const FileDescriptor *>(descriptor)) {
+            return protocol;
+        } else {
+            return parent->getProtocol();
+        }
     }
 };
 
 ProtocolTreeModel::ProtocolTreeModel(QObject *parent) : QAbstractItemModel(parent) {}
 
-QModelIndex ProtocolTreeModel::addProtocol(const Protocol &protocol) {
+QModelIndex ProtocolTreeModel::addProtocol(const std::shared_ptr<Protocol> &protocol) {
     beginInsertRows(QModelIndex(), nodes.size(), nodes.size());
 
-    const auto fd = protocol.getFileDescriptor();
-    const auto fileNode = std::make_shared<Node>(nodes.size(), fd);
+    const auto fd = protocol->getFileDescriptor();
+    const auto fileNode = std::make_shared<Node>(nodes.size(), fd, protocol);
     nodes.push_back(fileNode);
     for (int32_t sindex = 0; sindex < fd->service_count(); sindex++) {
         auto sd = fd->service(sindex);
@@ -144,7 +149,8 @@ Qt::ItemFlags ProtocolTreeModel::flags(const QModelIndex &index) const {
 }
 
 Method ProtocolTreeModel::indexToMethod(const QModelIndex &index) {
-    return Method(indexToNode(index)->getMethodDescriptor());
+    auto node = indexToNode(index);
+    return Method(node->getProtocol(), node->getMethodDescriptor());
 }
 
 const ProtocolTreeModel::Node *ProtocolTreeModel::indexToNode(const QModelIndex &index) {

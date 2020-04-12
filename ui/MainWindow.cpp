@@ -88,7 +88,7 @@ void MainWindow::onActionOpenTriggered() {
     }
     for (const auto &protocol : successes) {
         protocols.push_back(protocol);
-        const auto index = protocolTreeModel->addProtocol(*protocol);
+        const auto index = protocolTreeModel->addProtocol(protocol);
         ui.treeView->expandRecursively(index);
     }
 }

@@ -5,7 +5,8 @@
 #include <google/protobuf/dynamic_message.h>
 #include <google/protobuf/util/json_util.h>
 
-Method::Method(const google::protobuf::MethodDescriptor *descriptor) : descriptor(descriptor) {}
+Method::Method(std::shared_ptr<Protocol> protocol, const google::protobuf::MethodDescriptor *descriptor)
+    : protocol(std::move(protocol)), descriptor(descriptor) {}
 
 const std::string &Method::getFullName() const {
     return descriptor->full_name();
@@ -46,8 +47,7 @@ Method::parseResponse(google::protobuf::DynamicMessageFactory &factory, const gr
 void Method::writeMethodRef(florarpc::MethodRef &ref) {
     ref.set_service_name(descriptor->service()->full_name());
     ref.set_method_name(descriptor->name());
-    // TODO: フルパス出力したいので、MethodにQFileInfoかProtocolの参照を引き回す
-    ref.set_file_name(descriptor->file()->name());
+    ref.set_file_name(protocol->getSourceAbsolutePath());
 }
 
 Method::ParseError::ParseError(std::unique_ptr<std::string> message) : message(std::move(message)) {}

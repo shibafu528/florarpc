@@ -9,7 +9,7 @@ class ProtocolTreeModel : public QAbstractItemModel {
 public:
     ProtocolTreeModel(QObject *parent);
 
-    QModelIndex addProtocol(const Protocol &protocol);
+    QModelIndex addProtocol(const std::shared_ptr<Protocol> &protocol);
 
     QModelIndex index(int row, int column, const QModelIndex &parent) const override;
 
