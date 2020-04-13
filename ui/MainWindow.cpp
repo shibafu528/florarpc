@@ -53,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(),
                                     QGuiApplication::primaryScreen()->availableGeometry()));
+    setWindowTitle(QString("%1 - FloraRPC").arg("新しいワークスペース"));
 }
 
 void MainWindow::onActionOpenTriggered() {
@@ -131,6 +132,7 @@ void MainWindow::onActionOpenWorkspaceTriggered() {
     }
 
     ui.statusbar->showMessage("ワークスペースを読み込みました", 5000);
+    setWorkspaceFilename(filename);
 }
 
 void MainWindow::onActionSaveWorkspaceTriggered() {
@@ -139,46 +141,10 @@ void MainWindow::onActionSaveWorkspaceTriggered() {
         return;
     }
 
-    florarpc::Workspace workspace;
-    florarpc::Version *version = workspace.mutable_app_version();
-    version->set_major(FLORA_VERSION_MAJOR);
-    version->set_minor(FLORA_VERSION_MINOR);
-    version->set_patch(FLORA_VERSION_PATCH);
-    version->set_tweak(FLORA_VERSION_TWEAK);
-    
-    for (auto &protocol : protocols) {
-        florarpc::ProtoFile *file = workspace.add_proto_files();
-        file->set_path(protocol->getSource().absoluteFilePath().toStdString());
+    if (saveWorkspace(filename)) {
+        ui.statusbar->showMessage("ワークスペースを保存しました", 5000);
+        setWorkspaceFilename(filename);
     }
-    
-    for (auto &path : imports) {
-        florarpc::ImportPath *importPath = workspace.add_import_paths();
-        importPath->set_path(path.toStdString());
-    }
-
-    for (int i = 0; i < ui.editorTabs->count(); i++) {
-        auto editor = qobject_cast<Editor *>(ui.editorTabs->widget(i));
-        if (editor != nullptr) {
-            florarpc::Request *request = workspace.add_requests();
-            editor->writeRequest(*request);
-        }
-    }
-
-    std::string output;
-    if (!workspace.SerializeToString(&output)) {
-        QMessageBox::critical(this, "Save error", "ワークスペースの保存中にエラーが発生しました。\nワークスペース情報の書き出し準備に失敗しました。");
-        return;
-    }
-
-    QFile file(filename);
-    if (!file.open(QFile::WriteOnly)) {
-        QMessageBox::critical(this, "Save error", "ワークスペースの保存中にエラーが発生しました。\n保存先のファイルを作成できません。");
-        return;
-    }
-    file.write(QByteArray::fromStdString(output));
-    file.close();
-
-    ui.statusbar->showMessage("ワークスペースを保存しました", 5000);
 }
 
 void MainWindow::onActionManageProtoTriggered() {
@@ -189,9 +155,22 @@ void MainWindow::onActionManageProtoTriggered() {
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
-    if (QMessageBox::information(this, "確認", "アプリケーションを終了します。よろしいですか？",
-                                 QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel) {
-        event->ignore();
+    if (workspaceFilename.isEmpty()) {
+        if (QMessageBox::information(
+                this, "確認", "ワークスペースは保存されていません！\nアプリケーションを終了してもよろしいですか？",
+                QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel) {
+            event->ignore();
+        }
+    } else {
+        if (saveWorkspace(workspaceFilename)) {
+            return;
+        }
+
+        if (QMessageBox::information(
+                this, "確認", "ワークスペースは保存されていません！\nアプリケーションを終了してもよろしいですか？",
+                QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel) {
+            event->ignore();
+        }
     }
 }
 
@@ -282,4 +261,56 @@ Editor *MainWindow::openEditor(std::unique_ptr<Method> method, bool forceNewTab)
     const auto addedIndex = ui.editorTabs->addTab(editor, QString::fromStdString(methodName));
     ui.editorTabs->setCurrentIndex(addedIndex);
     return editor;
+}
+
+bool MainWindow::saveWorkspace(const QString &filename) {
+    florarpc::Workspace workspace;
+    florarpc::Version *version = workspace.mutable_app_version();
+    version->set_major(FLORA_VERSION_MAJOR);
+    version->set_minor(FLORA_VERSION_MINOR);
+    version->set_patch(FLORA_VERSION_PATCH);
+    version->set_tweak(FLORA_VERSION_TWEAK);
+
+    for (auto &protocol : protocols) {
+        florarpc::ProtoFile *file = workspace.add_proto_files();
+        file->set_path(protocol->getSource().absoluteFilePath().toStdString());
+    }
+
+    for (auto &path : imports) {
+        florarpc::ImportPath *importPath = workspace.add_import_paths();
+        importPath->set_path(path.toStdString());
+    }
+
+    for (int i = 0; i < ui.editorTabs->count(); i++) {
+        auto editor = qobject_cast<Editor *>(ui.editorTabs->widget(i));
+        if (editor != nullptr) {
+            florarpc::Request *request = workspace.add_requests();
+            editor->writeRequest(*request);
+        }
+    }
+
+    std::string output;
+    if (!workspace.SerializeToString(&output)) {
+        QMessageBox::critical(
+            this, "Save error",
+            "ワークスペースの保存中にエラーが発生しました。\nワークスペース情報の書き出し準備に失敗しました。");
+        return false;
+    }
+
+    QFile file(filename);
+    if (!file.open(QFile::WriteOnly)) {
+        QMessageBox::critical(this, "Save error",
+                              "ワークスペースの保存中にエラーが発生しました。\n保存先のファイルを作成できません。");
+        return false;
+    }
+    file.write(QByteArray::fromStdString(output));
+    file.close();
+
+    return true;
+}
+
+void MainWindow::setWorkspaceFilename(const QString &filename) {
+    workspaceFilename = filename;
+    QFileInfo fileInfo(filename);
+    setWindowTitle(QString("%1 - FloraRPC").arg(fileInfo.baseName()));
 }

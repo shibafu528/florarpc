@@ -44,10 +44,13 @@ private:
     KSyntaxHighlighting::Repository syntaxDefinitions;
     QShortcut tabCloseShortcut;
     QMenu treeMethodContextMenu;
+    QString workspaceFilename;
 
     void openProtos(const QStringList &filenames, bool abortOnLoadError);
     void openMethod(const QModelIndex &index, bool forceNewTab);
     Editor *openEditor(std::unique_ptr<Method> method, bool forceNewTab);
+    bool saveWorkspace(const QString &filename);
+    void setWorkspaceFilename(const QString &filename);
 };
 
 #endif  // FLORARPC_MAINWINDOW_H
