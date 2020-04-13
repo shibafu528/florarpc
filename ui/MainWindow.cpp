@@ -156,10 +156,14 @@ void MainWindow::onActionManageProtoTriggered() {
 
 void MainWindow::closeEvent(QCloseEvent *event) {
     if (workspaceFilename.isEmpty()) {
-        auto response = QMessageBox::warning(
-            this, "確認", "ワークスペースは保存されていません。\n保存してからアプリケーションを終了しますか？",
-            QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, QMessageBox::Yes);
-        if (response == QMessageBox::Yes) {
+        QMessageBox messageBox;
+        messageBox.setIcon(QMessageBox::Warning);
+        messageBox.setWindowTitle("確認");
+        messageBox.setText("ワークスペースは保存されていません。\n保存してからアプリケーションを終了しますか？");
+        messageBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+        messageBox.setDefaultButton(QMessageBox::Save);
+        auto response = messageBox.exec();
+        if (response == QMessageBox::Save) {
             auto filename = QFileDialog::getSaveFileName(this, "Save workspace", "", "FloraRPC Workspace (*.floraws)");
             if (filename.isEmpty()) {
                 event->ignore();
