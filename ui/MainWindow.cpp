@@ -156,9 +156,19 @@ void MainWindow::onActionManageProtoTriggered() {
 
 void MainWindow::closeEvent(QCloseEvent *event) {
     if (workspaceFilename.isEmpty()) {
-        if (QMessageBox::information(
-                this, "確認", "ワークスペースは保存されていません！\nアプリケーションを終了してもよろしいですか？",
-                QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel) {
+        auto response = QMessageBox::warning(
+            this, "確認", "ワークスペースは保存されていません。\n保存してからアプリケーションを終了しますか？",
+            QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, QMessageBox::Yes);
+        if (response == QMessageBox::Yes) {
+            auto filename = QFileDialog::getSaveFileName(this, "Save workspace", "", "FloraRPC Workspace (*.floraws)");
+            if (filename.isEmpty()) {
+                event->ignore();
+                return;
+            }
+            if (!saveWorkspace(filename)) {
+                event->ignore();
+            }
+        } else if (response == QMessageBox::Cancel) {
             event->ignore();
         }
     } else {
@@ -166,9 +176,9 @@ void MainWindow::closeEvent(QCloseEvent *event) {
             return;
         }
 
-        if (QMessageBox::information(
-                this, "確認", "ワークスペースは保存されていません！\nアプリケーションを終了してもよろしいですか？",
-                QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel) {
+        if (QMessageBox::warning(this, "確認",
+                                 "ワークスペースは保存されていません！\nアプリケーションを終了してもよろしいですか？",
+                                 QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel) {
             event->ignore();
         }
     }
