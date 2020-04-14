@@ -20,6 +20,9 @@ public:
 protected:
     void closeEvent(QCloseEvent *event) override;
 
+public slots:
+    void onLogging(const QString &message);
+
 private slots:
 
     void onActionOpenTriggered();

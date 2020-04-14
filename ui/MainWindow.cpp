@@ -46,8 +46,8 @@ MainWindow::MainWindow(QWidget *parent)
         openMethod(index, false);
     });
     treeMethodContextMenu.addAction("新しいタブで開く(&N)", [=]() {
-        const QModelIndex &index = ui.treeView->indexAt(
-                ui.treeView->viewport()->mapFromGlobal(treeMethodContextMenu.pos()));
+        const QModelIndex &index =
+            ui.treeView->indexAt(ui.treeView->viewport()->mapFromGlobal(treeMethodContextMenu.pos()));
         openMethod(index, true);
     });
 
@@ -55,6 +55,8 @@ MainWindow::MainWindow(QWidget *parent)
                                     QGuiApplication::primaryScreen()->availableGeometry()));
     setWindowTitle(QString("%1 - FloraRPC").arg("新しいワークスペース"));
 }
+
+void MainWindow::onLogging(const QString &message) {}
 
 void MainWindow::onActionOpenTriggered() {
     auto filenames = QFileDialog::getOpenFileNames(this, "Open proto", "", "Proto definition files (*.proto)", nullptr);
