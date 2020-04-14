@@ -38,12 +38,14 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui.editorTabs, &QTabWidget::tabCloseRequested, this, &MainWindow::onEditorTabCloseRequested);
     connect(&tabCloseShortcut, &QShortcut::activated, this, &MainWindow::onTabCloseShortcutActivated);
 
+    ui.menuView->addAction(ui.logDockWidget->toggleViewAction());
+
     ui.logDockWidget->hide();
     ui.treeView->setModel(protocolTreeModel.get());
 
     treeMethodContextMenu.addAction("開く(&O)", [=]() {
-        const QModelIndex &index = ui.treeView->indexAt(
-                ui.treeView->viewport()->mapFromGlobal(treeMethodContextMenu.pos()));
+        const QModelIndex &index =
+            ui.treeView->indexAt(ui.treeView->viewport()->mapFromGlobal(treeMethodContextMenu.pos()));
         openMethod(index, false);
     });
     treeMethodContextMenu.addAction("新しいタブで開く(&N)", [=]() {

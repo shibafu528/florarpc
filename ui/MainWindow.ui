@@ -55,16 +55,22 @@
     <property name="title">
      <string>ファイル(&amp;F)</string>
     </property>
-    <addaction name="actionOpen"/>
-    <addaction name="actionOpenWorkspace"/>
-    <addaction name="separator"/>
-    <addaction name="actionSaveWorkspace"/>
-    <addaction name="separator"/>
-    <addaction name="actionManageProto"/>
-    <addaction name="separator"/>
-    <addaction name="actionQuit"/>
+       <addaction name="actionOpen"/>
+       <addaction name="actionOpenWorkspace"/>
+       <addaction name="separator"/>
+       <addaction name="actionSaveWorkspace"/>
+       <addaction name="separator"/>
+       <addaction name="actionManageProto"/>
+       <addaction name="separator"/>
+       <addaction name="actionQuit"/>
    </widget>
-   <addaction name="menuFile"/>
+      <widget class="QMenu" name="menuView">
+          <property name="title">
+              <string>表示(&amp;V)</string>
+          </property>
+      </widget>
+      <addaction name="menuFile"/>
+      <addaction name="menuView"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="dockWidget">
@@ -113,16 +119,16 @@
       <widget class="QTreeView" name="treeView">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-         <horstretch>1</horstretch>
-         <verstretch>0</verstretch>
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <property name="baseSize">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
+          <property name="baseSize">
+              <size>
+                  <width>0</width>
+                  <height>0</height>
+              </size>
+          </property>
           <property name="contextMenuPolicy">
               <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -177,16 +183,16 @@
          </property>
          <property name="shortcut">
              <string>Ctrl+O</string>
-   </property>
-  </action>
-  <action name="actionManageProto">
-   <property name="text">
-    <string>インポート パスの管理(&amp;I)...</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+I</string>
-   </property>
-  </action>
+         </property>
+     </action>
+     <action name="actionManageProto">
+         <property name="text">
+             <string>インポート パスの管理(&amp;I)...</string>
+         </property>
+         <property name="shortcut">
+             <string>Ctrl+I</string>
+         </property>
+     </action>
   <action name="actionQuit">
    <property name="text">
     <string>終了(&amp;Q)</string>
