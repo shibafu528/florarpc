@@ -55,16 +55,22 @@
     <property name="title">
      <string>ファイル(&amp;F)</string>
     </property>
-    <addaction name="actionOpen"/>
-    <addaction name="actionOpenWorkspace"/>
-    <addaction name="separator"/>
-    <addaction name="actionSaveWorkspace"/>
-    <addaction name="separator"/>
-    <addaction name="actionManageProto"/>
-    <addaction name="separator"/>
-    <addaction name="actionQuit"/>
+       <addaction name="actionOpen"/>
+       <addaction name="actionOpenWorkspace"/>
+       <addaction name="separator"/>
+       <addaction name="actionSaveWorkspace"/>
+       <addaction name="separator"/>
+       <addaction name="actionManageProto"/>
+       <addaction name="separator"/>
+       <addaction name="actionQuit"/>
    </widget>
-   <addaction name="menuFile"/>
+      <widget class="QMenu" name="menuView">
+          <property name="title">
+              <string>表示(&amp;V)</string>
+          </property>
+      </widget>
+      <addaction name="menuFile"/>
+      <addaction name="menuView"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="dockWidget">
@@ -76,7 +82,7 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>91</width>
+     <width>123</width>
      <height>123</height>
     </size>
    </property>
@@ -113,46 +119,80 @@
       <widget class="QTreeView" name="treeView">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-         <horstretch>1</horstretch>
-         <verstretch>0</verstretch>
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <property name="baseSize">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="contextMenuPolicy">
-        <enum>Qt::CustomContextMenu</enum>
-       </property>
-       <property name="selectionMode">
-        <enum>QAbstractItemView::SingleSelection</enum>
-       </property>
-       <attribute name="headerVisible">
-        <bool>false</bool>
-       </attribute>
+          <property name="baseSize">
+              <size>
+                  <width>0</width>
+                  <height>0</height>
+              </size>
+          </property>
+          <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
+          </property>
+          <property name="selectionMode">
+              <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <attribute name="headerVisible">
+              <bool>false</bool>
+          </attribute>
       </widget>
      </item>
     </layout>
    </widget>
   </widget>
-  <action name="actionOpen">
-   <property name="text">
-    <string>Protoファイルを開く(&amp;O)...</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+O</string>
-   </property>
-  </action>
-  <action name="actionManageProto">
-   <property name="text">
-    <string>インポート パスの管理(&amp;I)...</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+I</string>
-   </property>
-  </action>
+     <widget class="QDockWidget" name="logDockWidget">
+         <property name="windowTitle">
+             <string>ログ</string>
+         </property>
+         <attribute name="dockWidgetArea">
+             <number>8</number>
+         </attribute>
+         <widget class="QWidget" name="dockWidgetContents_2">
+             <layout class="QHBoxLayout" name="horizontalLayout">
+                 <property name="leftMargin">
+                     <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                     <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                     <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                     <number>0</number>
+                 </property>
+                 <item>
+                     <widget class="QPlainTextEdit" name="logEdit">
+                         <property name="readOnly">
+                             <bool>true</bool>
+                         </property>
+                         <property name="textInteractionFlags">
+                             <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+                         </property>
+                     </widget>
+                 </item>
+             </layout>
+         </widget>
+     </widget>
+     <action name="actionOpen">
+         <property name="text">
+             <string>Protoファイルを開く(&amp;O)...</string>
+         </property>
+         <property name="shortcut">
+             <string>Ctrl+O</string>
+         </property>
+     </action>
+     <action name="actionManageProto">
+         <property name="text">
+             <string>インポート パスの管理(&amp;I)...</string>
+         </property>
+         <property name="shortcut">
+             <string>Ctrl+I</string>
+         </property>
+     </action>
   <action name="actionQuit">
    <property name="text">
     <string>終了(&amp;Q)</string>
