@@ -38,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui.editorTabs, &QTabWidget::tabCloseRequested, this, &MainWindow::onEditorTabCloseRequested);
     connect(&tabCloseShortcut, &QShortcut::activated, this, &MainWindow::onTabCloseShortcutActivated);
 
+    ui.logDockWidget->hide();
     ui.treeView->setModel(protocolTreeModel.get());
 
     treeMethodContextMenu.addAction("開く(&O)", [=]() {
@@ -56,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle(QString("%1 - FloraRPC").arg("新しいワークスペース"));
 }
 
-void MainWindow::onLogging(const QString &message) {}
+void MainWindow::onLogging(const QString &message) { ui.logEdit->appendPlainText(message); }
 
 void MainWindow::onActionOpenTriggered() {
     auto filenames = QFileDialog::getOpenFileNames(this, "Open proto", "", "Proto definition files (*.proto)", nullptr);

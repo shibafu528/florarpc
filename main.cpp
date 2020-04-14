@@ -69,7 +69,8 @@ void gpr_custom_log_handler(gpr_log_func_args *args) {
                        .arg(gpr_log_severity_string(args->severity))
                        .arg(args->file)
                        .arg(args->line)
-                       .arg(args->message);
+                       .arg(args->message)
+                       .trimmed();
     qDebug() << message.toStdString().c_str();
     QMetaObject::invokeMethod(mainWindow, "onLogging", Qt::QueuedConnection, Q_ARG(QString, message));
 }
