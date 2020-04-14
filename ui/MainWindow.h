@@ -1,15 +1,18 @@
 #ifndef FLORARPC_MAINWINDOW_H
 #define FLORARPC_MAINWINDOW_H
 
+#include <KSyntaxHighlighting/repository.h>
+
 #include <QMainWindow>
 #include <QShortcut>
-#include <KSyntaxHighlighting/repository.h>
-#include "ui/ui_MainWindow.h"
+
 #include "../entity/Protocol.h"
+#include "Editor.h"
 #include "ProtocolTreeModel.h"
+#include "ui/ui_MainWindow.h"
 
 class MainWindow : public QMainWindow {
-Q_OBJECT
+    Q_OBJECT
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
@@ -20,6 +23,10 @@ protected:
 private slots:
 
     void onActionOpenTriggered();
+
+    void onActionOpenWorkspaceTriggered();
+
+    void onActionSaveWorkspaceTriggered();
 
     void onActionManageProtoTriggered();
 
@@ -37,9 +44,13 @@ private:
     KSyntaxHighlighting::Repository syntaxDefinitions;
     QShortcut tabCloseShortcut;
     QMenu treeMethodContextMenu;
+    QString workspaceFilename;
 
+    void openProtos(const QStringList &filenames, bool abortOnLoadError);
     void openMethod(const QModelIndex &index, bool forceNewTab);
+    Editor *openEditor(std::unique_ptr<Method> method, bool forceNewTab);
+    bool saveWorkspace(const QString &filename);
+    void setWorkspaceFilename(const QString &filename);
 };
 
-
-#endif //FLORARPC_MAINWINDOW_H
+#endif  // FLORARPC_MAINWINDOW_H

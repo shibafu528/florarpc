@@ -56,6 +56,9 @@
      <string>ファイル(&amp;F)</string>
     </property>
     <addaction name="actionOpen"/>
+    <addaction name="actionOpenWorkspace"/>
+    <addaction name="separator"/>
+    <addaction name="actionSaveWorkspace"/>
     <addaction name="separator"/>
     <addaction name="actionManageProto"/>
     <addaction name="separator"/>
@@ -159,6 +162,22 @@
    </property>
    <property name="menuRole">
     <enum>QAction::QuitRole</enum>
+   </property>
+  </action>
+  <action name="actionSaveWorkspace">
+   <property name="text">
+    <string>ワークスペースを保存(&amp;S)...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionOpenWorkspace">
+   <property name="text">
+    <string>ワークスペースを開く(&amp;W)...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+O</string>
    </property>
   </action>
  </widget>
