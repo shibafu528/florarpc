@@ -91,9 +91,9 @@ Editor::Editor(std::unique_ptr<Method> &&method,
 }
 
 void Editor::setServers(std::vector<std::shared_ptr<Server>> servers) {
-    QString selected = nullptr;
+    QUuid selected = nullptr;
     if (!this->servers.empty()) {
-        selected = this->servers[ui.serverSelectBox->currentIndex()]->address;
+        selected = this->servers[ui.serverSelectBox->currentIndex()]->id;
     }
 
     this->servers = servers;
@@ -107,7 +107,7 @@ void Editor::setServers(std::vector<std::shared_ptr<Server>> servers) {
         ui.executeButton->setDisabled(false);
         for (std::vector<std::shared_ptr<Server>>::size_type i = 0; i < servers.size(); i++) {
             ui.serverSelectBox->addItem(servers[i]->name);
-            if (selected == servers[i]->address) {
+            if (selected == servers[i]->id) {
                 ui.serverSelectBox->setCurrentIndex(i);
             }
         }

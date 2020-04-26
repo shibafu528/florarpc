@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package florarpc;
-
-message UUID {
-  bytes uuid = 1;
-}
