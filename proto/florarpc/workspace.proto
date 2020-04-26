@@ -9,6 +9,7 @@ message Workspace {
   repeated ProtoFile proto_files = 2;
   repeated ImportPath import_paths = 3;
   repeated Request requests = 4;
+  repeated Server servers = 5;
 }
 
 message ProtoFile {
@@ -29,6 +30,7 @@ message Request {
   MethodRef method = 1;
   string body_draft = 2;
   string metadata_draft = 3;
+  bytes selected_server_id = 4;
 }
 
 message Server {

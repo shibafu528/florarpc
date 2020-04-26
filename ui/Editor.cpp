@@ -117,6 +117,12 @@ void Editor::setServers(std::vector<std::shared_ptr<Server>> servers) {
 void Editor::readRequest(const florarpc::Request &request) {
     ui.requestEdit->setPlainText(QString::fromStdString(request.body_draft()));
     ui.requestMetadataEdit->setPlainText(QString::fromStdString(request.metadata_draft()));
+    for (std::vector<std::shared_ptr<Server>>::size_type i = 0; i < servers.size(); i++) {
+        if (request.selected_server_id() == servers[i]->id.toByteArray().toStdString()) {
+            ui.serverSelectBox->setCurrentIndex(i);
+            break;
+        }
+    }
 }
 
 void Editor::writeRequest(florarpc::Request &request) {
@@ -125,6 +131,7 @@ void Editor::writeRequest(florarpc::Request &request) {
 
     request.set_body_draft(ui.requestEdit->toPlainText().toStdString());
     request.set_metadata_draft(ui.requestMetadataEdit->toPlainText().toStdString());
+    request.set_selected_server_id(getCurrentServer()->id.toByteArray().toStdString());
 }
 
 void Editor::onExecuteButtonClicked() {

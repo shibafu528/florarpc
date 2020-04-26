@@ -105,6 +105,7 @@ void MainWindow::onActionOpenWorkspaceTriggered() {
 
     protocols.clear();
     imports.clear();
+    servers.clear();
     for (int i = ui.editorTabs->count() - 1; i >= 0; i--) {
         auto editor = ui.editorTabs->widget(i);
         ui.editorTabs->removeTab(i);
@@ -114,6 +115,10 @@ void MainWindow::onActionOpenWorkspaceTriggered() {
 
     for (const auto &importPath : workspace.import_paths()) {
         imports.append(QString::fromStdString(importPath.path()));
+    }
+
+    for (const auto &server : workspace.servers()) {
+        servers.push_back(std::make_shared<Server>(server));
     }
 
     QStringList filenames;
@@ -314,6 +319,11 @@ bool MainWindow::saveWorkspace(const QString &filename) {
     for (auto &path : imports) {
         florarpc::ImportPath *importPath = workspace.add_import_paths();
         importPath->set_path(path.toStdString());
+    }
+
+    for (auto &server : servers) {
+        florarpc::Server *protoServer = workspace.add_servers();
+        server->writeServer(*protoServer);
     }
 
     for (int i = 0; i < ui.editorTabs->count(); i++) {

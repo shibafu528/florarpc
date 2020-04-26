@@ -4,10 +4,15 @@
 #include <QString>
 #include <QUuid>
 
+#include "florarpc/workspace.pb.h"
+
 class Server {
 public:
     Server();
     explicit Server(QUuid id);
+    explicit Server(const florarpc::Server &server);
+
+    void writeServer(florarpc::Server &server);
 
     QUuid id;
     QString name;
