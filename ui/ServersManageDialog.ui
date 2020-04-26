@@ -27,6 +27,18 @@
        <property name="selectionMode">
         <enum>QAbstractItemView::SingleSelection</enum>
        </property>
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectRows</enum>
+       </property>
+       <attribute name="horizontalHeaderHighlightSections">
+        <bool>false</bool>
+       </attribute>
+       <attribute name="verticalHeaderVisible">
+        <bool>false</bool>
+       </attribute>
+       <attribute name="verticalHeaderHighlightSections">
+        <bool>false</bool>
+       </attribute>
        <column>
         <property name="text">
          <string>名前</string>
@@ -52,7 +64,9 @@
           <string>追加(&amp;A)</string>
          </property>
          <property name="icon">
-          <iconset theme="list-add"/>
+          <iconset theme="list-add">
+           <normaloff>.</normaloff>.
+          </iconset>
          </property>
         </widget>
        </item>
@@ -62,7 +76,9 @@
           <string>編集(&amp;E)</string>
          </property>
          <property name="icon">
-          <iconset theme="document-edit"/>
+          <iconset theme="document-edit">
+           <normaloff>.</normaloff>.
+          </iconset>
          </property>
         </widget>
        </item>
@@ -72,7 +88,9 @@
           <string>削除(&amp;D)</string>
          </property>
          <property name="icon">
-          <iconset theme="list-remove"/>
+          <iconset theme="list-remove">
+           <normaloff>.</normaloff>.
+          </iconset>
          </property>
         </widget>
        </item>

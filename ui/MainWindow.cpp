@@ -10,6 +10,7 @@
 #include <QTextStream>
 
 #include "ImportsManageDialog.h"
+#include "ServersManageDialog.h"
 #include "flora_constants.h"
 #include "florarpc/workspace.pb.h"
 #include "util/ProtobufIterator.h"
@@ -24,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui.actionOpenWorkspace, &QAction::triggered, this, &MainWindow::onActionOpenWorkspaceTriggered);
     connect(ui.actionSaveWorkspace, &QAction::triggered, this, &MainWindow::onActionSaveWorkspaceTriggered);
     connect(ui.actionManageProto, &QAction::triggered, this, &MainWindow::onActionManageProtoTriggered);
+    connect(ui.actionManageServer, &QAction::triggered, this, &MainWindow::onActionManageServerTriggered);
     connect(ui.actionQuit, &QAction::triggered, this, &MainWindow::close);
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
     connect(ui.treeView, &QWidget::customContextMenuRequested, [=](const QPoint &pos) {
@@ -157,6 +159,13 @@ void MainWindow::onActionManageProtoTriggered() {
     dialog->setPaths(imports);
     dialog->exec();
     imports = dialog->getPaths();
+}
+
+void MainWindow::onActionManageServerTriggered() {
+    auto dialog = std::make_unique<ServersManageDialog>(this);
+    dialog->setServers(servers);
+    dialog->exec();
+    servers = dialog->getServers();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
