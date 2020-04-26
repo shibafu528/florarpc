@@ -118,7 +118,7 @@ void Editor::readRequest(const florarpc::Request &request) {
     ui.requestEdit->setPlainText(QString::fromStdString(request.body_draft()));
     ui.requestMetadataEdit->setPlainText(QString::fromStdString(request.metadata_draft()));
     for (std::vector<std::shared_ptr<Server>>::size_type i = 0; i < servers.size(); i++) {
-        if (request.selected_server_id() == servers[i]->id.toByteArray().toStdString()) {
+        if (request.selected_server_id() == servers[i]->id.toString().toStdString()) {
             ui.serverSelectBox->setCurrentIndex(i);
             break;
         }

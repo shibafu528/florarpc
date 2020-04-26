@@ -11,7 +11,7 @@ Server::Server(const florarpc::Server& server)
       useTLS(server.usetls()) {}
 
 void Server::writeServer(florarpc::Server& server) {
-    server.set_id(id.toByteArray().toStdString());
+    server.set_id(id.toString().toStdString());
     server.set_name(name.toStdString());
     server.set_address(address.toStdString());
     server.set_usetls(useTLS);

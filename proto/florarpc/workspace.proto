@@ -30,11 +30,11 @@ message Request {
   MethodRef method = 1;
   string body_draft = 2;
   string metadata_draft = 3;
-  bytes selected_server_id = 4;
+  string selected_server_id = 4;
 }
 
 message Server {
-  bytes id = 1;
+  string id = 1;
   string name = 2;
   string address = 3;
   bool useTLS = 4;
