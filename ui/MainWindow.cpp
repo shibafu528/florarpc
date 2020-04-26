@@ -166,6 +166,12 @@ void MainWindow::onActionManageServerTriggered() {
     dialog->setServers(servers);
     dialog->exec();
     servers = dialog->getServers();
+    for (int i = 0; i < ui.editorTabs->count(); i++) {
+        auto editor = qobject_cast<Editor *>(ui.editorTabs->widget(i));
+        if (editor != nullptr) {
+            editor->setServers(servers);
+        }
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -286,6 +292,7 @@ Editor *MainWindow::openEditor(std::unique_ptr<Method> method, bool forceNewTab)
     }
 
     auto editor = new Editor(std::move(method), syntaxDefinitions);
+    editor->setServers(servers);
     const auto addedIndex = ui.editorTabs->addTab(editor, QString::fromStdString(methodName));
     ui.editorTabs->setCurrentIndex(addedIndex);
     return editor;

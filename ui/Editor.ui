@@ -20,16 +20,22 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QLineEdit" name="serverAddressEdit">
-       <property name="placeholderText">
-        <string>Server address</string>
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>接続先</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="useTlsCheck">
-       <property name="text">
-        <string>TLS</string>
+      <widget class="QComboBox" name="serverSelectBox">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
       </widget>
      </item>
