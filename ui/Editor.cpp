@@ -22,7 +22,6 @@ Editor::Editor(std::unique_ptr<Method> &&method,
         : QWidget(parent), responseMetadataContextMenu(new QMenu(this)), session(nullptr), method(std::move(method)) {
     ui.setupUi(this);
 
-    connect(ui.serverAddressEdit, &QLineEdit::textChanged, this, &Editor::onServerAddressEditTextChanged);
     connect(ui.executeButton, &QPushButton::clicked, this, &Editor::onExecuteButtonClicked);
     connect(ui.sendButton, &QPushButton::clicked, this, &Editor::onSendButtonClicked);
     connect(ui.finishButton, &QPushButton::clicked, this, &Editor::onFinishButtonClicked);
@@ -91,9 +90,39 @@ Editor::Editor(std::unique_ptr<Method> &&method,
     hideStreamingButtons();
 }
 
+void Editor::setServers(std::vector<std::shared_ptr<Server>> servers) {
+    QUuid selected = nullptr;
+    if (!this->servers.empty()) {
+        selected = this->servers[ui.serverSelectBox->currentIndex()]->id;
+    }
+
+    this->servers = servers;
+    ui.serverSelectBox->clear();
+    if (servers.empty()) {
+        ui.serverSelectBox->setDisabled(true);
+        ui.serverSelectBox->addItem("ファイル→接続先の管理 から追加してください");
+        ui.executeButton->setDisabled(true);
+    } else {
+        ui.serverSelectBox->setDisabled(false);
+        ui.executeButton->setDisabled(false);
+        for (std::vector<std::shared_ptr<Server>>::size_type i = 0; i < servers.size(); i++) {
+            ui.serverSelectBox->addItem(servers[i]->name);
+            if (selected == servers[i]->id) {
+                ui.serverSelectBox->setCurrentIndex(i);
+            }
+        }
+    }
+}
+
 void Editor::readRequest(const florarpc::Request &request) {
     ui.requestEdit->setPlainText(QString::fromStdString(request.body_draft()));
     ui.requestMetadataEdit->setPlainText(QString::fromStdString(request.metadata_draft()));
+    for (std::vector<std::shared_ptr<Server>>::size_type i = 0; i < servers.size(); i++) {
+        if (request.selected_server_id() == servers[i]->id.toString().toStdString()) {
+            ui.serverSelectBox->setCurrentIndex(i);
+            break;
+        }
+    }
 }
 
 void Editor::writeRequest(florarpc::Request &request) {
@@ -102,9 +131,7 @@ void Editor::writeRequest(florarpc::Request &request) {
 
     request.set_body_draft(ui.requestEdit->toPlainText().toStdString());
     request.set_metadata_draft(ui.requestMetadataEdit->toPlainText().toStdString());
-}
-
-void Editor::onServerAddressEditTextChanged(const QString &text) { ui.executeButton->setEnabled(!text.isEmpty());
+    request.set_selected_server_id(getCurrentServer()->id.toByteArray().toStdString());
 }
 
 void Editor::onExecuteButtonClicked() {
@@ -162,8 +189,9 @@ void Editor::onExecuteButtonClicked() {
         }
     }
 
-    auto credentials = getDefaultCredentials(ui.useTlsCheck->isChecked());
-    session = new Session(*method, ui.serverAddressEdit->text(), credentials, metadata, this);
+    auto server = getCurrentServer();
+    auto credentials = getDefaultCredentials(server->useTLS);
+    session = new Session(*method, server->address, credentials, metadata, this);
     connect(session, &Session::messageSent, this, &Editor::onMessageSent);
     connect(session, &Session::messageReceived, this, &Editor::onMessageReceived);
     connect(session, &Session::initialMetadataReceived, this, &Editor::onMetadataReceived);
@@ -388,4 +416,12 @@ void Editor::updateResponsePager() {
     if (ui.responseBodyPageSpin->value() == responses.size()) {
         ui.nextResponseBodyButton->setDisabled(true);
     }
+}
+
+std::shared_ptr<Server> Editor::getCurrentServer() {
+    if (servers.empty()) {
+        return nullptr;
+    }
+
+    return servers[ui.serverSelectBox->currentIndex()];
 }

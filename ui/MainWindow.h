@@ -7,6 +7,7 @@
 #include <QShortcut>
 
 #include "../entity/Protocol.h"
+#include "../entity/Server.h"
 #include "Editor.h"
 #include "ProtocolTreeModel.h"
 #include "ui/ui_MainWindow.h"
@@ -33,6 +34,8 @@ private slots:
 
     void onActionManageProtoTriggered();
 
+    void onActionManageServerTriggered();
+
     void onTreeViewClicked(const QModelIndex &index);
 
     void onEditorTabCloseRequested(const int index);
@@ -42,6 +45,7 @@ private slots:
 private:
     Ui::MainWindow ui;
     std::vector<std::shared_ptr<Protocol>> protocols;
+    std::vector<std::shared_ptr<Server>> servers;
     std::unique_ptr<ProtocolTreeModel> protocolTreeModel;
     QStringList imports;
     KSyntaxHighlighting::Repository syntaxDefinitions;

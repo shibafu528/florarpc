@@ -10,6 +10,7 @@
 #include <QTextStream>
 
 #include "ImportsManageDialog.h"
+#include "ServersManageDialog.h"
 #include "flora_constants.h"
 #include "florarpc/workspace.pb.h"
 #include "util/ProtobufIterator.h"
@@ -24,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui.actionOpenWorkspace, &QAction::triggered, this, &MainWindow::onActionOpenWorkspaceTriggered);
     connect(ui.actionSaveWorkspace, &QAction::triggered, this, &MainWindow::onActionSaveWorkspaceTriggered);
     connect(ui.actionManageProto, &QAction::triggered, this, &MainWindow::onActionManageProtoTriggered);
+    connect(ui.actionManageServer, &QAction::triggered, this, &MainWindow::onActionManageServerTriggered);
     connect(ui.actionQuit, &QAction::triggered, this, &MainWindow::close);
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
     connect(ui.treeView, &QWidget::customContextMenuRequested, [=](const QPoint &pos) {
@@ -103,6 +105,7 @@ void MainWindow::onActionOpenWorkspaceTriggered() {
 
     protocols.clear();
     imports.clear();
+    servers.clear();
     for (int i = ui.editorTabs->count() - 1; i >= 0; i--) {
         auto editor = ui.editorTabs->widget(i);
         ui.editorTabs->removeTab(i);
@@ -112,6 +115,10 @@ void MainWindow::onActionOpenWorkspaceTriggered() {
 
     for (const auto &importPath : workspace.import_paths()) {
         imports.append(QString::fromStdString(importPath.path()));
+    }
+
+    for (const auto &server : workspace.servers()) {
+        servers.push_back(std::make_shared<Server>(server));
     }
 
     QStringList filenames;
@@ -157,6 +164,19 @@ void MainWindow::onActionManageProtoTriggered() {
     dialog->setPaths(imports);
     dialog->exec();
     imports = dialog->getPaths();
+}
+
+void MainWindow::onActionManageServerTriggered() {
+    auto dialog = std::make_unique<ServersManageDialog>(this);
+    dialog->setServers(servers);
+    dialog->exec();
+    servers = dialog->getServers();
+    for (int i = 0; i < ui.editorTabs->count(); i++) {
+        auto editor = qobject_cast<Editor *>(ui.editorTabs->widget(i));
+        if (editor != nullptr) {
+            editor->setServers(servers);
+        }
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -277,6 +297,7 @@ Editor *MainWindow::openEditor(std::unique_ptr<Method> method, bool forceNewTab)
     }
 
     auto editor = new Editor(std::move(method), syntaxDefinitions);
+    editor->setServers(servers);
     const auto addedIndex = ui.editorTabs->addTab(editor, QString::fromStdString(methodName));
     ui.editorTabs->setCurrentIndex(addedIndex);
     return editor;
@@ -298,6 +319,11 @@ bool MainWindow::saveWorkspace(const QString &filename) {
     for (auto &path : imports) {
         florarpc::ImportPath *importPath = workspace.add_import_paths();
         importPath->set_path(path.toStdString());
+    }
+
+    for (auto &server : servers) {
+        florarpc::Server *protoServer = workspace.add_servers();
+        server->writeServer(*protoServer);
     }
 
     for (int i = 0; i < ui.editorTabs->count(); i++) {

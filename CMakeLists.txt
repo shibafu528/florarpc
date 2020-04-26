@@ -102,12 +102,20 @@ add_executable(flora
         ui/MultiPageJsonView.ui
         ui/MultiPageJsonView.cpp
         ui/MultiPageJsonView.h
+        ui/ServerEditDialog.ui
+        ui/ServerEditDialog.cpp
+        ui/ServerEditDialog.h
+        ui/ServersManageDialog.ui
+        ui/ServersManageDialog.cpp
+        ui/ServersManageDialog.h
         entity/Protocol.cpp
         entity/Protocol.h
         entity/Method.cpp
         entity/Method.h
         entity/Session.cpp
         entity/Session.h
+        entity/Server.cpp
+        entity/Server.h
         ui/ProtocolTreeModel.cpp
         ui/ProtocolTreeModel.h
         util/GrpcUtility.cpp

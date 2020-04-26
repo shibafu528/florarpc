@@ -9,6 +9,7 @@
 #include <QWidget>
 
 #include "../entity/Method.h"
+#include "../entity/Server.h"
 #include "../entity/Session.h"
 #include "florarpc/workspace.pb.h"
 #include "ui/ui_Editor.h"
@@ -21,13 +22,13 @@ public:
 
     inline Method &getMethod() { return *method; }
 
+    void setServers(std::vector<std::shared_ptr<Server>> servers);
+
     void readRequest(const florarpc::Request &request);
 
     void writeRequest(florarpc::Request &request);
 
 private slots:
-
-    void onServerAddressEditTextChanged(const QString &text);
 
     void onExecuteButtonClicked();
 
@@ -60,6 +61,7 @@ private:
     QVector<grpc::ByteBuffer> responses;
 
     std::unique_ptr<Method> method;
+    std::vector<std::shared_ptr<Server>> servers;
 
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> requestHighlighter;
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> requestMetadataHighlighter;
@@ -79,6 +81,8 @@ private:
     void hideStreamingButtons();
 
     void updateResponsePager();
+
+    std::shared_ptr<Server> getCurrentServer();
 };
 
 #endif  // FLORARPC_EDITOR_H
