@@ -4,7 +4,7 @@
 #include <QPushButton>
 
 ServerEditDialog::ServerEditDialog(std::shared_ptr<Server> server, QWidget *parent)
-    : QDialog(parent), server(std::move(server)) {
+    : QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint), server(std::move(server)) {
     ui.setupUi(this);
 
     connect(ui.buttonBox->button(QDialogButtonBox::Ok), &QAbstractButton::clicked, this,

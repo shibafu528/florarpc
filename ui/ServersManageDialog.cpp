@@ -4,7 +4,8 @@
 
 #include "ServerEditDialog.h"
 
-ServersManageDialog::ServersManageDialog(QWidget *parent) : QDialog(parent) {
+ServersManageDialog::ServersManageDialog(QWidget *parent)
+    : QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint) {
     ui.setupUi(this);
 
     connect(ui.addButton, &QAbstractButton::clicked, this, &ServersManageDialog::onAddButtonClick);
