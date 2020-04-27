@@ -3,7 +3,7 @@
 #include <QMessageBox>
 
 ImportsManageDialog::ImportsManageDialog(QWidget *parent)
-        : QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint) {
+        : QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
     ui.setupUi(this);
 
     connect(ui.browseButton, &QAbstractButton::clicked, this, &ImportsManageDialog::onBrowseButtonClick);
