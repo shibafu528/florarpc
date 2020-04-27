@@ -23,6 +23,7 @@
 #include <QOperatingSystemVersion>
 #include <QFont>
 #include <QLocale>
+#include "platform/mac/NSWindow.h"
 #endif
 
 #ifdef _WIN32
@@ -108,6 +109,9 @@ int main(int argc, char *argv[]) {
         QOperatingSystemVersion::current() >= QOperatingSystemVersion::MacOSCatalina) {
         QFont::insertSubstitution(".AppleSystemUIFont", "Hiragino Sans");
     }
+
+    // 特に対応してもいないタブバーをユーザーが勝手に召喚できてしまうので、封印する
+    Platform::Mac::NSWindow::setAllowsAutomaticWindowTabbing(false);
 #endif
 
     gpr_set_log_function(gpr_custom_log_handler);

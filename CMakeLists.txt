@@ -84,6 +84,12 @@ add_custom_command(
         MAIN_DEPENDENCY
         ${FLORA_PROTOBUF_PROTOS})
 
+if(APPLE)
+    set(FLORA_PLATFORM_SOURCES
+            platform/mac/NSWindow.h
+            platform/mac/NSWindow.mm)
+endif()
+
 add_executable(flora
         WIN32
         MACOSX_BUNDLE
@@ -124,7 +130,8 @@ add_executable(flora
         util/ProtobufJsonPrinter.cpp
         util/ProtobufJsonPrinter.h
         ${FLORA_PROTOBUF_SOURCES}
-        ${FLORA_PROTOBUF_HEADERS})
+        ${FLORA_PROTOBUF_HEADERS}
+        ${FLORA_PLATFORM_SOURCES})
 
 target_link_libraries(flora
         Qt5::Widgets
@@ -145,5 +152,7 @@ target_include_directories(flora
         ${FLORA_PROTOBUF_GENERATED})
 
 if(APPLE)
+    find_library(APPKIT_LIBRARY AppKit)
+    target_link_libraries(flora ${APPKIT_LIBRARY})
     set_target_properties(flora PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/AppleInfo.plist)
 endif()
