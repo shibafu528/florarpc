@@ -40,7 +40,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui.editorTabs, &QTabWidget::tabCloseRequested, this, &MainWindow::onEditorTabCloseRequested);
     connect(&tabCloseShortcut, &QShortcut::activated, this, &MainWindow::onTabCloseShortcutActivated);
 
-    ui.menuView->addAction(ui.logDockWidget->toggleViewAction());
+    auto toggleLogViewAction = ui.logDockWidget->toggleViewAction();
+    toggleLogViewAction->setShortcut(Qt::CTRL + Qt::Key_L);
+    ui.menuView->addAction(toggleLogViewAction);
 
     ui.logDockWidget->hide();
     ui.treeView->setModel(protocolTreeModel.get());
