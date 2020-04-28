@@ -6,6 +6,7 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QScreen>
+#include <QStandardPaths>
 #include <QStyle>
 #include <QTextStream>
 
@@ -71,7 +72,12 @@ void MainWindow::onActionOpenTriggered() {
 }
 
 void MainWindow::onActionOpenWorkspaceTriggered() {
-    auto filename = QFileDialog::getOpenFileName(this, "Open workspace", "", "FloraRPC Workspace (*.floraws)");
+    QString baseDirectory = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+    if (!workspaceFilename.isEmpty()) {
+        baseDirectory = QFileInfo(workspaceFilename).dir().path();
+    }
+    auto filename =
+        QFileDialog::getOpenFileName(this, "Open workspace", baseDirectory, "FloraRPC Workspace (*.floraws)");
     if (filename.isEmpty()) {
         return;
     }
@@ -150,7 +156,12 @@ void MainWindow::onActionOpenWorkspaceTriggered() {
 }
 
 void MainWindow::onActionSaveWorkspaceTriggered() {
-    auto filename = QFileDialog::getSaveFileName(this, "Save workspace", "", "FloraRPC Workspace (*.floraws)");
+    QString baseDirectory = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+    if (!workspaceFilename.isEmpty()) {
+        baseDirectory = QFileInfo(workspaceFilename).dir().path();
+    }
+    auto filename =
+        QFileDialog::getSaveFileName(this, "Save workspace", baseDirectory, "FloraRPC Workspace (*.floraws)");
     if (filename.isEmpty()) {
         return;
     }
