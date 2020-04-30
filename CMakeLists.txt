@@ -84,6 +84,12 @@ add_custom_command(
         MAIN_DEPENDENCY
         ${FLORA_PROTOBUF_PROTOS})
 
+if(WIN32)
+    set(FLORA_PLATFORM_SOURCES
+            platform/RootCertificates.h
+            platform/windows/RootCertificates.mm)
+endif()
+
 if(APPLE)
     set(FLORA_PLATFORM_SOURCES
             platform/RootCertificates.h
