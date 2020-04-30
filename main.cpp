@@ -23,6 +23,7 @@
 #include <QOperatingSystemVersion>
 #include <QFont>
 #include <QLocale>
+#include "platform/RootCertificates.h"
 #include "platform/mac/NSWindow.h"
 #endif
 
@@ -112,6 +113,8 @@ int main(int argc, char *argv[]) {
 
     // 特に対応してもいないタブバーをユーザーが勝手に召喚できてしまうので、封印する
     Platform::Mac::NSWindow::setAllowsAutomaticWindowTabbing(false);
+
+    grpc_set_ssl_roots_override_callback(Platform::grpc_root_certificates_override_callback);
 #endif
 
     gpr_set_log_function(gpr_custom_log_handler);
