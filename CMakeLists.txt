@@ -87,7 +87,7 @@ add_custom_command(
 if(WIN32)
     set(FLORA_PLATFORM_SOURCES
             platform/RootCertificates.h
-            platform/windows/RootCertificates.mm)
+            platform/windows/RootCertificates.cpp)
 endif()
 
 if(APPLE)
