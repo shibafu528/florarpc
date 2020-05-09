@@ -17,15 +17,15 @@ public:
     std::vector<std::shared_ptr<Server>> &getServers();
 
 private slots:
-    void onAddButtonClick();
+    void onAddServerButtonClick();
 
-    void onEditButtonClick();
+    void onEditServerButtonClick();
 
-    void onDeleteButtonClick();
+    void onDeleteServerButtonClick();
 
     void onCloseButtonClick();
 
-    void onCellDoubleClick(int row, int column);
+    void onServerCellDoubleClick(int row, int column);
 
 private:
     Ui::ServersManageDialog ui;

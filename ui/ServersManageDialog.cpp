@@ -8,23 +8,23 @@ ServersManageDialog::ServersManageDialog(QWidget *parent)
     : QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
     ui.setupUi(this);
 
-    connect(ui.addButton, &QAbstractButton::clicked, this, &ServersManageDialog::onAddButtonClick);
-    connect(ui.editButton, &QAbstractButton::clicked, this, &ServersManageDialog::onEditButtonClick);
-    connect(ui.deleteButton, &QAbstractButton::clicked, this, &ServersManageDialog::onDeleteButtonClick);
+    connect(ui.serversTable, &QTableWidget::cellDoubleClicked, this, &ServersManageDialog::onServerCellDoubleClick);
+    connect(ui.addServerButton, &QAbstractButton::clicked, this, &ServersManageDialog::onAddServerButtonClick);
+    connect(ui.editServerButton, &QAbstractButton::clicked, this, &ServersManageDialog::onEditServerButtonClick);
+    connect(ui.deleteServerButton, &QAbstractButton::clicked, this, &ServersManageDialog::onDeleteServerButtonClick);
     connect(ui.buttonBox->button(QDialogButtonBox::Close), &QAbstractButton::clicked, this,
             &ServersManageDialog::onCloseButtonClick);
-    connect(ui.tableWidget, &QTableWidget::cellDoubleClicked, this, &ServersManageDialog::onCellDoubleClick);
 
-    auto tableHeader = ui.tableWidget->horizontalHeader();
-    tableHeader->setSectionResizeMode(0, QHeaderView::Stretch);
-    tableHeader->setSectionResizeMode(1, QHeaderView::Stretch);
-    tableHeader->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    auto serversTableHeader = ui.serversTable->horizontalHeader();
+    serversTableHeader->setSectionResizeMode(0, QHeaderView::Stretch);
+    serversTableHeader->setSectionResizeMode(1, QHeaderView::Stretch);
+    serversTableHeader->setSectionResizeMode(2, QHeaderView::ResizeToContents);
 }
 
 void ServersManageDialog::setServers(std::vector<std::shared_ptr<Server>> &servers) {
     this->servers = servers;
 
-    ui.tableWidget->clearContents();
+    ui.serversTable->clearContents();
     for (auto &server : servers) {
         addServerRow(*server);
     }
@@ -32,7 +32,7 @@ void ServersManageDialog::setServers(std::vector<std::shared_ptr<Server>> &serve
 
 std::vector<std::shared_ptr<Server>> &ServersManageDialog::getServers() { return servers; }
 
-void ServersManageDialog::onAddButtonClick() {
+void ServersManageDialog::onAddServerButtonClick() {
     auto server = std::make_shared<Server>();
     auto dialog = std::make_unique<ServerEditDialog>(server, this);
     if (dialog->exec() == QDialog::DialogCode::Accepted) {
@@ -41,8 +41,8 @@ void ServersManageDialog::onAddButtonClick() {
     }
 }
 
-void ServersManageDialog::onEditButtonClick() {
-    auto select = ui.tableWidget->selectionModel();
+void ServersManageDialog::onEditServerButtonClick() {
+    auto select = ui.serversTable->selectionModel();
     if (!select->hasSelection()) {
         return;
     }
@@ -55,8 +55,8 @@ void ServersManageDialog::onEditButtonClick() {
     }
 }
 
-void ServersManageDialog::onDeleteButtonClick() {
-    auto select = ui.tableWidget->selectionModel();
+void ServersManageDialog::onDeleteServerButtonClick() {
+    auto select = ui.serversTable->selectionModel();
     if (!select->hasSelection()) {
         return;
     }
@@ -67,13 +67,13 @@ void ServersManageDialog::onDeleteButtonClick() {
         return;
     }
 
-    ui.tableWidget->removeRow(row);
+    ui.serversTable->removeRow(row);
     servers.erase(servers.begin() + row);
 }
 
 void ServersManageDialog::onCloseButtonClick() { close(); }
 
-void ServersManageDialog::onCellDoubleClick(int row, int column) {
+void ServersManageDialog::onServerCellDoubleClick(int row, int column) {
     auto server = servers[row];
     auto dialog = std::make_unique<ServerEditDialog>(server, this);
     if (dialog->exec() == QDialog::DialogCode::Accepted) {
@@ -82,17 +82,17 @@ void ServersManageDialog::onCellDoubleClick(int row, int column) {
 }
 
 void ServersManageDialog::addServerRow(Server &server) {
-    int row = ui.tableWidget->rowCount();
-    ui.tableWidget->insertRow(row);
+    int row = ui.serversTable->rowCount();
+    ui.serversTable->insertRow(row);
     setServerRow(row, server);
 }
 
 void ServersManageDialog::setServerRow(int row, Server &server) {
-    ui.tableWidget->setItem(row, 0, new QTableWidgetItem(server.name));
-    ui.tableWidget->setItem(row, 1, new QTableWidgetItem(server.address));
+    ui.serversTable->setItem(row, 0, new QTableWidgetItem(server.name));
+    ui.serversTable->setItem(row, 1, new QTableWidgetItem(server.address));
 
     auto useTLSItem = new QTableWidgetItem();
     useTLSItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
     useTLSItem->setCheckState(server.useTLS ? Qt::Checked : Qt::Unchecked);
-    ui.tableWidget->setItem(row, 2, useTLSItem);
+    ui.serversTable->setItem(row, 2, useTLSItem);
 }
