@@ -23,6 +23,8 @@ private slots:
 
     void onDeleteServerButtonClick();
 
+    void onAddCertsButtonClick();
+
     void onCloseButtonClick();
 
     void onServerCellDoubleClick(int row, int column);

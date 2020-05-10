@@ -2,6 +2,7 @@
 
 #include <QMessageBox>
 
+#include "CertsEditDialog.h"
 #include "ServerEditDialog.h"
 
 ServersManageDialog::ServersManageDialog(QWidget *parent)
@@ -12,6 +13,7 @@ ServersManageDialog::ServersManageDialog(QWidget *parent)
     connect(ui.addServerButton, &QAbstractButton::clicked, this, &ServersManageDialog::onAddServerButtonClick);
     connect(ui.editServerButton, &QAbstractButton::clicked, this, &ServersManageDialog::onEditServerButtonClick);
     connect(ui.deleteServerButton, &QAbstractButton::clicked, this, &ServersManageDialog::onDeleteServerButtonClick);
+    connect(ui.addCertsButton, &QAbstractButton::clicked, this, &ServersManageDialog::onAddCertsButtonClick);
     connect(ui.buttonBox->button(QDialogButtonBox::Close), &QAbstractButton::clicked, this,
             &ServersManageDialog::onCloseButtonClick);
 
@@ -69,6 +71,11 @@ void ServersManageDialog::onDeleteServerButtonClick() {
 
     ui.serversTable->removeRow(row);
     servers.erase(servers.begin() + row);
+}
+
+void ServersManageDialog::onAddCertsButtonClick() {
+    auto dialog = std::make_unique<CertsEditDialog>(this);
+    dialog->exec();
 }
 
 void ServersManageDialog::onCloseButtonClick() { close(); }
