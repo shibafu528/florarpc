@@ -3,6 +3,7 @@
 
 #include <QDialog>
 
+#include "entity/Certificate.h"
 #include "entity/Server.h"
 #include "ui/ui_ServersManageDialog.h"
 
@@ -24,6 +25,10 @@ private slots:
     void onDeleteServerButtonClick();
 
     void onAddCertsButtonClick();
+
+    void onEditCertsButtonClick();
+
+    void onDeleteCertsButtonClick();
 
     void onCloseButtonClick();
 

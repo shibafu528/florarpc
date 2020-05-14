@@ -128,6 +128,8 @@ add_executable(flora
         ui/ServersManageDialog.ui
         ui/ServersManageDialog.cpp
         ui/ServersManageDialog.h
+        entity/Certificate.cpp
+        entity/Certificate.h
         entity/Protocol.cpp
         entity/Protocol.h
         entity/Method.cpp

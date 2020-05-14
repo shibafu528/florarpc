@@ -14,6 +14,8 @@ ServersManageDialog::ServersManageDialog(QWidget *parent)
     connect(ui.editServerButton, &QAbstractButton::clicked, this, &ServersManageDialog::onEditServerButtonClick);
     connect(ui.deleteServerButton, &QAbstractButton::clicked, this, &ServersManageDialog::onDeleteServerButtonClick);
     connect(ui.addCertsButton, &QAbstractButton::clicked, this, &ServersManageDialog::onAddCertsButtonClick);
+    connect(ui.editCertsButton, &QAbstractButton::clicked, this, &ServersManageDialog::onEditCertsButtonClick);
+    connect(ui.deleteCertsButton, &QAbstractButton::clicked, this, &ServersManageDialog::onDeleteCertsButtonClick);
     connect(ui.buttonBox->button(QDialogButtonBox::Close), &QAbstractButton::clicked, this,
             &ServersManageDialog::onCloseButtonClick);
 
@@ -74,9 +76,15 @@ void ServersManageDialog::onDeleteServerButtonClick() {
 }
 
 void ServersManageDialog::onAddCertsButtonClick() {
-    auto dialog = std::make_unique<CertsEditDialog>(this);
-    dialog->exec();
+    auto certs = std::make_shared<Certificate>();
+    auto dialog = std::make_unique<CertsEditDialog>(certs, this);
+    if (dialog->exec() == QDialog::DialogCode::Accepted) {
+    }
 }
+
+void ServersManageDialog::onEditCertsButtonClick() {}
+
+void ServersManageDialog::onDeleteCertsButtonClick() {}
 
 void ServersManageDialog::onCloseButtonClick() { close(); }
 

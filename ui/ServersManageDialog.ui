@@ -151,7 +151,7 @@
          </column>
          <column>
           <property name="text">
-           <string>サーバ証明書</string>
+           <string>ルート証明書</string>
           </property>
          </column>
          <column>
