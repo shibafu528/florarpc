@@ -12,8 +12,11 @@ public:
     QUuid id;
     QString name;
     QByteArray rootCerts;
+    QString rootCertsName;
     QByteArray privateKey;
+    QString privateKeyName;
     QByteArray certChain;
+    QString certChainName;
 };
 
 #endif  // FLORARPC_CERTIFICATE_H

@@ -22,6 +22,10 @@ public:
 
     QByteArray getPem();
 
+    void setFilename(QString filename);
+
+    QString getFilename();
+
     void setAcceptType(AcceptType acceptType);
 
 private slots:
@@ -34,6 +38,7 @@ private slots:
 private:
     Ui_CertsEditControl ui;
     QByteArray pem;
+    QString filename;
     AcceptType acceptType;
 };
 

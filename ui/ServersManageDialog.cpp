@@ -36,6 +36,17 @@ void ServersManageDialog::setServers(std::vector<std::shared_ptr<Server>> &serve
 
 std::vector<std::shared_ptr<Server>> &ServersManageDialog::getServers() { return servers; }
 
+void ServersManageDialog::setCertificates(std::vector<std::shared_ptr<Certificate>> &certificates) {
+    this->certificates = certificates;
+
+    ui.certsTable->clearContents();
+    for (auto &cert : certificates) {
+        addCertsRow(*cert);
+    }
+}
+
+std::vector<std::shared_ptr<Certificate>> &ServersManageDialog::getCertificates() { return certificates; }
+
 void ServersManageDialog::onAddServerButtonClick() {
     auto server = std::make_shared<Server>();
     auto dialog = std::make_unique<ServerEditDialog>(server, this);
@@ -79,12 +90,41 @@ void ServersManageDialog::onAddCertsButtonClick() {
     auto certs = std::make_shared<Certificate>();
     auto dialog = std::make_unique<CertsEditDialog>(certs, this);
     if (dialog->exec() == QDialog::DialogCode::Accepted) {
+        certificates.push_back(certs);
+        addCertsRow(*certs);
     }
 }
 
-void ServersManageDialog::onEditCertsButtonClick() {}
+void ServersManageDialog::onEditCertsButtonClick() {
+    auto select = ui.certsTable->selectionModel();
+    if (!select->hasSelection()) {
+        return;
+    }
 
-void ServersManageDialog::onDeleteCertsButtonClick() {}
+    auto row = select->selectedRows().first();
+    auto certificate = certificates[row.row()];
+    auto dialog = std::make_unique<CertsEditDialog>(certificate, this);
+    if (dialog->exec() == QDialog::DialogCode::Accepted) {
+        setCertsRow(row.row(), *certificate);
+    }
+}
+
+void ServersManageDialog::onDeleteCertsButtonClick() {
+    auto select = ui.certsTable->selectionModel();
+    if (!select->hasSelection()) {
+        return;
+    }
+
+    auto row = select->selectedRows().first().row();
+    if (QMessageBox::warning(this, "確認",
+                             QString("証明書 %1 を削除してもよろしいですか？").arg(certificates[row]->name),
+                             QMessageBox::Ok | QMessageBox::Cancel) != QMessageBox::Ok) {
+        return;
+    }
+
+    ui.certsTable->removeRow(row);
+    certificates.erase(certificates.begin() + row);
+}
 
 void ServersManageDialog::onCloseButtonClick() { close(); }
 
@@ -110,4 +150,17 @@ void ServersManageDialog::setServerRow(int row, Server &server) {
     useTLSItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
     useTLSItem->setCheckState(server.useTLS ? Qt::Checked : Qt::Unchecked);
     ui.serversTable->setItem(row, 2, useTLSItem);
+}
+
+void ServersManageDialog::addCertsRow(Certificate &certificate) {
+    int row = ui.certsTable->rowCount();
+    ui.certsTable->insertRow(row);
+    setCertsRow(row, certificate);
+}
+
+void ServersManageDialog::setCertsRow(int row, Certificate &certificate) {
+    ui.certsTable->setItem(row, 0, new QTableWidgetItem(certificate.name));
+    ui.certsTable->setItem(row, 1, new QTableWidgetItem(certificate.rootCertsName));
+    ui.certsTable->setItem(row, 2, new QTableWidgetItem(certificate.certChainName));
+    ui.certsTable->setItem(row, 3, new QTableWidgetItem(certificate.privateKeyName));
 }

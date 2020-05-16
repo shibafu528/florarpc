@@ -18,8 +18,11 @@ CertsEditDialog::CertsEditDialog(std::shared_ptr<Certificate> certificate, QWidg
 
     ui.nameEdit->setText(this->certificate->name);
     ui.rootCertsControl->setPem(this->certificate->rootCerts);
+    ui.rootCertsControl->setFilename(this->certificate->rootCertsName);
     ui.privateKeyControl->setPem(this->certificate->privateKey);
+    ui.privateKeyControl->setFilename(this->certificate->privateKeyName);
     ui.certChainControl->setPem(this->certificate->certChain);
+    ui.certChainControl->setFilename(this->certificate->certChainName);
 }
 
 void CertsEditDialog::onOkButtonClick() {
@@ -35,8 +38,11 @@ void CertsEditDialog::onOkButtonClick() {
 
     certificate->name = ui.nameEdit->text();
     certificate->rootCerts = ui.rootCertsControl->getPem();
+    certificate->rootCertsName = ui.rootCertsControl->getFilename();
     certificate->privateKey = ui.privateKeyControl->getPem();
+    certificate->privateKeyName = ui.privateKeyControl->getFilename();
     certificate->certChain = ui.certChainControl->getPem();
+    certificate->certChainName = ui.certChainControl->getFilename();
 
     done(Accepted);
 }

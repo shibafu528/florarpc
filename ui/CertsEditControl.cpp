@@ -29,6 +29,13 @@ void CertsEditControl::setPem(QByteArray pem) {
 
 QByteArray CertsEditControl::getPem() { return pem; }
 
+void CertsEditControl::setFilename(QString filename) {
+    this->filename = filename;
+    this->ui.filenameLabel->setText(filename);
+}
+
+QString CertsEditControl::getFilename() { return filename; }
+
 void CertsEditControl::setAcceptType(CertsEditControl::AcceptType acceptType) { this->acceptType = acceptType; }
 
 void CertsEditControl::onImportButtonClick() {
@@ -67,6 +74,7 @@ void CertsEditControl::onImportButtonClick() {
                             (acceptType == AcceptType::RSAPrivateKey && qName == PEM_STRING_RSA);
     if (acceptable) {
         setPem(bin);
+        setFilename(QFileInfo(filename).fileName());
     } else {
         switch (acceptType) {
             case AcceptType::Unknown:
@@ -95,4 +103,7 @@ void CertsEditControl::onShowButtonClick() {
     QMessageBox::information(this, "PEM", pemString);
 }
 
-void CertsEditControl::onDeleteButtonClick() { setPem(QByteArray()); }
+void CertsEditControl::onDeleteButtonClick() {
+    setPem(QByteArray());
+    setFilename("");
+}
