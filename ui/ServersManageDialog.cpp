@@ -13,6 +13,7 @@ ServersManageDialog::ServersManageDialog(QWidget *parent)
     connect(ui.addServerButton, &QAbstractButton::clicked, this, &ServersManageDialog::onAddServerButtonClick);
     connect(ui.editServerButton, &QAbstractButton::clicked, this, &ServersManageDialog::onEditServerButtonClick);
     connect(ui.deleteServerButton, &QAbstractButton::clicked, this, &ServersManageDialog::onDeleteServerButtonClick);
+    connect(ui.certsTable, &QTableWidget::cellDoubleClicked, this, &ServersManageDialog::onCertsCellDoubleClick);
     connect(ui.addCertsButton, &QAbstractButton::clicked, this, &ServersManageDialog::onAddCertsButtonClick);
     connect(ui.editCertsButton, &QAbstractButton::clicked, this, &ServersManageDialog::onEditCertsButtonClick);
     connect(ui.deleteCertsButton, &QAbstractButton::clicked, this, &ServersManageDialog::onDeleteCertsButtonClick);
@@ -133,6 +134,14 @@ void ServersManageDialog::onServerCellDoubleClick(int row, int column) {
     auto dialog = std::make_unique<ServerEditDialog>(server, certificates, this);
     if (dialog->exec() == QDialog::DialogCode::Accepted) {
         setServerRow(row, *server);
+    }
+}
+
+void ServersManageDialog::onCertsCellDoubleClick(int row, int column) {
+    auto certificate = certificates[row];
+    auto dialog = std::make_unique<CertsEditDialog>(certificate, this);
+    if (dialog->exec() == QDialog::DialogCode::Accepted) {
+        setCertsRow(row, *certificate);
     }
 }
 

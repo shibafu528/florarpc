@@ -38,6 +38,8 @@ private slots:
 
     void onServerCellDoubleClick(int row, int column);
 
+    void onCertsCellDoubleClick(int row, int column);
+
 private:
     Ui::ServersManageDialog ui;
     std::vector<std::shared_ptr<Server>> servers;
