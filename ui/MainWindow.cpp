@@ -114,6 +114,7 @@ void MainWindow::onActionOpenWorkspaceTriggered() {
     protocols.clear();
     imports.clear();
     servers.clear();
+    certificates.clear();
     for (int i = ui.editorTabs->count() - 1; i >= 0; i--) {
         auto editor = ui.editorTabs->widget(i);
         ui.editorTabs->removeTab(i);
@@ -127,6 +128,10 @@ void MainWindow::onActionOpenWorkspaceTriggered() {
 
     for (const auto &server : workspace.servers()) {
         servers.push_back(std::make_shared<Server>(server));
+    }
+
+    for (const auto &certificate : workspace.certificates()) {
+        certificates.push_back(std::make_shared<Certificate>(certificate));
     }
 
     QStringList filenames;
@@ -182,12 +187,15 @@ void MainWindow::onActionManageProtoTriggered() {
 void MainWindow::onActionManageServerTriggered() {
     auto dialog = std::make_unique<ServersManageDialog>(this);
     dialog->setServers(servers);
+    dialog->setCertificates(certificates);
     dialog->exec();
     servers = dialog->getServers();
+    certificates = dialog->getCertificates();
     for (int i = 0; i < ui.editorTabs->count(); i++) {
         auto editor = qobject_cast<Editor *>(ui.editorTabs->widget(i));
         if (editor != nullptr) {
             editor->setServers(servers);
+            editor->setCertificates(certificates);
         }
     }
 }
@@ -311,6 +319,7 @@ Editor *MainWindow::openEditor(std::unique_ptr<Method> method, bool forceNewTab)
 
     auto editor = new Editor(std::move(method), syntaxDefinitions);
     editor->setServers(servers);
+    editor->setCertificates(certificates);
     const auto addedIndex = ui.editorTabs->addTab(editor, QString::fromStdString(methodName));
     ui.editorTabs->setCurrentIndex(addedIndex);
     return editor;
@@ -337,6 +346,11 @@ bool MainWindow::saveWorkspace(const QString &filename) {
     for (auto &server : servers) {
         florarpc::Server *protoServer = workspace.add_servers();
         server->writeServer(*protoServer);
+    }
+
+    for (auto &certificate : certificates) {
+        florarpc::Certificate *protoCertificate = workspace.add_certificates();
+        certificate->writeCertificate(*protoCertificate);
     }
 
     for (int i = 0; i < ui.editorTabs->count(); i++) {

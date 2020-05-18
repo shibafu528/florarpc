@@ -6,6 +6,7 @@
 #include <QMainWindow>
 #include <QShortcut>
 
+#include "../entity/Certificate.h"
 #include "../entity/Protocol.h"
 #include "../entity/Server.h"
 #include "Editor.h"
@@ -46,6 +47,7 @@ private:
     Ui::MainWindow ui;
     std::vector<std::shared_ptr<Protocol>> protocols;
     std::vector<std::shared_ptr<Server>> servers;
+    std::vector<std::shared_ptr<Certificate>> certificates;
     std::unique_ptr<ProtocolTreeModel> protocolTreeModel;
     QStringList imports;
     KSyntaxHighlighting::Repository syntaxDefinitions;

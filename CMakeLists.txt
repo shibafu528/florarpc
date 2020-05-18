@@ -104,6 +104,12 @@ add_executable(flora
         main.cpp
         flora_constants.h
         resources.qrc
+        ui/CertsEditControl.ui
+        ui/CertsEditControl.cpp
+        ui/CertsEditControl.h
+        ui/CertsEditDialog.ui
+        ui/CertsEditDialog.cpp
+        ui/CertsEditDialog.h
         ui/MainWindow.ui
         ui/MainWindow.cpp
         ui/MainWindow.h
@@ -122,6 +128,8 @@ add_executable(flora
         ui/ServersManageDialog.ui
         ui/ServersManageDialog.cpp
         ui/ServersManageDialog.h
+        entity/Certificate.cpp
+        entity/Certificate.h
         entity/Protocol.cpp
         entity/Protocol.h
         entity/Method.cpp

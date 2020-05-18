@@ -10,6 +10,7 @@ message Workspace {
   repeated ImportPath import_paths = 3;
   repeated Request requests = 4;
   repeated Server servers = 5;
+  repeated Certificate certificates = 6;
 }
 
 message ProtoFile {
@@ -38,4 +39,16 @@ message Server {
   string name = 2;
   string address = 3;
   bool useTLS = 4;
+  string certificate_id = 5;
+}
+
+message Certificate {
+  string id = 1;
+  string name = 2;
+  bytes root_certs = 3;
+  string root_certs_name = 4;
+  bytes private_key = 5;
+  string private_key_name = 6;
+  bytes cert_chain = 7;
+  string cert_chain_name = 8;
 }
