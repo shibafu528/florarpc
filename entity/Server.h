@@ -18,6 +18,7 @@ public:
     QString name;
     QString address;
     bool useTLS;
+    QUuid certificateUUID;
 };
 
 #endif  // FLORARPC_SERVER_H

@@ -49,7 +49,7 @@ std::vector<std::shared_ptr<Certificate>> &ServersManageDialog::getCertificates(
 
 void ServersManageDialog::onAddServerButtonClick() {
     auto server = std::make_shared<Server>();
-    auto dialog = std::make_unique<ServerEditDialog>(server, this);
+    auto dialog = std::make_unique<ServerEditDialog>(server, certificates, this);
     if (dialog->exec() == QDialog::DialogCode::Accepted) {
         servers.push_back(server);
         addServerRow(*server);
@@ -64,7 +64,7 @@ void ServersManageDialog::onEditServerButtonClick() {
 
     auto row = select->selectedRows().first();
     auto server = servers[row.row()];
-    auto dialog = std::make_unique<ServerEditDialog>(server, this);
+    auto dialog = std::make_unique<ServerEditDialog>(server, certificates, this);
     if (dialog->exec() == QDialog::DialogCode::Accepted) {
         setServerRow(row.row(), *server);
     }
@@ -130,7 +130,7 @@ void ServersManageDialog::onCloseButtonClick() { close(); }
 
 void ServersManageDialog::onServerCellDoubleClick(int row, int column) {
     auto server = servers[row];
-    auto dialog = std::make_unique<ServerEditDialog>(server, this);
+    auto dialog = std::make_unique<ServerEditDialog>(server, certificates, this);
     if (dialog->exec() == QDialog::DialogCode::Accepted) {
         setServerRow(row, *server);
     }

@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>500</width>
-    <height>220</height>
+    <height>260</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,16 +19,6 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="nameEdit"/>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>アドレス</string>
-       </property>
-      </widget>
-     </item>
      <item row="0" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
@@ -43,6 +33,30 @@
       <widget class="QCheckBox" name="useTLSCheck">
        <property name="text">
         <string>&amp;TLSを使用</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>アドレス</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="nameEdit"/>
+     </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="certificateComboBox">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>証明書</string>
        </property>
       </widget>
      </item>
@@ -70,6 +84,12 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>nameEdit</tabstop>
+  <tabstop>addressEdit</tabstop>
+  <tabstop>useTLSCheck</tabstop>
+  <tabstop>certificateComboBox</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
