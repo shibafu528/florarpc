@@ -8,6 +8,7 @@
 
 #include <QWidget>
 
+#include "../entity/Certificate.h"
 #include "../entity/Method.h"
 #include "../entity/Server.h"
 #include "../entity/Session.h"
@@ -23,6 +24,8 @@ public:
     inline Method &getMethod() { return *method; }
 
     void setServers(std::vector<std::shared_ptr<Server>> servers);
+
+    void setCertificates(std::vector<std::shared_ptr<Certificate>> certificates);
 
     void readRequest(const florarpc::Request &request);
 
@@ -62,6 +65,7 @@ private:
 
     std::unique_ptr<Method> method;
     std::vector<std::shared_ptr<Server>> servers;
+    std::vector<std::shared_ptr<Certificate>> certificates;
 
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> requestHighlighter;
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> requestMetadataHighlighter;

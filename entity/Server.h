@@ -4,6 +4,7 @@
 #include <QString>
 #include <QUuid>
 
+#include "Certificate.h"
 #include "florarpc/workspace.pb.h"
 
 class Server {
@@ -13,6 +14,8 @@ public:
     explicit Server(const florarpc::Server &server);
 
     void writeServer(florarpc::Server &server);
+
+    std::shared_ptr<Certificate> findCertificate(const std::vector<std::shared_ptr<Certificate>> &certificates);
 
     QUuid id;
     QString name;

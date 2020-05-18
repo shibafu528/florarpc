@@ -24,3 +24,11 @@ void Certificate::writeCertificate(florarpc::Certificate &certificate) {
     certificate.set_cert_chain(certChain);
     certificate.set_cert_chain_name(certChainName.toStdString());
 }
+
+std::shared_ptr<grpc::ChannelCredentials> Certificate::getCredentials() {
+    grpc::SslCredentialsOptions options;
+    options.pem_root_certs = rootCerts.toStdString();
+    options.pem_private_key = privateKey.toStdString();
+    options.pem_cert_chain = certChain.toStdString();
+    return grpc::SslCredentials(options);
+}

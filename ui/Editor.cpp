@@ -1,25 +1,40 @@
 #include "Editor.h"
-#include "../util/GrpcUtility.h"
-#include "../entity/Method.h"
+
 #include <KSyntaxHighlighting/definition.h>
 #include <KSyntaxHighlighting/theme.h>
-#include <QMenu>
-#include <QMessageBox>
+#include <google/protobuf/util/json_util.h>
+#include <grpcpp/generic/generic_stub.h>
+#include <grpcpp/grpcpp.h>
+
 #include <QClipboard>
+#include <QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <google/protobuf/util/json_util.h>
-#include <grpcpp/grpcpp.h>
-#include <grpcpp/generic/generic_stub.h>
+#include <QMenu>
+#include <QMessageBox>
 
-static std::shared_ptr<grpc::ChannelCredentials> getDefaultCredentials(bool useTls) {
-    return useTls ? grpc::SslCredentials(grpc::SslCredentialsOptions()) : grpc::InsecureChannelCredentials();
+#include "../entity/Method.h"
+#include "../util/GrpcUtility.h"
+
+static std::shared_ptr<grpc::ChannelCredentials> getCredentials(
+    Server &server, std::vector<std::shared_ptr<Certificate>> &certificates) {
+    if (server.useTLS) {
+        auto certificate = server.findCertificate(certificates);
+        if (certificate) {
+            qDebug() << "Using ssl channel credentials with user options";
+            return certificate->getCredentials();
+        } else {
+            qDebug() << "Using default ssl channel credentials";
+            return grpc::SslCredentials(grpc::SslCredentialsOptions());
+        }
+    } else {
+        qDebug() << "Using insecure channel credentials";
+        return grpc::InsecureChannelCredentials();
+    }
 }
 
-Editor::Editor(std::unique_ptr<Method> &&method,
-               KSyntaxHighlighting::Repository &repository,
-               QWidget *parent)
-        : QWidget(parent), responseMetadataContextMenu(new QMenu(this)), session(nullptr), method(std::move(method)) {
+Editor::Editor(std::unique_ptr<Method> &&method, KSyntaxHighlighting::Repository &repository, QWidget *parent)
+    : QWidget(parent), responseMetadataContextMenu(new QMenu(this)), session(nullptr), method(std::move(method)) {
     ui.setupUi(this);
 
     connect(ui.executeButton, &QPushButton::clicked, this, &Editor::onExecuteButtonClicked);
@@ -43,9 +58,9 @@ Editor::Editor(std::unique_ptr<Method> &&method,
 
     const auto jsonDefinition = repository.definitionForMimeType("application/json");
     if (jsonDefinition.isValid()) {
-        const auto theme = (palette().color(QPalette::Base).lightness() < 128) ?
-                           repository.defaultTheme(KSyntaxHighlighting::Repository::DarkTheme) :
-                           repository.defaultTheme(KSyntaxHighlighting::Repository::LightTheme);
+        const auto theme = (palette().color(QPalette::Base).lightness() < 128)
+                               ? repository.defaultTheme(KSyntaxHighlighting::Repository::DarkTheme)
+                               : repository.defaultTheme(KSyntaxHighlighting::Repository::LightTheme);
         requestHighlighter = setupHighlighter(*ui.requestEdit, jsonDefinition, theme);
         requestMetadataHighlighter = setupHighlighter(*ui.requestMetadataEdit, jsonDefinition, theme);
         responseHighlighter = setupHighlighter(*ui.responseEdit, jsonDefinition, theme);
@@ -70,12 +85,15 @@ Editor::Editor(std::unique_ptr<Method> &&method,
             responseMetadataContextMenu->exec(ui.responseMetadataTable->viewport()->mapToGlobal(pos));
         }
     });
-    responseMetadataContextMenu->addAction("コピー(&C)", [=]() {
-        auto selected = ui.responseMetadataTable->selectedItems();
-        if (!selected.isEmpty()) {
-            QApplication::clipboard()->setText(selected.first()->text());
-        }
-    })->setIcon(QIcon::fromTheme("edit-copy"));
+    responseMetadataContextMenu
+        ->addAction("コピー(&C)",
+                    [=]() {
+                        auto selected = ui.responseMetadataTable->selectedItems();
+                        if (!selected.isEmpty()) {
+                            QApplication::clipboard()->setText(selected.first()->text());
+                        }
+                    })
+        ->setIcon(QIcon::fromTheme("edit-copy"));
 
     ui.requestEdit->setText(QString::fromStdString(this->method->makeRequestSkeleton()));
     requestHighlighter->rehighlight();
@@ -112,6 +130,10 @@ void Editor::setServers(std::vector<std::shared_ptr<Server>> servers) {
             }
         }
     }
+}
+
+void Editor::setCertificates(std::vector<std::shared_ptr<Certificate>> certificates) {
+    this->certificates = certificates;
 }
 
 void Editor::readRequest(const florarpc::Request &request) {
@@ -190,7 +212,7 @@ void Editor::onExecuteButtonClicked() {
     }
 
     auto server = getCurrentServer();
-    auto credentials = getDefaultCredentials(server->useTLS);
+    auto credentials = getCredentials(*server, certificates);
     session = new Session(*method, server->address, credentials, metadata, this);
     connect(session, &Session::messageSent, this, &Editor::onMessageSent);
     connect(session, &Session::messageReceived, this, &Editor::onMessageReceived);
@@ -282,9 +304,7 @@ void Editor::onNextResponseBodyButtonClicked() {
     updateResponsePager();
 }
 
-void Editor::onMessageSent() {
-    ui.sendButton->setDisabled(false);
-}
+void Editor::onMessageSent() { ui.sendButton->setDisabled(false); }
 
 void Editor::onMessageReceived(const grpc::ByteBuffer &buffer) {
     responses.append(buffer);
@@ -316,7 +336,7 @@ void Editor::onMetadataReceived(const Session::Metadata &metadata) {
 
 void Editor::onSessionFinished(int code, const QString &message, const QByteArray &details) {
     if (code != grpc::StatusCode::OK) {
-        setErrorToResponseView(GrpcUtility::errorCodeToString((grpc::StatusCode) code), message, details);
+        setErrorToResponseView(GrpcUtility::errorCodeToString((grpc::StatusCode)code), message, details);
     }
     cleanupSession();
 }
@@ -329,7 +349,7 @@ void Editor::cleanupSession() {
 }
 
 std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> Editor::setupHighlighter(
-        QTextEdit &edit, const KSyntaxHighlighting::Definition &definition, const KSyntaxHighlighting::Theme &theme) {
+    QTextEdit &edit, const KSyntaxHighlighting::Definition &definition, const KSyntaxHighlighting::Theme &theme) {
     auto highlighter = std::make_unique<KSyntaxHighlighting::SyntaxHighlighter>(&edit);
 
     auto pal = qApp->palette();

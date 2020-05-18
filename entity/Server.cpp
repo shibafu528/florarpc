@@ -18,3 +18,16 @@ void Server::writeServer(florarpc::Server& server) {
     server.set_usetls(useTLS);
     server.set_certificate_id(certificateUUID.toString().toStdString());
 }
+
+std::shared_ptr<Certificate> Server::findCertificate(const std::vector<std::shared_ptr<Certificate>>& certificates) {
+    if (!useTLS || certificateUUID.isNull()) {
+        return nullptr;
+    }
+
+    for (const auto& cert : certificates) {
+        if (cert->id == certificateUUID) {
+            return cert;
+        }
+    }
+    return nullptr;
+}
