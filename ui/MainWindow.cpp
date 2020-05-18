@@ -114,6 +114,7 @@ void MainWindow::onActionOpenWorkspaceTriggered() {
     protocols.clear();
     imports.clear();
     servers.clear();
+    certificates.clear();
     for (int i = ui.editorTabs->count() - 1; i >= 0; i--) {
         auto editor = ui.editorTabs->widget(i);
         ui.editorTabs->removeTab(i);
@@ -127,6 +128,10 @@ void MainWindow::onActionOpenWorkspaceTriggered() {
 
     for (const auto &server : workspace.servers()) {
         servers.push_back(std::make_shared<Server>(server));
+    }
+
+    for (const auto &certificate : workspace.certificates()) {
+        certificates.push_back(std::make_shared<Certificate>(certificate));
     }
 
     QStringList filenames;
@@ -337,6 +342,11 @@ bool MainWindow::saveWorkspace(const QString &filename) {
     for (auto &server : servers) {
         florarpc::Server *protoServer = workspace.add_servers();
         server->writeServer(*protoServer);
+    }
+
+    for (auto &certificate : certificates) {
+        florarpc::Certificate *protoCertificate = workspace.add_certificates();
+        certificate->writeCertificate(*protoCertificate);
     }
 
     for (int i = 0; i < ui.editorTabs->count(); i++) {

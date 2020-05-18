@@ -4,10 +4,15 @@
 #include <QString>
 #include <QUuid>
 
+#include "florarpc/workspace.pb.h"
+
 class Certificate {
 public:
     Certificate();
     explicit Certificate(QUuid id);
+    explicit Certificate(const florarpc::Certificate &certificate);
+
+    void writeCertificate(florarpc::Certificate &certificate);
 
     QUuid id;
     QString name;
