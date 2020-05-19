@@ -17,11 +17,11 @@ CertsEditDialog::CertsEditDialog(std::shared_ptr<Certificate> certificate, QWidg
     ui.certChainControl->setAcceptType(CertsEditControl::AcceptType::Certificate);
 
     ui.nameEdit->setText(this->certificate->name);
-    ui.rootCertsControl->setPem(this->certificate->rootCerts);
+    ui.rootCertsControl->setFilePath(this->certificate->rootCertsPath);
     ui.rootCertsControl->setFilename(this->certificate->rootCertsName);
-    ui.privateKeyControl->setPem(this->certificate->privateKey);
+    ui.privateKeyControl->setFilePath(this->certificate->privateKeyPath);
     ui.privateKeyControl->setFilename(this->certificate->privateKeyName);
-    ui.certChainControl->setPem(this->certificate->certChain);
+    ui.certChainControl->setFilePath(this->certificate->certChainPath);
     ui.certChainControl->setFilename(this->certificate->certChainName);
 }
 
@@ -31,17 +31,17 @@ void CertsEditDialog::onOkButtonClick() {
         return;
     }
 
-    if (ui.rootCertsControl->getPem().isEmpty()) {
-        QMessageBox::warning(this, "Error", "ルート証明書のインポートは必須です。");
+    if (ui.rootCertsControl->getFilename().isEmpty()) {
+        QMessageBox::warning(this, "Error", "ルート証明書の指定は必須です。");
         return;
     }
 
     certificate->name = ui.nameEdit->text();
-    certificate->rootCerts = ui.rootCertsControl->getPem();
+    certificate->rootCertsPath = ui.rootCertsControl->getFilePath();
     certificate->rootCertsName = ui.rootCertsControl->getFilename();
-    certificate->privateKey = ui.privateKeyControl->getPem();
+    certificate->privateKeyPath = ui.privateKeyControl->getFilePath();
     certificate->privateKeyName = ui.privateKeyControl->getFilename();
-    certificate->certChain = ui.certChainControl->getPem();
+    certificate->certChainPath = ui.certChainControl->getFilePath();
     certificate->certChainName = ui.certChainControl->getFilename();
 
     done(Accepted);

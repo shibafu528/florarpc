@@ -20,11 +20,11 @@ public:
 
     QUuid id;
     QString name;
-    QByteArray rootCerts;
+    QString rootCertsPath;
     QString rootCertsName;
-    QByteArray privateKey;
+    QString privateKeyPath;
     QString privateKeyName;
-    QByteArray certChain;
+    QString certChainPath;
     QString certChainName;
 };
 
