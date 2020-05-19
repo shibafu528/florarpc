@@ -45,10 +45,15 @@ message Server {
 message Certificate {
   string id = 1;
   string name = 2;
-  bytes root_certs = 3;
+  string root_certs_path = 9;
   string root_certs_name = 4;
-  bytes private_key = 5;
+  string private_key_path = 10;
   string private_key_name = 6;
-  bytes cert_chain = 7;
+  string cert_chain_path = 11;
   string cert_chain_name = 8;
+
+  // deprecated fields
+  bytes root_certs = 3 [deprecated = true];
+  bytes private_key = 5 [deprecated = true];
+  bytes cert_chain = 7 [deprecated = true];
 }

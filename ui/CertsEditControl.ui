@@ -29,14 +29,7 @@
    <item>
     <widget class="QPushButton" name="importButton">
      <property name="text">
-      <string>インポート</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="showButton">
-     <property name="text">
-      <string>表示</string>
+      <string>参照...</string>
      </property>
     </widget>
    </item>

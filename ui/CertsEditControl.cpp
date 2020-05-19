@@ -10,28 +10,20 @@ CertsEditControl::CertsEditControl(QWidget *parent) : QWidget(parent), acceptTyp
     ui.setupUi(this);
 
     connect(ui.importButton, &QAbstractButton::clicked, this, &CertsEditControl::onImportButtonClick);
-    connect(ui.showButton, &QAbstractButton::clicked, this, &CertsEditControl::onShowButtonClick);
     connect(ui.deleteButton, &QAbstractButton::clicked, this, &CertsEditControl::onDeleteButtonClick);
 }
 
-void CertsEditControl::setPem(QByteArray pem) {
-    this->pem = pem;
-    if (pem.isEmpty()) {
-        ui.importButton->show();
-        ui.showButton->hide();
-        ui.deleteButton->hide();
-    } else {
-        ui.importButton->hide();
-        ui.showButton->show();
-        ui.deleteButton->show();
-    }
+void CertsEditControl::setFilePath(QString filePath) {
+    this->filePath = filePath;
+    updateState();
 }
 
-QByteArray CertsEditControl::getPem() { return pem; }
+QString CertsEditControl::getFilePath() { return filePath; }
 
 void CertsEditControl::setFilename(QString filename) {
     this->filename = filename;
     this->ui.filenameLabel->setText(filename);
+    updateState();
 }
 
 QString CertsEditControl::getFilename() { return filename; }
@@ -73,8 +65,9 @@ void CertsEditControl::onImportButtonClick() {
     const auto acceptable = (acceptType == AcceptType::Certificate && qName == PEM_STRING_X509) ||
                             (acceptType == AcceptType::RSAPrivateKey && qName == PEM_STRING_RSA);
     if (acceptable) {
-        setPem(bin);
-        setFilename(QFileInfo(filename).fileName());
+        QFileInfo fileInfo(filename);
+        setFilePath(fileInfo.absoluteFilePath());
+        setFilename(fileInfo.fileName());
     } else {
         switch (acceptType) {
             case AcceptType::Unknown:
@@ -98,12 +91,17 @@ void CertsEditControl::onImportButtonClick() {
     OPENSSL_free(data);
 }
 
-void CertsEditControl::onShowButtonClick() {
-    QString pemString = QString::fromUtf8(pem);
-    QMessageBox::information(this, "PEM", pemString);
+void CertsEditControl::onDeleteButtonClick() {
+    setFilePath("");
+    setFilename("");
 }
 
-void CertsEditControl::onDeleteButtonClick() {
-    setPem(QByteArray());
-    setFilename("");
+void CertsEditControl::updateState() {
+    if (filePath.isEmpty() && filename.isEmpty()) {
+        ui.importButton->show();
+        ui.deleteButton->hide();
+    } else {
+        ui.importButton->hide();
+        ui.deleteButton->show();
+    }
 }

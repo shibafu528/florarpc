@@ -18,9 +18,9 @@ public:
 
     explicit CertsEditControl(QWidget *parent = nullptr);
 
-    void setPem(QByteArray pem);
+    void setFilePath(QString filePath);
 
-    QByteArray getPem();
+    QString getFilePath();
 
     void setFilename(QString filename);
 
@@ -31,15 +31,15 @@ public:
 private slots:
     void onImportButtonClick();
 
-    void onShowButtonClick();
-
     void onDeleteButtonClick();
 
 private:
     Ui_CertsEditControl ui;
-    QByteArray pem;
+    QString filePath;
     QString filename;
     AcceptType acceptType;
+
+    void updateState();
 };
 
 #endif  // FLORARPC_CERTSEDITCONTROL_H
