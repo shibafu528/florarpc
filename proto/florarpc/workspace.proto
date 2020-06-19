@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package florarpc;
+
+import "florarpc/version.proto";
+
+message Workspace {
+  Version app_version = 1;
+  repeated ProtoFile proto_files = 2;
+  repeated ImportPath import_paths = 3;
+  repeated Request requests = 4;
+  repeated Server servers = 5;
+  repeated Certificate certificates = 6;
+}
+
+message ProtoFile {
+  string path = 1; // The full path of a file
+}
+
+message ImportPath {
+  string path = 1; // The full path of an import directory
+}
+
+message MethodRef {
+  string service_name = 1;
+  string method_name = 2;
+  string file_name = 3;
+}
+
+message Request {
+  MethodRef method = 1;
+  string body_draft = 2;
+  string metadata_draft = 3;
+  string selected_server_id = 4;
+}
+
+message Server {
+  string id = 1;
+  string name = 2;
+  string address = 3;
+  bool useTLS = 4;
+  string certificate_id = 5;
+}
+
+message Certificate {
+  string id = 1;
+  string name = 2;
+  string root_certs_path = 9;
+  string root_certs_name = 4;
+  string private_key_path = 10;
+  string private_key_name = 6;
+  string cert_chain_path = 11;
+  string cert_chain_name = 8;
+
+  // deprecated fields
+  bytes root_certs = 3 [deprecated = true];
+  bytes private_key = 5 [deprecated = true];
+  bytes cert_chain = 7 [deprecated = true];
+}

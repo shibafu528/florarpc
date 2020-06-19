@@ -57,11 +57,21 @@
     </property>
     <addaction name="actionOpen"/>
     <addaction name="separator"/>
+    <addaction name="actionOpenWorkspace"/>
+    <addaction name="actionSaveWorkspace"/>
+    <addaction name="separator"/>
     <addaction name="actionManageProto"/>
+    <addaction name="actionManageServer"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>表示(&amp;V)</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuView"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="dockWidget">
@@ -73,7 +83,7 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>91</width>
+     <width>123</width>
      <height>123</height>
     </size>
    </property>
@@ -134,20 +144,54 @@
     </layout>
    </widget>
   </widget>
+  <widget class="QDockWidget" name="logDockWidget">
+   <property name="windowTitle">
+    <string>ログ</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_2">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QPlainTextEdit" name="logEdit">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
   <action name="actionOpen">
    <property name="text">
-    <string>Protoファイルを開く(&amp;O)...</string>
+    <string>Protoファイルを取り込む(&amp;I)...</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+O</string>
+    <string>Ctrl+I</string>
    </property>
   </action>
   <action name="actionManageProto">
    <property name="text">
-    <string>インポート パスの管理(&amp;I)...</string>
+    <string>インポート パスの管理(&amp;P)...</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+I</string>
+    <string>Ctrl+Alt+P</string>
    </property>
   </action>
   <action name="actionQuit">
@@ -159,6 +203,30 @@
    </property>
    <property name="menuRole">
     <enum>QAction::QuitRole</enum>
+   </property>
+  </action>
+  <action name="actionSaveWorkspace">
+   <property name="text">
+    <string>ワークスペースを保存(&amp;S)...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionOpenWorkspace">
+   <property name="text">
+    <string>ワークスペースを開く(&amp;O)...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionManageServer">
+   <property name="text">
+    <string>接続先の管理(&amp;E)...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+E</string>
    </property>
   </action>
  </widget>

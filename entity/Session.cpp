@@ -1,29 +1,50 @@
 #include "Session.h"
+#include <chrono>
 #include <grpcpp/create_channel.h>
 #include <grpcpp/generic/generic_stub.h>
 #include <QRunnable>
 #include <QDebug>
 
 class Session::QueueWatcher : public QObject {
-    Q_OBJECT
+Q_OBJECT
 
 public:
     explicit QueueWatcher(Session &session) : session(session) {}
 
 signals:
+
     void messageSent();
+
     void messageReceived(const grpc::ByteBuffer &buffer);
+
     void initialMetadataReceived(const Session::Metadata &metadata);
+
     void trailingMetadataReceived(const Session::Metadata &metadata);
+
     void finished(int code, const QString &message, const QByteArray &details);
+
     void aborted();
+
     void finish();
 
 public slots:
+
     void doWork() {
+        using std::chrono::system_clock;
+
         void *gotTag;
         bool ok;
-        while (session.queue.Next(&gotTag, &ok)) {
+        while (auto event = session.queue.AsyncNext(&gotTag, &ok, system_clock::now())) {
+            if (event == grpc_impl::CompletionQueue::SHUTDOWN) {
+                break;
+            }
+            if (event == grpc_impl::CompletionQueue::TIMEOUT) {
+                if (QThread::currentThread()->isInterruptionRequested()) {
+                    break;
+                }
+                continue;
+            }
+
             if (!ok) {
                 emit finish();
                 continue;
@@ -83,7 +104,8 @@ private:
             session.receivedInitialMetadata = true;
             Metadata metadata;
             for (const auto &[key, value] : session.context.GetServerInitialMetadata()) {
-                metadata.insert(QString::fromLatin1(key.data(), key.size()), QString::fromLatin1(value.data(), value.size()));
+                metadata.insert(QString::fromLatin1(key.data(), key.size()),
+                                QString::fromLatin1(value.data(), value.size()));
             }
             emit initialMetadataReceived(metadata);
         }
@@ -111,7 +133,8 @@ private:
         qDebug() << __FUNCTION__;
         Metadata metadata;
         for (const auto &[key, value] : session.context.GetServerTrailingMetadata()) {
-            metadata.insert(QString::fromLatin1(key.data(), key.size()), QString::fromLatin1(value.data(), value.size()));
+            metadata.insert(QString::fromLatin1(key.data(), key.size()),
+                            QString::fromLatin1(value.data(), value.size()));
         }
         emit trailingMetadataReceived(metadata);
         emit finished(session.statusBuffer.error_code(),
@@ -120,7 +143,8 @@ private:
     }
 };
 
-Session::Session(const Method &method, const QString &serverAddress, std::shared_ptr<grpc::ChannelCredentials> &creds, const Metadata &metadata, QObject *parent)
+Session::Session(const Method &method, const QString &serverAddress, std::shared_ptr<grpc::ChannelCredentials> &creds,
+                 const Metadata &metadata, QObject *parent)
         : QObject(parent), method(method), readTag(true), writeTag(false) {
     qRegisterMetaType<Metadata>();
     qRegisterMetaType<grpc::ByteBuffer>();
@@ -148,6 +172,7 @@ Session::Session(const Method &method, const QString &serverAddress, std::shared
 }
 
 Session::~Session() {
+    queueWatcherWorker.requestInterruption();
     queueWatcherWorker.quit();
     queueWatcherWorker.wait();
 }

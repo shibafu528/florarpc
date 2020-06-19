@@ -13,7 +13,7 @@ bool GrpcUtility::parseMessage(const grpc::ByteBuffer &buffer, google::protobuf:
     std::string buf;
     buf.reserve(buffer.Length());
     for (const auto &s : slices) {
-        buf.append(reinterpret_cast<const char*>(s.begin()), s.size());
+        buf.append(reinterpret_cast<const char *>(s.begin()), s.size());
     }
     return message.ParseFromString(buf);
 }

@@ -20,6 +20,17 @@ dev: build
 	copy /Y bin\Debug\KF5SyntaxHighlighting.dll Debug && \
 	popd
 
+release: build-release
+	pushd build-release && \
+	cmake -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_ROOT)\scripts\buildsystems\vcpkg.cmake \
+		-DCMAKE_PREFIX_PATH=$(Qt5_DIR) -A x64 .. && \
+	cmake --build . --config Release && \
+	$(Qt5_DIR)\bin\windeployqt -release Release\flora.exe && \
+	copy /Y $(Qt5_DIR)\bin\Qt5Network.dll Release && \
+	copy /Y $(Qt5_DIR)\translations\qtbase_*.qm Release\translations && \
+	copy /Y bin\Release\KF5SyntaxHighlighting.dll Release && \
+	popd
+
 install_deps: $(VCPKG_ROOT)\vcpkg.exe
 	$(VCPKG_ROOT)\vcpkg install --triplet x64-windows @vcpkg_packages.txt
 
@@ -29,7 +40,10 @@ $(VCPKG_ROOT)\vcpkg.exe:
 build:
 	mkdir build
 
+build-release:
+	mkdir build-release
+
 clean:
-	rd /S /Q build
+	rd /S /Q build build-release 2> nul || type nul > nul
 
 .PHONY: dev clean install_deps

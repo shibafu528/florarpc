@@ -7,22 +7,29 @@
 #include "ui/ui_MultiPageJsonView.h"
 
 class MultiPageJsonView : public QWidget {
-    Q_OBJECT
+Q_OBJECT
 
 public:
     explicit MultiPageJsonView(QWidget *parent = nullptr);
+
     void setupHighlighter(KSyntaxHighlighting::Repository &repository);
 
 signals:
+
     void setPagerVisible(bool visible);
 
 public slots:
+
     void clear();
+
     void append(const QString &document);
 
 private slots:
+
     void onPageChanged(int page);
+
     void onPrevButtonClicked();
+
     void onNextButtonClicked();
 
 private:

@@ -2,14 +2,17 @@
 #define FLORARPC_PROTOCOLTREEMODEL_H
 
 #include <QAbstractItemModel>
-#include "../entity/Protocol.h"
+
 #include "../entity/Method.h"
+#include "../entity/Protocol.h"
 
 class ProtocolTreeModel : public QAbstractItemModel {
 public:
     ProtocolTreeModel(QObject *parent);
 
-    QModelIndex addProtocol(const Protocol &protocol);
+    QModelIndex addProtocol(const std::shared_ptr<Protocol> &protocol);
+
+    void clear();
 
     void remove(const QModelIndex &index);
 
@@ -34,8 +37,7 @@ private:
 
     std::vector<std::shared_ptr<Node>> nodes;
 
-    static const Node* indexToNode(const QModelIndex &index);
+    static const Node *indexToNode(const QModelIndex &index);
 };
 
-
-#endif //FLORARPC_PROTOCOLTREEMODEL_H
+#endif  // FLORARPC_PROTOCOLTREEMODEL_H
