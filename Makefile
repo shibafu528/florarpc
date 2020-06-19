@@ -25,7 +25,7 @@ release: build-release
 	cmake -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_ROOT)\scripts\buildsystems\vcpkg.cmake \
 		-DCMAKE_PREFIX_PATH=$(Qt5_DIR) -A x64 .. && \
 	cmake --build . --config Release && \
-	$(Qt5_DIR)\bin\windeployqt -debug Release\flora.exe && \
+	$(Qt5_DIR)\bin\windeployqt -release Release\flora.exe && \
 	copy /Y $(Qt5_DIR)\bin\Qt5Network.dll Release && \
 	copy /Y $(Qt5_DIR)\translations\qtbase_*.qm Release\translations && \
 	copy /Y bin\Release\KF5SyntaxHighlighting.dll Release && \
@@ -44,6 +44,6 @@ build-release:
 	mkdir build-release
 
 clean:
-	rd /S /Q build build-release
+	rd /S /Q build build-release 2> nul || type nul > nul
 
 .PHONY: dev clean install_deps
