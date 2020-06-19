@@ -39,6 +39,8 @@ private slots:
 
     void onTreeViewClicked(const QModelIndex &index);
 
+    void onRemoveFileFromTreeTriggered();
+
     void onEditorTabCloseRequested(const int index);
 
     void onTabCloseShortcutActivated();
@@ -52,6 +54,7 @@ private:
     QStringList imports;
     KSyntaxHighlighting::Repository syntaxDefinitions;
     QShortcut tabCloseShortcut;
+    QMenu treeFileContextMenu;
     QMenu treeMethodContextMenu;
     QString workspaceFilename;
 

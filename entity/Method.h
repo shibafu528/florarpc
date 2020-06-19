@@ -40,6 +40,8 @@ public:
 
     void writeMethodRef(florarpc::MethodRef &ref);
 
+    bool isChildOf(const google::protobuf::FileDescriptor *fileDescriptor);
+
 private:
     const std::shared_ptr<Protocol> protocol;
     const google::protobuf::MethodDescriptor *descriptor;

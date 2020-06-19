@@ -55,3 +55,7 @@ Method::ParseError::ParseError(std::unique_ptr<std::string> message) : message(s
 const std::string &Method::ParseError::getMessage() {
     return *message;
 }
+
+bool Method::isChildOf(const google::protobuf::FileDescriptor *fileDescriptor) {
+    return fileDescriptor == descriptor->file();
+}

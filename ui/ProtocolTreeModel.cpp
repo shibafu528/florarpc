@@ -70,6 +70,22 @@ QModelIndex ProtocolTreeModel::addProtocol(const std::shared_ptr<Protocol> &prot
     return index(nodes.size() - 1, 0, QModelIndex());
 }
 
+void ProtocolTreeModel::remove(const QModelIndex &index) {
+    beginRemoveRows(index.parent(), index.row(), index.row());
+
+    auto file = indexToFile(index);
+    auto remove = std::remove_if(nodes.begin(), nodes.end(), [file](std::shared_ptr<Node> &node) {
+        return node->getFileDescriptor() == file;
+    });
+    nodes.erase(remove, nodes.end());
+
+    for (auto iter = nodes.begin() + index.row(); iter != nodes.end(); iter++) {
+        (*iter)->index--;
+    }
+
+    endRemoveRows();
+}
+
 void ProtocolTreeModel::clear() {
     beginResetModel();
     nodes.clear();
@@ -81,12 +97,8 @@ QModelIndex ProtocolTreeModel::index(int row, int column, const QModelIndex &par
         return QModelIndex();
     }
 
-    if (parent.isValid()) {
-        const auto parentNode = indexToNode(parent);
-        return createIndex(row, 0, parentNode->children[row].get());
-    } else {
-        return createIndex(row, 0, nodes[row].get());
-    }
+    const auto &nodes = parent.isValid() ? indexToNode(parent)->children : this->nodes;
+    return createIndex(row, 0, (0 <= row && row < nodes.size()) ? nodes[row].get() : nullptr);
 }
 
 QModelIndex ProtocolTreeModel::parent(const QModelIndex &child) const {
@@ -95,7 +107,7 @@ QModelIndex ProtocolTreeModel::parent(const QModelIndex &child) const {
     }
 
     const auto node = indexToNode(child);
-    if (node->parent) {
+    if (node != nullptr && node->parent) {
         return createIndex(node->parent->index, 0, node->parent.get());
     }
 
@@ -147,11 +159,15 @@ Qt::ItemFlags ProtocolTreeModel::flags(const QModelIndex &index) const {
     }
 
     const auto node = indexToNode(index);
-    if (node->type == Node::MethodNode) {
+    if (node == nullptr || node->type == Node::MethodNode) {
         return QAbstractItemModel::flags(index);
     }
 
     return Qt::ItemFlag::ItemIsEnabled;
+}
+
+const google::protobuf::FileDescriptor *ProtocolTreeModel::indexToFile(const QModelIndex &index) {
+    return indexToNode(index)->getFileDescriptor();
 }
 
 Method ProtocolTreeModel::indexToMethod(const QModelIndex &index) {

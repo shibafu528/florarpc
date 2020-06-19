@@ -14,6 +14,8 @@ public:
 
     void clear();
 
+    void remove(const QModelIndex &index);
+
     QModelIndex index(int row, int column, const QModelIndex &parent) const override;
 
     QModelIndex parent(const QModelIndex &child) const override;
@@ -25,6 +27,8 @@ public:
     QVariant data(const QModelIndex &index, int role) const override;
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
+
+    static const google::protobuf::FileDescriptor* indexToFile(const QModelIndex &index);
 
     static Method indexToMethod(const QModelIndex &index);
 
