@@ -39,6 +39,8 @@ private slots:
 
     void onTreeViewClicked(const QModelIndex &index);
 
+    void onRemoveFileFromTreeTriggered();
+
     void onEditorTabCloseRequested(const int index);
 
     void onTabCloseShortcutActivated();
