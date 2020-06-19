@@ -1,6 +1,7 @@
 .idea/
 flora_autogen/
 build/
+build-release/
 .DS_Store
 Thumbs.db
 

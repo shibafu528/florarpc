@@ -18,11 +18,29 @@ dev: build
 	mkdir -pv flora.app/Contents/translations && \
 	cp -fv $(Qt5_DIR)/translations/qtbase_*.qm flora.app/Contents/translations && \
 	popd
+
+release: build-release
+	pushd build-release && \
+	cmake -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_ROOT)/scripts/buildsystems/vcpkg.cmake \
+		-DCMAKE_PREFIX_PATH=$(Qt5_DIR) \
+		-DCMAKE_BUILD_TYPE=Release .. && \
+	cmake --build . && \
+	$(Qt5_DIR)/bin/macdeployqt flora.app -always-overwrite -verbose=2 && \
+	mkdir -pv flora.app/Contents/translations && \
+	cp -fv $(Qt5_DIR)/translations/qtbase_*.qm flora.app/Contents/translations && \
+	popd
 else
 dev: build
 	pushd build && \
 	cmake -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_ROOT)/scripts/buildsystems/vcpkg.cmake \
 		-DCMAKE_BUILD_TYPE=Debug .. && \
+	cmake --build . && \
+	popd
+
+release: build-release
+	pushd build-release && \
+	cmake -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_ROOT)/scripts/buildsystems/vcpkg.cmake \
+		-DCMAKE_BUILD_TYPE=Release .. && \
 	cmake --build . && \
 	popd
 endif
@@ -36,5 +54,8 @@ $(VCPKG_ROOT)/vcpkg:
 build:
 	mkdir build
 
+build-release:
+	mkdir build-release
+
 clean:
-	rm -rf build
+	rm -rf build build-release
