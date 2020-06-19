@@ -156,6 +156,46 @@ void Editor::writeRequest(florarpc::Request &request) {
     request.set_selected_server_id(getCurrentServer()->id.toByteArray().toStdString());
 }
 
+Request *Editor::makeRequest() {
+    auto request = new Request(*method);
+    request->setServer(getCurrentServer());
+    request->setBody(ui.requestEdit->toPlainText());
+
+    QHash<QString, QString> metadata;
+    if (const auto metadataInput = ui.requestMetadataEdit->toPlainText(); !metadataInput.isEmpty()) {
+        QJsonParseError parseError = {};
+        QJsonDocument metadataJson = QJsonDocument::fromJson(metadataInput.toUtf8(), &parseError);
+        if (metadataJson.isNull()) {
+            QMessageBox::warning(this, "Request Metadata Parse Error", parseError.errorString());
+            return nullptr;
+        }
+        if (!metadataJson.isObject()) {
+            QMessageBox::warning(this, "Request Metadata Parse Error", "Metadata input must be an object.");
+            return nullptr;
+        }
+
+        const QJsonObject &object = metadataJson.object();
+        for (auto iter = object.constBegin(); iter != object.constEnd(); iter++) {
+            const auto key = iter.key();
+            const auto value = iter.value().toString();
+            if (value == nullptr) {
+                QMessageBox::warning(this, "Request Metadata Parse Error",
+                                     QLatin1String("Metadata '") + key + QLatin1String("' must be a string."));
+                return nullptr;
+            }
+
+            metadata.insert(key, value);
+        }
+    }
+    request->setMetadata(metadata);
+
+    if (auto server = getCurrentServer(); server) {
+        request->setServer(server);
+    }
+
+    return request;
+}
+
 void Editor::onExecuteButtonClicked() {
     if (session != nullptr) {
         return;

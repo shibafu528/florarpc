@@ -70,6 +70,12 @@
      <string>表示(&amp;V)</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuTool">
+    <property name="title">
+     <string>ツール(&amp;T)</string>
+    </property>
+    <addaction name="actionCopyAsGrpcurl"/>
+   </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>ヘルプ(&amp;H)</string>
@@ -78,6 +84,7 @@
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
+   <addaction name="menuTool"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -234,6 +241,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+E</string>
+   </property>
+  </action>
+  <action name="actionCopyAsGrpcurl">
+   <property name="text">
+    <string>Copy as gRPCurl</string>
    </property>
   </action>
   <action name="actionAbout">

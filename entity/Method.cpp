@@ -56,6 +56,6 @@ const std::string &Method::ParseError::getMessage() {
     return *message;
 }
 
-bool Method::isChildOf(const google::protobuf::FileDescriptor *fileDescriptor) {
+bool Method::isChildOf(const google::protobuf::FileDescriptor *fileDescriptor) const {
     return fileDescriptor == descriptor->file();
 }

@@ -170,6 +170,10 @@ const google::protobuf::FileDescriptor *ProtocolTreeModel::indexToFile(const QMo
     return indexToNode(index)->getFileDescriptor();
 }
 
+const QFileInfo ProtocolTreeModel::indexToSourceFile(const QModelIndex &index) {
+    return indexToNode(index)->getProtocol()->getSource();
+}
+
 Method ProtocolTreeModel::indexToMethod(const QModelIndex &index) {
     auto node = indexToNode(index);
     return Method(node->getProtocol(), node->getMethodDescriptor());
