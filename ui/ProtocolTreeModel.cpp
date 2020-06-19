@@ -97,12 +97,8 @@ QModelIndex ProtocolTreeModel::index(int row, int column, const QModelIndex &par
         return QModelIndex();
     }
 
-    if (parent.isValid()) {
-        const auto parentNode = indexToNode(parent);
-        return createIndex(row, 0, parentNode->children[row].get());
-    } else {
-        return createIndex(row, 0, nodes[row].get());
-    }
+    const auto &nodes = parent.isValid() ? indexToNode(parent)->children : this->nodes;
+    return createIndex(row, 0, (0 <= row && row < nodes.size()) ? nodes[row].get() : nullptr);
 }
 
 QModelIndex ProtocolTreeModel::parent(const QModelIndex &child) const {
@@ -111,7 +107,7 @@ QModelIndex ProtocolTreeModel::parent(const QModelIndex &child) const {
     }
 
     const auto node = indexToNode(child);
-    if (node->parent) {
+    if (node != nullptr && node->parent) {
         return createIndex(node->parent->index, 0, node->parent.get());
     }
 
@@ -163,7 +159,7 @@ Qt::ItemFlags ProtocolTreeModel::flags(const QModelIndex &index) const {
     }
 
     const auto node = indexToNode(index);
-    if (node->type == Node::MethodNode) {
+    if (node == nullptr || node->type == Node::MethodNode) {
         return QAbstractItemModel::flags(index);
     }
 
