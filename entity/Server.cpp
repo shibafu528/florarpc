@@ -2,7 +2,7 @@
 
 Server::Server() : Server(QUuid::createUuid()) {}
 
-Server::Server(QUuid id) : id(id) {}
+Server::Server(QUuid id) : id(id), name(), address(), useTLS(false), certificateUUID() {}
 
 Server::Server(const florarpc::Server& server)
     : id(QByteArray::fromStdString(server.id())),
