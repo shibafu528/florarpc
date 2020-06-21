@@ -18,7 +18,7 @@ if(WIN32)
   add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 endif()
 
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Qml REQUIRED)
 
 option(FLORA_FORCE_BUILD_KF5LIB "システムのKF5ライブラリを使用せず、常にビルドする")
 if(NOT FLORA_FORCE_BUILD_KF5LIB)
@@ -115,6 +115,7 @@ add_executable(flora
         ui/CertsEditDialog.h
         ui/MainWindow.ui
         ui/MainWindow.cpp
+        ui/MainWindow_Plugin.cpp
         ui/MainWindow.h
         ui/ImportsManageDialog.ui
         ui/ImportsManageDialog.cpp
@@ -156,6 +157,7 @@ add_executable(flora
 
 target_link_libraries(flora
         Qt5::Widgets
+        Qt5::Qml
         KF5::SyntaxHighlighting
         protobuf::libprotobuf
         ${LIB_gRPC})
