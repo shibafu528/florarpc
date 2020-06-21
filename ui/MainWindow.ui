@@ -70,8 +70,15 @@
      <string>表示(&amp;V)</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>ヘルプ(&amp;H)</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="dockWidget">
@@ -227,6 +234,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+E</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>FloraRPC について(&amp;A)...</string>
    </property>
   </action>
  </widget>

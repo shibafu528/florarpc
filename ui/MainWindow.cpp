@@ -10,6 +10,7 @@
 #include <QStyle>
 #include <QTextStream>
 
+#include "AboutDialog.h"
 #include "ImportsManageDialog.h"
 #include "ServersManageDialog.h"
 #include "flora_constants.h"
@@ -28,6 +29,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui.actionSaveWorkspace, &QAction::triggered, this, &MainWindow::onActionSaveWorkspaceTriggered);
     connect(ui.actionManageProto, &QAction::triggered, this, &MainWindow::onActionManageProtoTriggered);
     connect(ui.actionManageServer, &QAction::triggered, this, &MainWindow::onActionManageServerTriggered);
+    connect(ui.actionAbout, &QAction::triggered, [=]() {
+        AboutDialog dialog;
+        dialog.exec();
+    });
     connect(ui.actionQuit, &QAction::triggered, this, &MainWindow::close);
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
     connect(ui.treeView, &QWidget::customContextMenuRequested, [=](const QPoint &pos) {
