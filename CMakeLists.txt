@@ -115,7 +115,6 @@ add_executable(flora
         ui/CertsEditDialog.h
         ui/MainWindow.ui
         ui/MainWindow.cpp
-        ui/MainWindow_Plugin.cpp
         ui/MainWindow.h
         ui/ImportsManageDialog.ui
         ui/ImportsManageDialog.cpp
