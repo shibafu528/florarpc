@@ -245,7 +245,7 @@
   </action>
   <action name="actionCopyAsGrpcurl">
    <property name="text">
-    <string>gRP&amp;Curlのコマンドラインを生成</string>
+    <string>gRPCurlのコマンドを生成してコピー</string>
    </property>
   </action>
   <action name="actionAbout">
