@@ -3,7 +3,6 @@
 
 #include <KSyntaxHighlighting/repository.h>
 #include <KSyntaxHighlighting/syntaxhighlighter.h>
-#include <entity/Request.h>
 #include <google/protobuf/descriptor.h>
 #include <grpc++/support/string_ref.h>
 
@@ -32,11 +31,11 @@ public:
 
     void writeRequest(florarpc::Request &request);
 
-    /**
-     * @return
-     * リクエストの情報をまとめたオブジェクト。<b>このEditor内への参照を持つため、Editorのライフサイクルより長く保持してはいけない。</b>
-     */
-    Request *makeRequest();
+    QString getRequestBody();
+
+    std::optional<QHash<QString, QString>> getMetadata();
+
+    std::shared_ptr<Server> getCurrentServer();
 
 private slots:
 
@@ -92,8 +91,6 @@ private:
     void hideStreamingButtons();
 
     void updateResponsePager();
-
-    std::shared_ptr<Server> getCurrentServer();
 };
 
 #endif  // FLORARPC_EDITOR_H

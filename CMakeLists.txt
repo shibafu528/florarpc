@@ -138,8 +138,6 @@ add_executable(flora
         entity/Protocol.h
         entity/Method.cpp
         entity/Method.h
-        entity/Request.cpp
-        entity/Request.h
         entity/Session.cpp
         entity/Session.h
         entity/Server.cpp

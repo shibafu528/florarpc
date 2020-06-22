@@ -11,19 +11,23 @@ void MainWindow::onActionCopyAsGrpcurlTriggered() {
         return;
     }
 
-    std::unique_ptr<Request> request(editor->makeRequest());
-    if (request == nullptr) {
+    const auto &method = editor->getMethod();
+    const auto server = editor->getCurrentServer();
+    const auto requestBody = editor->getRequestBody();
+    const auto metadataResult = editor->getMetadata();
+    if (!metadataResult) {
         return;
     }
+    const auto &metadata = metadataResult.value();
 
     QJSEngine js;
     js.installExtensions(QJSEngine::ConsoleExtension | QJSEngine::GarbageCollectionExtension);
     {
         QJSValue req = js.newObject();
-        req.setProperty("body", request->getBody());
+        req.setProperty("body", requestBody);
 
         QJSValue meta = js.newObject();
-        for (auto iter = request->getMetadata().cbegin(); iter != request->getMetadata().cend(); ++iter) {
+        for (auto iter = metadata.cbegin(); iter != metadata.cend(); ++iter) {
             meta.setProperty(iter.key(), iter.value());
         }
         req.setProperty("metadata", meta);
@@ -31,14 +35,14 @@ void MainWindow::onActionCopyAsGrpcurlTriggered() {
         for (int i = 0; i < protocolTreeModel->rowCount(QModelIndex()); i++) {
             const auto index = protocolTreeModel->index(i, 0, QModelIndex());
             const auto fileDescriptor = protocolTreeModel->indexToFile(index);
-            if (request->getMethod().isChildOf(fileDescriptor)) {
+            if (method.isChildOf(fileDescriptor)) {
                 const auto fileInfo = protocolTreeModel->indexToSourceFile(index);
                 req.setProperty("protoFile", fileInfo.absoluteFilePath());
                 break;
             }
         }
 
-        req.setProperty("path", QString::fromStdString(request->getMethod().getRequestPath()));
+        req.setProperty("path", QString::fromStdString(method.getRequestPath()));
 
         js.globalObject().setProperty("request", req);
     }
@@ -49,7 +53,7 @@ void MainWindow::onActionCopyAsGrpcurlTriggered() {
         }
         js.globalObject().setProperty("imports", imp);
     }
-    if (const auto &server = request->getServer(); server) {
+    if (server) {
         QJSValue svr = js.newObject();
 
         svr.setProperty("address", server->address);
