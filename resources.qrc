@@ -4,6 +4,9 @@
         <!-- third party licenses -->
         <file>third_party_licenses.md</file>
 
+        <!-- Bundle tool script -->
+        <file>js/to_grpcurl.js</file>
+
         <!-- Well known types .proto -->
         <file>proto/google/protobuf/timestamp.proto</file>
         <file>proto/google/protobuf/type.proto</file>

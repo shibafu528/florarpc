@@ -1,11 +1,24 @@
 #include <QClipboard>
 #include <QFileDialog>
 #include <QJSEngine>
+#include <QMessageBox>
 #include <QTextStream>
 
 #include "MainWindow.h"
 
 void MainWindow::onActionCopyAsGrpcurlTriggered() {
+    QFile file(":/js/to_grpcurl.js");
+    if (!file.open(QFile::ReadOnly)) {
+        QMessageBox::critical(this, "Fatal error", "スクリプトの実行に失敗しました。");
+        return;
+    }
+
+    const auto &script = file.readAll();
+    file.close();
+    executeToolScript(script);
+}
+
+void MainWindow::executeToolScript(const QString &script) {
     const auto editor = qobject_cast<Editor *>(ui.editorTabs->currentWidget());
     if (editor == nullptr) {
         return;
@@ -72,22 +85,18 @@ void MainWindow::onActionCopyAsGrpcurlTriggered() {
         js.globalObject().setProperty("server", svr);
     }
 
-    // TODO: tmp
-    QString fileName = QFileDialog::getOpenFileName(this, QString(), QString(), "JavaScript file (*.js)");
-    QFile f(fileName);
-    f.open(QFile::ReadOnly);
-    QJSValue ret = js.evaluate(f.readAll());
+    QJSValue ret = js.evaluate(script);
     if (ret.isError()) {
         ui.statusbar->showMessage(
-            QString("Error at %1: %2").arg(ret.property("lineNumber").toInt()).arg(ret.toString()), 10000);
+            QString("Error (line %1): %2").arg(ret.property("lineNumber").toInt()).arg(ret.toString()), 10000);
     } else if (ret.isString()) {
         if (auto str = ret.toString(); !str.isEmpty()) {
             QApplication::clipboard()->setText(str);
-            ui.statusbar->showMessage("Copied!", 5000);
+            ui.statusbar->showMessage("クリップボードにコピーしました", 5000);
         } else {
-            ui.statusbar->showMessage("Result is empty.", 5000);
+            ui.statusbar->showMessage("スクリプトを実行しました", 5000);
         }
     } else {
-        ui.statusbar->showMessage("Result is not string.", 5000);
+        ui.statusbar->showMessage("Error: スクリプトの実行結果が文字列ではありません", 5000);
     }
 }
