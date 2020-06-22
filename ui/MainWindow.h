@@ -65,6 +65,7 @@ private:
     Editor *openEditor(std::unique_ptr<Method> method, bool forceNewTab);
     bool saveWorkspace(const QString &filename);
     void setWorkspaceFilename(const QString &filename);
+    void reloadToolScripts();
     void executeToolScript(const QString &script);
 };
 

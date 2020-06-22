@@ -75,6 +75,7 @@
      <string>ツール(&amp;T)</string>
     </property>
     <addaction name="actionCopyAsGrpcurl"/>
+    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">

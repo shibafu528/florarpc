@@ -74,6 +74,7 @@ MainWindow::MainWindow(QWidget *parent)
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(),
                                     QGuiApplication::primaryScreen()->availableGeometry()));
     setWindowTitle(QString("%1 - FloraRPC").arg("新しいワークスペース"));
+    reloadToolScripts();
 }
 
 void MainWindow::onLogging(const QString &message) { ui.logEdit->appendPlainText(message); }
@@ -435,6 +436,21 @@ void MainWindow::setWorkspaceFilename(const QString &filename) {
     workspaceFilename = filename;
     QFileInfo fileInfo(filename);
     setWindowTitle(QString("%1 - FloraRPC").arg(fileInfo.baseName()));
+}
+
+void MainWindow::reloadToolScripts() {
+    QDir toolsDir(QStandardPaths::locate(QStandardPaths::AppConfigLocation, "tools", QStandardPaths::LocateDirectory));
+    const auto toolFiles = toolsDir.entryInfoList(QStringList("*.js"), QDir::Files);
+    for (const auto toolFile : toolFiles) {
+        ui.menuTool->addAction(toolFile.baseName(), [this, toolFile]() {
+            QFile file(toolFile.absoluteFilePath());
+            if (!file.open(QFile::ReadOnly)) {
+                QMessageBox::critical(this, "Fatal error", "スクリプトの実行に失敗しました。");
+            }
+            executeToolScript(file.readAll());
+            file.close();
+        });
+    }
 }
 
 void MainWindow::executeToolScript(const QString &script) {
