@@ -3,6 +3,7 @@
 #include <google/protobuf/util/json_util.h>
 
 #include <QClipboard>
+#include <QDesktopServices>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QJSEngine>
@@ -37,6 +38,8 @@ MainWindow::MainWindow(QWidget *parent)
     });
     connect(ui.actionQuit, &QAction::triggered, this, &MainWindow::close);
     connect(ui.actionCopyAsGrpcurl, &QAction::triggered, this, &MainWindow::onActionCopyAsGrpcurlTriggered);
+    connect(ui.actionOpenCopyAsUserScriptDir, &QAction::triggered, this,
+            &MainWindow::onActionOpenCopyAsUserScriptDirTriggered);
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
     connect(ui.treeView, &QWidget::customContextMenuRequested, [=](const QPoint &pos) {
         const QModelIndex &index = ui.treeView->indexAt(pos);
@@ -223,6 +226,14 @@ void MainWindow::onActionCopyAsGrpcurlTriggered() {
     const auto &script = file.readAll();
     file.close();
     executeToolScript(script);
+}
+
+void MainWindow::onActionOpenCopyAsUserScriptDirTriggered() {
+    QDir dir(QStandardPaths::locate(QStandardPaths::AppConfigLocation, "tools", QStandardPaths::LocateDirectory));
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -442,7 +453,8 @@ void MainWindow::reloadToolScripts() {
     QDir toolsDir(QStandardPaths::locate(QStandardPaths::AppConfigLocation, "tools", QStandardPaths::LocateDirectory));
     const auto toolFiles = toolsDir.entryInfoList(QStringList("*.js"), QDir::Files);
     for (const auto toolFile : toolFiles) {
-        ui.menuTool->addAction(toolFile.baseName(), [this, toolFile]() {
+        const auto action = new QAction(toolFile.baseName(), ui.menuTool);
+        connect(action, &QAction::triggered, [this, toolFile]() {
             QFile file(toolFile.absoluteFilePath());
             if (!file.open(QFile::ReadOnly)) {
                 QMessageBox::critical(this, "Fatal error", "スクリプトの実行に失敗しました。");
@@ -450,6 +462,10 @@ void MainWindow::reloadToolScripts() {
             executeToolScript(file.readAll());
             file.close();
         });
+        ui.menuTool->insertAction(ui.actionOpenCopyAsUserScriptDir, action);
+    }
+    if (!toolFiles.isEmpty()) {
+        ui.menuTool->insertSeparator(ui.actionOpenCopyAsUserScriptDir);
     }
 }
 

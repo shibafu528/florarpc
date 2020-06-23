@@ -76,6 +76,7 @@
     </property>
     <addaction name="actionCopyAsGrpcurl"/>
     <addaction name="separator"/>
+    <addaction name="actionOpenCopyAsUserScriptDir"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -252,6 +253,11 @@
   <action name="actionAbout">
    <property name="text">
     <string>FloraRPC について(&amp;A)...</string>
+   </property>
+  </action>
+  <action name="actionOpenCopyAsUserScriptDir">
+   <property name="text">
+    <string>ユーザースクリプトのフォルダを開く(&amp;O)</string>
    </property>
   </action>
  </widget>

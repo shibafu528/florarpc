@@ -39,6 +39,8 @@ private slots:
 
     void onActionCopyAsGrpcurlTriggered();
 
+    void onActionOpenCopyAsUserScriptDirTriggered();
+
     void onTreeViewClicked(const QModelIndex &index);
 
     void onRemoveFileFromTreeTriggered();
