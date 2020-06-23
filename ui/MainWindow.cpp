@@ -229,10 +229,14 @@ void MainWindow::onActionCopyAsGrpcurlTriggered() {
 }
 
 void MainWindow::onActionOpenCopyAsUserScriptDirTriggered() {
-    QDir dir(QStandardPaths::locate(QStandardPaths::AppConfigLocation, "tools", QStandardPaths::LocateDirectory));
-    if (!dir.exists()) {
-        dir.mkpath(".");
+    QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
+    if (!dir.exists() || !dir.exists("tools")) {
+        if (!dir.mkpath("tools")) {
+            QMessageBox::critical(this, "Fatal error", "スクリプトフォルダを作成できませんでした。");
+            return;
+        }
     }
+    dir.cd("tools");
     QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
 }
 
