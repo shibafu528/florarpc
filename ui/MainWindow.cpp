@@ -459,7 +459,7 @@ void MainWindow::reloadCopyAsUserScripts() {
     QDir scriptDir(getCopyAsUserScriptDir());
     const auto scripts = scriptDir.entryInfoList(QStringList("*.js"), QDir::Files);
     for (const auto script : scripts) {
-        const auto action = new QAction(script.baseName(), ui.menuTool);
+        const auto action = new QAction(script.baseName(), ui.menuCopyAs);
         connect(action, &QAction::triggered, [this, script]() {
             QFile file(script.absoluteFilePath());
             if (!file.open(QFile::ReadOnly)) {
@@ -468,10 +468,10 @@ void MainWindow::reloadCopyAsUserScripts() {
             executeCopyAsScript(file.readAll());
             file.close();
         });
-        ui.menuTool->insertAction(ui.actionOpenCopyAsUserScriptDir, action);
+        ui.menuCopyAs->insertAction(ui.actionOpenCopyAsUserScriptDir, action);
     }
     if (!scripts.isEmpty()) {
-        ui.menuTool->insertSeparator(ui.actionOpenCopyAsUserScriptDir);
+        ui.menuCopyAs->insertSeparator(ui.actionOpenCopyAsUserScriptDir);
     }
 }
 
