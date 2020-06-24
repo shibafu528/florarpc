@@ -20,11 +20,16 @@
 #include "florarpc/workspace.pb.h"
 #include "util/ProtobufIterator.h"
 
+static QString getCopyAsUserScriptDir() {
+    return QDir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation)).filePath("scripts/copyas");
+}
+
 MainWindow::MainWindow(QWidget *parent)
-        : QMainWindow(parent), protocolTreeModel(std::make_unique<ProtocolTreeModel>(this)),
-          tabCloseShortcut(QKeySequence(Qt::CTRL + Qt::Key_W), this),
-          treeFileContextMenu(this),
-          treeMethodContextMenu(this) {
+    : QMainWindow(parent),
+      protocolTreeModel(std::make_unique<ProtocolTreeModel>(this)),
+      tabCloseShortcut(QKeySequence(Qt::CTRL + Qt::Key_W), this),
+      treeFileContextMenu(this),
+      treeMethodContextMenu(this) {
     ui.setupUi(this);
 
     connect(ui.actionOpen, &QAction::triggered, this, &MainWindow::onActionOpenTriggered);
@@ -77,7 +82,7 @@ MainWindow::MainWindow(QWidget *parent)
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(),
                                     QGuiApplication::primaryScreen()->availableGeometry()));
     setWindowTitle(QString("%1 - FloraRPC").arg("新しいワークスペース"));
-    reloadToolScripts();
+    reloadCopyAsUserScripts();
 }
 
 void MainWindow::onLogging(const QString &message) { ui.logEdit->appendPlainText(message); }
@@ -225,18 +230,15 @@ void MainWindow::onActionCopyAsGrpcurlTriggered() {
 
     const auto &script = file.readAll();
     file.close();
-    executeToolScript(script);
+    executeCopyAsScript(script);
 }
 
 void MainWindow::onActionOpenCopyAsUserScriptDirTriggered() {
-    QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
-    if (!dir.exists() || !dir.exists("tools")) {
-        if (!dir.mkpath("tools")) {
-            QMessageBox::critical(this, "Fatal error", "スクリプトフォルダを作成できませんでした。");
-            return;
-        }
+    QDir dir(getCopyAsUserScriptDir());
+    if (!dir.exists() && !dir.mkpath(".")) {
+        QMessageBox::critical(this, "Fatal error", "スクリプトフォルダを作成できませんでした。");
+        return;
     }
-    dir.cd("tools");
     QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
 }
 
@@ -453,27 +455,27 @@ void MainWindow::setWorkspaceFilename(const QString &filename) {
     setWindowTitle(QString("%1 - FloraRPC").arg(fileInfo.baseName()));
 }
 
-void MainWindow::reloadToolScripts() {
-    QDir toolsDir(QStandardPaths::locate(QStandardPaths::AppConfigLocation, "tools", QStandardPaths::LocateDirectory));
-    const auto toolFiles = toolsDir.entryInfoList(QStringList("*.js"), QDir::Files);
-    for (const auto toolFile : toolFiles) {
-        const auto action = new QAction(toolFile.baseName(), ui.menuTool);
-        connect(action, &QAction::triggered, [this, toolFile]() {
-            QFile file(toolFile.absoluteFilePath());
+void MainWindow::reloadCopyAsUserScripts() {
+    QDir scriptDir(getCopyAsUserScriptDir());
+    const auto scripts = scriptDir.entryInfoList(QStringList("*.js"), QDir::Files);
+    for (const auto script : scripts) {
+        const auto action = new QAction(script.baseName(), ui.menuTool);
+        connect(action, &QAction::triggered, [this, script]() {
+            QFile file(script.absoluteFilePath());
             if (!file.open(QFile::ReadOnly)) {
                 QMessageBox::critical(this, "Fatal error", "スクリプトの実行に失敗しました。");
             }
-            executeToolScript(file.readAll());
+            executeCopyAsScript(file.readAll());
             file.close();
         });
         ui.menuTool->insertAction(ui.actionOpenCopyAsUserScriptDir, action);
     }
-    if (!toolFiles.isEmpty()) {
+    if (!scripts.isEmpty()) {
         ui.menuTool->insertSeparator(ui.actionOpenCopyAsUserScriptDir);
     }
 }
 
-void MainWindow::executeToolScript(const QString &script) {
+void MainWindow::executeCopyAsScript(const QString &script) {
     const auto editor = qobject_cast<Editor *>(ui.editorTabs->currentWidget());
     if (editor == nullptr) {
         return;

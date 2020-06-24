@@ -67,8 +67,8 @@ private:
     Editor *openEditor(std::unique_ptr<Method> method, bool forceNewTab);
     bool saveWorkspace(const QString &filename);
     void setWorkspaceFilename(const QString &filename);
-    void reloadToolScripts();
-    void executeToolScript(const QString &script);
+    void reloadCopyAsUserScripts();
+    void executeCopyAsScript(const QString &script);
 };
 
 #endif  // FLORARPC_MAINWINDOW_H
