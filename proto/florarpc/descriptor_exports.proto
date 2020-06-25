@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package florarpc;
+
+import "google/protobuf/descriptor.proto";
+
+message DescriptorExports {
+  google.protobuf.DescriptorProto request = 1;
+  google.protobuf.FileDescriptorProto request_owner_file = 2;
+  google.protobuf.DescriptorProto response = 3;
+  google.protobuf.FileDescriptorProto response_owner_file = 4;
+  google.protobuf.MethodDescriptorProto method = 5;
+  google.protobuf.ServiceDescriptorProto method_owner_service = 6;
+  google.protobuf.FileDescriptorProto method_owner_file = 7;
+}

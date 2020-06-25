@@ -492,10 +492,10 @@ void MainWindow::executeCopyAsScript(const QString &script) {
 
     QJSEngine js;
     js.installExtensions(QJSEngine::ConsoleExtension | QJSEngine::GarbageCollectionExtension);
+    auto parseFunction = js.evaluate("JSON.parse");
     {
         QJSValue req = js.newObject();
         {
-            auto parseFunction = js.evaluate("JSON.parse");
             auto parsedBody = parseFunction.call(QJSValueList({requestBody}));
             if (parsedBody.isError()) {
                 ui.statusbar->showMessage("Error: リクエストをJSONとしてパースできません", 5000);
@@ -548,6 +548,14 @@ void MainWindow::executeCopyAsScript(const QString &script) {
         }
 
         js.globalObject().setProperty("server", svr);
+    }
+    {
+        florarpc::DescriptorExports desc;
+        std::string descJson;
+        method.exportTo(desc);
+        google::protobuf::util::MessageToJsonString(desc, &descJson);
+        js.globalObject().setProperty("descriptor",
+                                      parseFunction.call(QJSValueList({QString::fromStdString(descJson)})));
     }
 
     QJSValue ret = js.evaluate(script);
