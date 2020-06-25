@@ -495,13 +495,12 @@ void MainWindow::executeCopyAsScript(const QString &script) {
     {
         QJSValue req = js.newObject();
         {
-            js.globalObject().setProperty("body", requestBody);
-            QJSValue parsedBody = js.evaluate("JSON.parse(body)");
+            auto parseFunction = js.evaluate("JSON.parse");
+            auto parsedBody = parseFunction.call(QJSValueList({requestBody}));
             if (parsedBody.isError()) {
                 ui.statusbar->showMessage("Error: リクエストをJSONとしてパースできません", 5000);
                 return;
             }
-            js.globalObject().deleteProperty("body");
             req.setProperty("body", parsedBody);
         }
 
