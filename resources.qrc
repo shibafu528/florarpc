@@ -8,6 +8,7 @@
         <file>js/to_grpcurl.js</file>
 
         <!-- Well known types .proto -->
+        <file>proto/google/protobuf/descriptor.proto</file>
         <file>proto/google/protobuf/timestamp.proto</file>
         <file>proto/google/protobuf/type.proto</file>
         <file>proto/google/protobuf/field_mask.proto</file>
