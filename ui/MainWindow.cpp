@@ -494,7 +494,16 @@ void MainWindow::executeCopyAsScript(const QString &script) {
     js.installExtensions(QJSEngine::ConsoleExtension | QJSEngine::GarbageCollectionExtension);
     {
         QJSValue req = js.newObject();
-        req.setProperty("body", requestBody);
+        {
+            js.globalObject().setProperty("body", requestBody);
+            QJSValue parsedBody = js.evaluate("JSON.parse(body)");
+            if (parsedBody.isError()) {
+                ui.statusbar->showMessage("Error: リクエストをJSONとしてパースできません", 5000);
+                return;
+            }
+            js.globalObject().deleteProperty("body");
+            req.setProperty("body", parsedBody);
+        }
 
         QJSValue meta = js.newObject();
         for (auto iter = metadata.cbegin(); iter != metadata.cend(); ++iter) {

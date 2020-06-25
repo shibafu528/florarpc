@@ -6,7 +6,7 @@ const args = [];
 
 // -d
 args.push('-d');
-args.push(`'${request.body.replace(/\n/g, '')}'`);
+args.push(`'${JSON.stringify(request.body)}'`);
 
 // -H
 for (const key in request.metadata) {
