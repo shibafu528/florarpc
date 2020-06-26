@@ -7,6 +7,7 @@
 #include <grpc++/support/string_ref.h>
 
 #include <QWidget>
+#include <optional>
 
 #include "../entity/Certificate.h"
 #include "../entity/Method.h"
