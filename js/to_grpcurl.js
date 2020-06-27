@@ -1,8 +1,6 @@
 /*
  * Copy to gRPCurl
  */
-console.log(JSON.stringify(descriptor));
-console.log(JSON.stringify(descriptor.findMessageTypeByName("helloworld.HelloRequest")))
 
 const args = [];
 

@@ -551,9 +551,13 @@ void MainWindow::executeCopyAsScript(const QString &script) {
                 cert.setProperty("certChain", certificate->certChainPath);
                 svr.setProperty("certificate", cert);
             }
+        } else {
+            svr.setProperty("certificate", QJSValue());
         }
 
         js.globalObject().setProperty("server", svr);
+    } else {
+        js.globalObject().setProperty("server", QJSValue());
     }
     {
         florarpc::DescriptorExports desc;
