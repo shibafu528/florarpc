@@ -32,17 +32,19 @@ args.push(`"${request.protoFile}"`);
 
 // server
 if (server.useTLS) {
-    if (server.certificate.rootCerts) {
-        args.push('-cacert');
-        args.push(`${server.certificate.rootCerts}`);
-    }
-    if (server.certificate.privateKey) {
-        args.push('-key');
-        args.push(`${server.certificate.privateKey}`);
-    }
-    if (server.certificate.certChain) {
-        args.push('-cert');
-        args.push(`${server.certificate.certChain}`);
+    if (server.certificate) {
+        if (server.certificate.rootCerts) {
+            args.push('-cacert');
+            args.push(`${server.certificate.rootCerts}`);
+        }
+        if (server.certificate.privateKey) {
+            args.push('-key');
+            args.push(`${server.certificate.privateKey}`);
+        }
+        if (server.certificate.certChain) {
+            args.push('-cert');
+            args.push(`${server.certificate.certChain}`);
+        }
     }
 } else {
     args.push('-plaintext');
