@@ -18,6 +18,7 @@
 #include "ServersManageDialog.h"
 #include "flora_constants.h"
 #include "florarpc/workspace.pb.h"
+#include "util/DescriptorPoolProxy.h"
 #include "util/ProtobufIterator.h"
 
 static QString getCopyAsUserScriptDir() {
@@ -493,6 +494,11 @@ void MainWindow::executeCopyAsScript(const QString &script) {
     QJSEngine js;
     js.installExtensions(QJSEngine::ConsoleExtension | QJSEngine::GarbageCollectionExtension);
     auto parseFunction = js.evaluate("JSON.parse");
+
+    DescriptorPoolProxy descriptorPoolProxy(js, method);
+    const auto descriptorPoolProxyValue = js.newQObject(&descriptorPoolProxy);
+    js.globalObject().setProperty("descriptor", descriptorPoolProxyValue);
+
     {
         QJSValue req = js.newObject();
         {
@@ -554,8 +560,10 @@ void MainWindow::executeCopyAsScript(const QString &script) {
         std::string descJson;
         method.exportTo(desc);
         google::protobuf::util::MessageToJsonString(desc, &descJson);
-        js.globalObject().setProperty("descriptor",
-                                      parseFunction.call(QJSValueList({QString::fromStdString(descJson)})));
+        QJSValue descObj = parseFunction.call(QJSValueList({QString::fromStdString(descJson)}));
+
+        auto assignFunction = js.evaluate("Object.assign");
+        assignFunction.call(QJSValueList({descriptorPoolProxyValue, descObj}));
     }
 
     QJSValue ret = js.evaluate(script);

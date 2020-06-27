@@ -146,6 +146,8 @@ add_executable(flora
         entity/Server.h
         ui/ProtocolTreeModel.cpp
         ui/ProtocolTreeModel.h
+        util/DescriptorPoolProxy.cpp
+        util/DescriptorPoolProxy.h
         util/GrpcUtility.cpp
         util/GrpcUtility.h
         util/ProtobufIterator.h

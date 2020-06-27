@@ -9,6 +9,8 @@
 #include "florarpc/descriptor_exports.pb.h"
 #include "florarpc/workspace.pb.h"
 
+class DescriptorPoolProxy;
+
 class Method {
 public:
     class ParseError : public std::exception {
@@ -48,6 +50,8 @@ public:
 private:
     const std::shared_ptr<Protocol> protocol;
     const google::protobuf::MethodDescriptor *descriptor;
+
+    friend DescriptorPoolProxy;
 };
 
 #endif  // FLORARPC_METHOD_H
