@@ -6,6 +6,7 @@
 #include <QLibraryInfo>
 #include <QTranslator>
 
+#include "flora_constants.h"
 #include "ui/MainWindow.h"
 
 #ifdef _WIN32
@@ -45,6 +46,8 @@ int main(int argc, char *argv[]) {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
     QApplication app(argc, argv);
+    QApplication::setApplicationName("FloraRPC");
+    QApplication::setApplicationVersion(FLORA_VERSION);
 
 #ifdef _WIN32
     // 日本語Windowsを使う人を救済する

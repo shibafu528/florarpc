@@ -50,12 +50,29 @@ void Method::writeMethodRef(florarpc::MethodRef &ref) {
     ref.set_file_name(protocol->getSourceAbsolutePath());
 }
 
-Method::ParseError::ParseError(std::unique_ptr<std::string> message) : message(std::move(message)) {}
+void Method::exportTo(florarpc::DescriptorExports &dest) const {
+    descriptor->input_type()->CopyTo(dest.mutable_request());
 
-const std::string &Method::ParseError::getMessage() {
-    return *message;
+    descriptor->input_type()->file()->CopyTo(dest.mutable_request_owner_file());
+    descriptor->input_type()->file()->CopyJsonNameTo(dest.mutable_request_owner_file());
+
+    descriptor->output_type()->CopyTo(dest.mutable_response());
+
+    descriptor->output_type()->file()->CopyTo(dest.mutable_response_owner_file());
+    descriptor->output_type()->file()->CopyJsonNameTo(dest.mutable_response_owner_file());
+
+    descriptor->CopyTo(dest.mutable_method());
+
+    descriptor->service()->CopyTo(dest.mutable_method_owner_service());
+
+    descriptor->file()->CopyTo(dest.mutable_method_owner_file());
+    descriptor->file()->CopyJsonNameTo(dest.mutable_method_owner_file());
 }
 
-bool Method::isChildOf(const google::protobuf::FileDescriptor *fileDescriptor) {
+Method::ParseError::ParseError(std::unique_ptr<std::string> message) : message(std::move(message)) {}
+
+const std::string &Method::ParseError::getMessage() { return *message; }
+
+bool Method::isChildOf(const google::protobuf::FileDescriptor *fileDescriptor) const {
     return fileDescriptor == descriptor->file();
 }

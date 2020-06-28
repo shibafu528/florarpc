@@ -37,6 +37,10 @@ private slots:
 
     void onActionManageServerTriggered();
 
+    void onActionCopyAsGrpcurlTriggered();
+
+    void onActionOpenCopyAsUserScriptDirTriggered();
+
     void onTreeViewClicked(const QModelIndex &index);
 
     void onRemoveFileFromTreeTriggered();
@@ -63,6 +67,8 @@ private:
     Editor *openEditor(std::unique_ptr<Method> method, bool forceNewTab);
     bool saveWorkspace(const QString &filename);
     void setWorkspaceFilename(const QString &filename);
+    void reloadCopyAsUserScripts();
+    void executeCopyAsScript(const QString &script);
 };
 
 #endif  // FLORARPC_MAINWINDOW_H

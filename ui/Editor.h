@@ -7,6 +7,7 @@
 #include <grpc++/support/string_ref.h>
 
 #include <QWidget>
+#include <optional>
 
 #include "../entity/Certificate.h"
 #include "../entity/Method.h"
@@ -30,6 +31,12 @@ public:
     void readRequest(const florarpc::Request &request);
 
     void writeRequest(florarpc::Request &request);
+
+    QString getRequestBody();
+
+    std::optional<QHash<QString, QString>> getMetadata();
+
+    std::shared_ptr<Server> getCurrentServer();
 
 private slots:
 
@@ -85,8 +92,6 @@ private:
     void hideStreamingButtons();
 
     void updateResponsePager();
-
-    std::shared_ptr<Server> getCurrentServer();
 };
 
 #endif  // FLORARPC_EDITOR_H

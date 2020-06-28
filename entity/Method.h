@@ -6,7 +6,10 @@
 #include <grpcpp/support/byte_buffer.h>
 
 #include "Protocol.h"
+#include "florarpc/descriptor_exports.pb.h"
 #include "florarpc/workspace.pb.h"
+
+class DescriptorPoolProxy;
 
 class Method {
 public:
@@ -40,11 +43,15 @@ public:
 
     void writeMethodRef(florarpc::MethodRef &ref);
 
-    bool isChildOf(const google::protobuf::FileDescriptor *fileDescriptor);
+    bool isChildOf(const google::protobuf::FileDescriptor *fileDescriptor) const;
+
+    void exportTo(florarpc::DescriptorExports &dest) const;
 
 private:
     const std::shared_ptr<Protocol> protocol;
     const google::protobuf::MethodDescriptor *descriptor;
+
+    friend DescriptorPoolProxy;
 };
 
 #endif  // FLORARPC_METHOD_H

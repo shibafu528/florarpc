@@ -2,8 +2,11 @@
 
 #include <google/protobuf/util/json_util.h>
 
+#include <QClipboard>
+#include <QDesktopServices>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QJSEngine>
 #include <QMessageBox>
 #include <QScreen>
 #include <QStandardPaths>
@@ -15,13 +18,19 @@
 #include "ServersManageDialog.h"
 #include "flora_constants.h"
 #include "florarpc/workspace.pb.h"
+#include "util/DescriptorPoolProxy.h"
 #include "util/ProtobufIterator.h"
 
+static QString getCopyAsUserScriptDir() {
+    return QDir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation)).filePath("scripts/copyas");
+}
+
 MainWindow::MainWindow(QWidget *parent)
-        : QMainWindow(parent), protocolTreeModel(std::make_unique<ProtocolTreeModel>(this)),
-          tabCloseShortcut(QKeySequence(Qt::CTRL + Qt::Key_W), this),
-          treeFileContextMenu(this),
-          treeMethodContextMenu(this) {
+    : QMainWindow(parent),
+      protocolTreeModel(std::make_unique<ProtocolTreeModel>(this)),
+      tabCloseShortcut(QKeySequence(Qt::CTRL + Qt::Key_W), this),
+      treeFileContextMenu(this),
+      treeMethodContextMenu(this) {
     ui.setupUi(this);
 
     connect(ui.actionOpen, &QAction::triggered, this, &MainWindow::onActionOpenTriggered);
@@ -34,6 +43,9 @@ MainWindow::MainWindow(QWidget *parent)
         dialog.exec();
     });
     connect(ui.actionQuit, &QAction::triggered, this, &MainWindow::close);
+    connect(ui.actionCopyAsGrpcurl, &QAction::triggered, this, &MainWindow::onActionCopyAsGrpcurlTriggered);
+    connect(ui.actionOpenCopyAsUserScriptDir, &QAction::triggered, this,
+            &MainWindow::onActionOpenCopyAsUserScriptDirTriggered);
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
     connect(ui.treeView, &QWidget::customContextMenuRequested, [=](const QPoint &pos) {
         const QModelIndex &index = ui.treeView->indexAt(pos);
@@ -71,6 +83,7 @@ MainWindow::MainWindow(QWidget *parent)
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(),
                                     QGuiApplication::primaryScreen()->availableGeometry()));
     setWindowTitle(QString("%1 - FloraRPC").arg("新しいワークスペース"));
+    reloadCopyAsUserScripts();
 }
 
 void MainWindow::onLogging(const QString &message) { ui.logEdit->appendPlainText(message); }
@@ -207,6 +220,27 @@ void MainWindow::onActionManageServerTriggered() {
             editor->setCertificates(certificates);
         }
     }
+}
+
+void MainWindow::onActionCopyAsGrpcurlTriggered() {
+    QFile file(":/js/to_grpcurl.js");
+    if (!file.open(QFile::ReadOnly)) {
+        QMessageBox::critical(this, "Fatal error", "スクリプトの実行に失敗しました。");
+        return;
+    }
+
+    const auto &script = file.readAll();
+    file.close();
+    executeCopyAsScript(script);
+}
+
+void MainWindow::onActionOpenCopyAsUserScriptDirTriggered() {
+    QDir dir(getCopyAsUserScriptDir());
+    if (!dir.exists() && !dir.mkpath(".")) {
+        QMessageBox::critical(this, "Fatal error", "スクリプトフォルダを作成できませんでした。");
+        return;
+    }
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -420,4 +454,134 @@ void MainWindow::setWorkspaceFilename(const QString &filename) {
     workspaceFilename = filename;
     QFileInfo fileInfo(filename);
     setWindowTitle(QString("%1 - FloraRPC").arg(fileInfo.baseName()));
+}
+
+void MainWindow::reloadCopyAsUserScripts() {
+    QDir scriptDir(getCopyAsUserScriptDir());
+    const auto scripts = scriptDir.entryInfoList(QStringList("*.js"), QDir::Files);
+    for (const auto script : scripts) {
+        const auto action = new QAction(script.baseName(), ui.menuCopyAs);
+        connect(action, &QAction::triggered, [this, script]() {
+            QFile file(script.absoluteFilePath());
+            if (!file.open(QFile::ReadOnly)) {
+                QMessageBox::critical(this, "Fatal error", "スクリプトの実行に失敗しました。");
+            }
+            executeCopyAsScript(file.readAll());
+            file.close();
+        });
+        ui.menuCopyAs->insertAction(ui.actionOpenCopyAsUserScriptDir, action);
+    }
+    if (!scripts.isEmpty()) {
+        ui.menuCopyAs->insertSeparator(ui.actionOpenCopyAsUserScriptDir);
+    }
+}
+
+void MainWindow::executeCopyAsScript(const QString &script) {
+    const auto editor = qobject_cast<Editor *>(ui.editorTabs->currentWidget());
+    if (editor == nullptr) {
+        return;
+    }
+
+    const auto &method = editor->getMethod();
+    const auto server = editor->getCurrentServer();
+    const auto requestBody = editor->getRequestBody();
+    const auto metadataResult = editor->getMetadata();
+    if (!metadataResult) {
+        return;
+    }
+    const auto &metadata = metadataResult.value();
+
+    QJSEngine js;
+    js.installExtensions(QJSEngine::ConsoleExtension | QJSEngine::GarbageCollectionExtension);
+    auto parseFunction = js.evaluate("JSON.parse");
+
+    DescriptorPoolProxy descriptorPoolProxy(js, method);
+    const auto descriptorPoolProxyValue = js.newQObject(&descriptorPoolProxy);
+    js.globalObject().setProperty("descriptor", descriptorPoolProxyValue);
+
+    {
+        QJSValue req = js.newObject();
+        {
+            auto parsedBody = parseFunction.call(QJSValueList({requestBody}));
+            if (parsedBody.isError()) {
+                ui.statusbar->showMessage("Error: リクエストをJSONとしてパースできません", 5000);
+                return;
+            }
+            req.setProperty("body", parsedBody);
+        }
+
+        QJSValue meta = js.newObject();
+        for (auto iter = metadata.cbegin(); iter != metadata.cend(); ++iter) {
+            meta.setProperty(iter.key(), iter.value());
+        }
+        req.setProperty("metadata", meta);
+
+        for (int i = 0; i < protocolTreeModel->rowCount(QModelIndex()); i++) {
+            const auto index = protocolTreeModel->index(i, 0, QModelIndex());
+            const auto fileDescriptor = protocolTreeModel->indexToFile(index);
+            if (method.isChildOf(fileDescriptor)) {
+                const auto fileInfo = protocolTreeModel->indexToSourceFile(index);
+                req.setProperty("protoFile", fileInfo.absoluteFilePath());
+                break;
+            }
+        }
+
+        req.setProperty("path", QString::fromStdString(method.getRequestPath()));
+
+        js.globalObject().setProperty("request", req);
+    }
+    {
+        QJSValue imp = js.newArray(imports.size());
+        for (int i = 0; i < imports.size(); i++) {
+            imp.setProperty(i, imports[i]);
+        }
+        js.globalObject().setProperty("imports", imp);
+    }
+    if (server) {
+        QJSValue svr = js.newObject();
+
+        svr.setProperty("address", server->address);
+        svr.setProperty("useTLS", server->useTLS);
+        if (server->useTLS) {
+            auto certificate = server->findCertificate(certificates);
+            if (certificate) {
+                QJSValue cert = js.newObject();
+                cert.setProperty("rootCerts", certificate->rootCertsPath);
+                cert.setProperty("privateKey", certificate->privateKeyPath);
+                cert.setProperty("certChain", certificate->certChainPath);
+                svr.setProperty("certificate", cert);
+            }
+        } else {
+            svr.setProperty("certificate", QJSValue());
+        }
+
+        js.globalObject().setProperty("server", svr);
+    } else {
+        js.globalObject().setProperty("server", QJSValue());
+    }
+    {
+        florarpc::DescriptorExports desc;
+        std::string descJson;
+        method.exportTo(desc);
+        google::protobuf::util::MessageToJsonString(desc, &descJson);
+        QJSValue descObj = parseFunction.call(QJSValueList({QString::fromStdString(descJson)}));
+
+        auto assignFunction = js.evaluate("Object.assign");
+        assignFunction.call(QJSValueList({descriptorPoolProxyValue, descObj}));
+    }
+
+    QJSValue ret = js.evaluate(script);
+    if (ret.isError()) {
+        ui.statusbar->showMessage(
+            QString("Error (line %1): %2").arg(ret.property("lineNumber").toInt()).arg(ret.toString()), 10000);
+    } else if (ret.isString()) {
+        if (auto str = ret.toString(); !str.isEmpty()) {
+            QApplication::clipboard()->setText(str);
+            ui.statusbar->showMessage("クリップボードにコピーしました", 5000);
+        } else {
+            ui.statusbar->showMessage("スクリプトを実行しました", 5000);
+        }
+    } else {
+        ui.statusbar->showMessage("Error: スクリプトの実行結果が文字列ではありません", 5000);
+    }
 }

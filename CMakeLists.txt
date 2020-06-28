@@ -18,7 +18,7 @@ if(WIN32)
   add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 endif()
 
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Qml REQUIRED)
 
 option(FLORA_FORCE_BUILD_KF5LIB "システムのKF5ライブラリを使用せず、常にビルドする")
 if(NOT FLORA_FORCE_BUILD_KF5LIB)
@@ -62,12 +62,15 @@ configure_file(${PROJECT_SOURCE_DIR}/flora_constants.h.in ${PROJECT_BINARY_DIR}/
 set(FLORA_PROTOBUF_INCLUDE "${PROJECT_SOURCE_DIR}/proto")
 set(FLORA_PROTOBUF_GENERATED "${PROJECT_BINARY_DIR}/proto_generated")
 set(FLORA_PROTOBUF_PROTOS
+        ${FLORA_PROTOBUF_INCLUDE}/florarpc/descriptor_exports.proto
         ${FLORA_PROTOBUF_INCLUDE}/florarpc/version.proto
         ${FLORA_PROTOBUF_INCLUDE}/florarpc/workspace.proto)
 set(FLORA_PROTOBUF_SOURCES
+        ${FLORA_PROTOBUF_GENERATED}/florarpc/descriptor_exports.pb.cc
         ${FLORA_PROTOBUF_GENERATED}/florarpc/version.pb.cc
         ${FLORA_PROTOBUF_GENERATED}/florarpc/workspace.pb.cc)
 set(FLORA_PROTOBUF_HEADERS
+        ${FLORA_PROTOBUF_GENERATED}/florarpc/descriptor_exports.pb.h
         ${FLORA_PROTOBUF_GENERATED}/florarpc/version.pb.h
         ${FLORA_PROTOBUF_GENERATED}/florarpc/workspace.pb.h)
 file(MAKE_DIRECTORY "${FLORA_PROTOBUF_GENERATED}")
@@ -143,6 +146,8 @@ add_executable(flora
         entity/Server.h
         ui/ProtocolTreeModel.cpp
         ui/ProtocolTreeModel.h
+        util/DescriptorPoolProxy.cpp
+        util/DescriptorPoolProxy.h
         util/GrpcUtility.cpp
         util/GrpcUtility.h
         util/ProtobufIterator.h
@@ -154,6 +159,7 @@ add_executable(flora
 
 target_link_libraries(flora
         Qt5::Widgets
+        Qt5::Qml
         KF5::SyntaxHighlighting
         protobuf::libprotobuf
         ${LIB_gRPC})

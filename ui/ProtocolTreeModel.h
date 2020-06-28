@@ -28,7 +28,9 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-    static const google::protobuf::FileDescriptor* indexToFile(const QModelIndex &index);
+    static const google::protobuf::FileDescriptor *indexToFile(const QModelIndex &index);
+
+    static const QFileInfo indexToSourceFile(const QModelIndex &index);
 
     static Method indexToMethod(const QModelIndex &index);
 

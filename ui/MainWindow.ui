@@ -48,7 +48,7 @@
      <x>0</x>
      <y>0</y>
      <width>1309</width>
-     <height>40</height>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -76,7 +76,22 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>編集(&amp;E)</string>
+    </property>
+    <widget class="QMenu" name="menuCopyAs">
+     <property name="title">
+      <string>形式を選択してコピー</string>
+     </property>
+     <addaction name="actionCopyAsGrpcurl"/>
+     <addaction name="separator"/>
+     <addaction name="actionOpenCopyAsUserScriptDir"/>
+    </widget>
+    <addaction name="menuCopyAs"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -236,12 +251,22 @@
     <string>Ctrl+Alt+E</string>
    </property>
   </action>
+  <action name="actionCopyAsGrpcurl">
+   <property name="text">
+    <string>gRPCurlのコマンドを生成</string>
+   </property>
+  </action>
   <action name="actionAbout">
    <property name="text">
     <string>FloraRPC について(&amp;A)...</string>
    </property>
    <property name="menuRole">
     <enum>QAction::AboutRole</enum>
+   </property>
+  </action>
+  <action name="actionOpenCopyAsUserScriptDir">
+   <property name="text">
+    <string>スクリプトフォルダを開く(&amp;O)</string>
    </property>
   </action>
  </widget>
