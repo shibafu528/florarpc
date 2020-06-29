@@ -51,6 +51,7 @@ jobs:
           copy /Y bin\Release\KF5SyntaxHighlighting.dll Release
           copy /Y ${{ github.workspace }}\README.md Release\README.txt
           copy /Y ${{ github.workspace }}\LICENSE Release\LICENSE.txt
+          copy /Y ${{ github.workspace }}\NOTICE Release\NOTICE.txt
           copy /Y ${{ github.workspace }}\third_party_licenses.md Release\third_party_licenses.txt
 
       - name: Upload artifact
@@ -115,6 +116,7 @@ jobs:
           mv flora.app image/FloraRPC.app
           cp -f ${{ github.workspace }}/README.md image/README
           cp -f ${{ github.workspace }}/LICENSE image/LICENSE
+          cp -f ${{ github.workspace }}/NOTICE image/NOTICE
           cp -f ${{ github.workspace }}/third_party_licenses.md image/third_party_licenses
           hdiutil create dist/FloraRPC.dmg -volname FloraRPC -srcfolder image
 
