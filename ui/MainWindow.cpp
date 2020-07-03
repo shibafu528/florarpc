@@ -177,6 +177,9 @@ void MainWindow::onActionOpenWorkspaceTriggered() {
             }
         }
     }
+    if (-1 < workspace.active_request_index() && workspace.active_request_index() < ui.editorTabs->count()) {
+        ui.editorTabs->setCurrentIndex(workspace.active_request_index());
+    }
 
     ui.statusbar->showMessage("ワークスペースを読み込みました", 5000);
     setWorkspaceFilename(filename);
@@ -429,6 +432,7 @@ bool MainWindow::saveWorkspace(const QString &filename) {
             editor->writeRequest(*request);
         }
     }
+    workspace.set_active_request_index(ui.editorTabs->currentIndex());
 
     std::string output;
     if (!workspace.SerializeToString(&output)) {
