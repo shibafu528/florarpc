@@ -1,7 +1,10 @@
 FloraRPC
 ====
 
-QtでgRPC Clientを書いてみる試み。Awesome gRPCを見てもネイティブのデスクトップGUIツールキットを使った実装が全然無かったので……。
+Qtを使ったgRPC GUI Clientです。  
+既存のアプリはどれもWebベースであり、ネイティブのGUIツールキットを用いた実装がほとんど無かったので開発されました。
+
+UIの構成は [BloomRPC](https://github.com/uw-labs/bloomrpc/) の影響を強く受けています。
 
 ## Dependencies
 - Qt 5.14
