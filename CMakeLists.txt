@@ -89,12 +89,14 @@ add_custom_command(
 
 if(WIN32)
     set(FLORA_PLATFORM_SOURCES
+            resources.rc
             platform/RootCertificates.h
             platform/windows/RootCertificates.cpp)
 endif()
 
 if(APPLE)
     set(FLORA_PLATFORM_SOURCES
+            resources/appicon/FloraRPC.icns
             platform/RootCertificates.h
             platform/mac/NSWindow.h
             platform/mac/NSWindow.mm
@@ -181,5 +183,6 @@ if(APPLE)
     find_library(SECURITY_LIBRARY Security)
     target_link_libraries(flora ${APPKIT_LIBRARY} ${SECURITY_LIBRARY})
     set_target_properties(flora PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/AppleInfo.plist)
+    set_source_files_properties(resources/appicon/FloraRPC.icns PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
     set_property(TARGET flora APPEND_STRING PROPERTY COMPILE_FLAGS "-fobjc-arc")
 endif()

@@ -4,6 +4,9 @@
         <!-- third party licenses -->
         <file>third_party_licenses.md</file>
 
+        <!-- App icon -->
+        <file>resources/appicon/FloraRPC.iconset/icon_512x512.png</file>
+
         <!-- Bundle tool script -->
         <file>js/to_grpcurl.js</file>
 

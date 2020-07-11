@@ -84,6 +84,10 @@ MainWindow::MainWindow(QWidget *parent)
                                     QGuiApplication::primaryScreen()->availableGeometry()));
     setWindowTitleWithSuffix("新しいワークスペース");
     reloadCopyAsUserScripts();
+
+#if !defined(_WIN32) && !defined(__APPLE__)
+    setWindowIcon(QIcon(":/resources/appicon/FloraRPC.iconset/icon_512x512.png"));
+#endif
 }
 
 void MainWindow::onLogging(const QString &message) { ui.logEdit->appendPlainText(message); }
