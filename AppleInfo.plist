@@ -9,7 +9,7 @@
 	<key>CFBundleGetInfoString</key>
 	<string>FloraRPC</string>
 	<key>CFBundleIconFile</key>
-	<string>${APPLE_GUI_ICON}</string>
+	<string>FloraRPC</string>
 	<key>CFBundleIdentifier</key>
 	<string>info.shibafu528.florarpc</string>
 	<key>CFBundleInfoDictionaryVersion</key>

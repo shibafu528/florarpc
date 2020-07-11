@@ -1,6 +1,12 @@
 FloraRPC
 ====
 
+<div align="center">
+<img alt="App icon" src="./resources/appicon/FloraRPC.iconset/icon_256x256.png">
+</div>
+
+----
+
 Qtを使ったgRPC GUI Clientです。  
 既存のアプリはどれもWebベースであり、ネイティブのGUIツールキットを用いた実装がほとんど無かったので開発されました。
 
