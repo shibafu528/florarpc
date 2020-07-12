@@ -19,6 +19,8 @@ class MainWindow : public QMainWindow {
 public:
     explicit MainWindow(QWidget *parent = nullptr);
 
+    bool loadWorkspace(const QString &filename);
+
 protected:
     void closeEvent(QCloseEvent *event) override;
 

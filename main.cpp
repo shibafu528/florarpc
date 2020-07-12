@@ -92,6 +92,10 @@ int main(int argc, char *argv[]) {
     app.installTranslator(&qtTranslator);
 
     mainWindow = new MainWindow();
+    if (auto args = app.arguments(); args.length() > 1) {
+        mainWindow->loadWorkspace(args[1]);
+    }
+
     mainWindow->show();
     return app.exec();
 }

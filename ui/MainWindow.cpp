@@ -108,85 +108,7 @@ void MainWindow::onActionOpenWorkspaceTriggered() {
         return;
     }
 
-    QFile file(filename);
-    if (!file.open(QFile::ReadOnly)) {
-        QMessageBox::critical(this, "Open error",
-                              "ワークスペースの読み込み中にエラーが発生しました。\nファイルを開けません。");
-        return;
-    }
-
-    const QByteArray workspaceBin = file.readAll();
-    file.close();
-
-    florarpc::Workspace workspace;
-    bool success = workspace.ParseFromString(workspaceBin.toStdString());
-    if (!success) {
-        QMessageBox::critical(
-            this, "Open error",
-            "ワークスペースの読み込み中にエラーが発生しました。\nファイルを読み込むことができません。");
-        return;
-    }
-
-    if (workspace.app_version().major() > FLORA_VERSION_MAJOR ||
-        workspace.app_version().minor() > FLORA_VERSION_MINOR ||
-        workspace.app_version().patch() > FLORA_VERSION_PATCH ||
-        workspace.app_version().tweak() > FLORA_VERSION_TWEAK) {
-        QMessageBox::warning(this, "Open error",
-                             "このワークスペースは現在実行中のFloraRPCよりも新しいバージョンで保存されています。\n読み"
-                             "込みを中止します。");
-        return;
-    }
-
-    protocols.clear();
-    imports.clear();
-    servers.clear();
-    certificates.clear();
-    for (int i = ui.editorTabs->count() - 1; i >= 0; i--) {
-        auto editor = ui.editorTabs->widget(i);
-        ui.editorTabs->removeTab(i);
-        delete editor;
-    }
-    protocolTreeModel->clear();
-
-    for (const auto &importPath : workspace.import_paths()) {
-        imports.append(QString::fromStdString(importPath.path()));
-    }
-
-    for (const auto &server : workspace.servers()) {
-        servers.push_back(std::make_shared<Server>(server));
-    }
-
-    for (const auto &certificate : workspace.certificates()) {
-        certificates.push_back(std::make_shared<Certificate>(certificate));
-    }
-
-    QStringList filenames;
-    for (const auto &protoFile : workspace.proto_files()) {
-        filenames << QString::fromStdString(protoFile.path());
-    }
-    openProtos(filenames, false);
-
-    for (const auto &request : workspace.requests()) {
-        const auto &methodRef = request.method();
-        for (const auto &protocol : protocols) {
-            if (protocol->getSourceAbsolutePath() != methodRef.file_name()) {
-                continue;
-            }
-
-            auto method = protocol->findMethodByRef(methodRef);
-            if (method != nullptr) {
-                auto editor = openEditor(std::make_unique<Method>(protocol, method), true);
-                editor->readRequest(request);
-                break;
-            }
-        }
-    }
-    if (-1 < workspace.active_request_index() && workspace.active_request_index() < ui.editorTabs->count()) {
-        ui.editorTabs->setCurrentIndex(workspace.active_request_index());
-    }
-
-    ui.statusbar->showMessage("ワークスペースを読み込みました", 5000);
-    setWorkspaceFilename(filename);
+    loadWorkspace(filename);
 }
 
 void MainWindow::onActionSaveWorkspaceTriggered() {
@@ -399,6 +321,89 @@ Editor *MainWindow::openEditor(std::unique_ptr<Method> method, bool forceNewTab)
     const auto addedIndex = ui.editorTabs->addTab(editor, QString::fromStdString(methodName));
     ui.editorTabs->setCurrentIndex(addedIndex);
     return editor;
+}
+
+bool MainWindow::loadWorkspace(const QString &filename) {
+    QFile file(filename);
+    if (!file.open(QFile::ReadOnly)) {
+        QMessageBox::critical(this, "Open error",
+                              "ワークスペースの読み込み中にエラーが発生しました。\nファイルを開けません。");
+        return false;
+    }
+
+    const QByteArray workspaceBin = file.readAll();
+    file.close();
+
+    florarpc::Workspace workspace;
+    bool success = workspace.ParseFromString(workspaceBin.toStdString());
+    if (!success) {
+        QMessageBox::critical(
+            this, "Open error",
+            "ワークスペースの読み込み中にエラーが発生しました。\nファイルを読み込むことができません。");
+        return false;
+    }
+
+    if (workspace.app_version().major() > FLORA_VERSION_MAJOR ||
+        workspace.app_version().minor() > FLORA_VERSION_MINOR ||
+        workspace.app_version().patch() > FLORA_VERSION_PATCH ||
+        workspace.app_version().tweak() > FLORA_VERSION_TWEAK) {
+        QMessageBox::warning(this, "Open error",
+                             "このワークスペースは現在実行中のFloraRPCよりも新しいバージョンで保存されています。\n読み"
+                             "込みを中止します。");
+        return false;
+    }
+
+    protocols.clear();
+    imports.clear();
+    servers.clear();
+    certificates.clear();
+    for (int i = ui.editorTabs->count() - 1; i >= 0; i--) {
+        auto editor = ui.editorTabs->widget(i);
+        ui.editorTabs->removeTab(i);
+        delete editor;
+    }
+    protocolTreeModel->clear();
+
+    for (const auto &importPath : workspace.import_paths()) {
+        imports.append(QString::fromStdString(importPath.path()));
+    }
+
+    for (const auto &server : workspace.servers()) {
+        servers.push_back(std::make_shared<Server>(server));
+    }
+
+    for (const auto &certificate : workspace.certificates()) {
+        certificates.push_back(std::make_shared<Certificate>(certificate));
+    }
+
+    QStringList filenames;
+    for (const auto &protoFile : workspace.proto_files()) {
+        filenames << QString::fromStdString(protoFile.path());
+    }
+    openProtos(filenames, false);
+
+    for (const auto &request : workspace.requests()) {
+        const auto &methodRef = request.method();
+        for (const auto &protocol : protocols) {
+            if (protocol->getSourceAbsolutePath() != methodRef.file_name()) {
+                continue;
+            }
+
+            auto method = protocol->findMethodByRef(methodRef);
+            if (method != nullptr) {
+                auto editor = openEditor(std::make_unique<Method>(protocol, method), true);
+                editor->readRequest(request);
+                break;
+            }
+        }
+    }
+    if (-1 < workspace.active_request_index() && workspace.active_request_index() < ui.editorTabs->count()) {
+        ui.editorTabs->setCurrentIndex(workspace.active_request_index());
+    }
+
+    ui.statusbar->showMessage("ワークスペースを読み込みました", 5000);
+    setWorkspaceFilename(filename);
+    return true;
 }
 
 bool MainWindow::saveWorkspace(const QString &filename) {
