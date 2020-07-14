@@ -69,7 +69,6 @@ private:
     Editor *openEditor(std::unique_ptr<Method> method, bool forceNewTab);
     bool saveWorkspace(const QString &filename);
     void setWorkspaceFilename(const QString &filename);
-    void setWindowTitleWithSuffix(const QString &title);
     void reloadCopyAsUserScripts();
     void executeCopyAsScript(const QString &script);
 };

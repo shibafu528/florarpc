@@ -47,6 +47,7 @@ int main(int argc, char *argv[]) {
 
     QApplication app(argc, argv);
     QApplication::setApplicationName("FloraRPC");
+    QApplication::setApplicationDisplayName("FloraRPC");
     QApplication::setApplicationVersion(FLORA_VERSION);
 
 #ifdef _WIN32

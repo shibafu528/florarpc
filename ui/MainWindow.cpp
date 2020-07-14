@@ -82,7 +82,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(),
                                     QGuiApplication::primaryScreen()->availableGeometry()));
-    setWindowTitleWithSuffix("新しいワークスペース");
+    setWindowTitle("新しいワークスペース");
     reloadCopyAsUserScripts();
 
 #if !defined(_WIN32) && !defined(__APPLE__)
@@ -466,16 +466,8 @@ bool MainWindow::saveWorkspace(const QString &filename) {
 void MainWindow::setWorkspaceFilename(const QString &filename) {
     workspaceFilename = filename;
     QFileInfo fileInfo(filename);
-    setWindowTitleWithSuffix(fileInfo.fileName());
+    setWindowTitle(fileInfo.fileName());
     setWindowFilePath(fileInfo.absoluteFilePath());
-}
-
-void MainWindow::setWindowTitleWithSuffix(const QString &title) {
-#ifdef __APPLE__
-    setWindowTitle(title);
-#else
-    setWindowTitle(QString("%1 - FloraRPC").arg(title));
-#endif
 }
 
 void MainWindow::reloadCopyAsUserScripts() {
