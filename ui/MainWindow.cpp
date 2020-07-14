@@ -116,12 +116,17 @@ void MainWindow::onActionSaveWorkspaceTriggered() {
     if (!workspaceFilename.isEmpty()) {
         baseDirectory = QFileInfo(workspaceFilename).dir().path();
     }
-    auto filename =
-        QFileDialog::getSaveFileName(this, "Save workspace", baseDirectory, "FloraRPC Workspace (*.floraws)");
-    if (filename.isEmpty()) {
+    QFileDialog dialog(this, "Save workspace", baseDirectory, "FloraRPC Workspace (*.floraws)");
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setDefaultSuffix("floraws");
+    if (dialog.exec() == QDialog::Rejected) {
+        return;
+    }
+    if (dialog.selectedFiles().isEmpty()) {
         return;
     }
 
+    auto filename = dialog.selectedFiles().first();
     if (saveWorkspace(filename)) {
         ui.statusbar->showMessage("ワークスペースを保存しました", 5000);
         setWorkspaceFilename(filename);
