@@ -146,6 +146,8 @@ add_executable(flora
         entity/Session.h
         entity/Server.cpp
         entity/Server.h
+        ui/event/WorkspaceModifiedEvent.cpp
+        ui/event/WorkspaceModifiedEvent.h
         ui/ProtocolTreeModel.cpp
         ui/ProtocolTreeModel.h
         util/DescriptorPoolProxy.cpp

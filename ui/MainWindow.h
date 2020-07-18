@@ -5,6 +5,7 @@
 
 #include <QMainWindow>
 #include <QShortcut>
+#include <QTimer>
 
 #include "../entity/Certificate.h"
 #include "../entity/Protocol.h"
@@ -22,6 +23,7 @@ public:
     bool loadWorkspace(const QString &filename);
 
 protected:
+    bool event(QEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
 
 public slots:
@@ -51,6 +53,12 @@ private slots:
 
     void onTabCloseShortcutActivated();
 
+    void onWorkspaceModified();
+
+    void onTimeoutWorkspaceSaveTimer();
+
+    void cancelWorkspaceSaveTimer();
+
 private:
     Ui::MainWindow ui;
     std::vector<std::shared_ptr<Protocol>> protocols;
@@ -63,8 +71,9 @@ private:
     QMenu treeFileContextMenu;
     QMenu treeMethodContextMenu;
     QString workspaceFilename;
+    QTimer workspaceSaveTimer;
 
-    void openProtos(const QStringList &filenames, bool abortOnLoadError);
+    bool openProtos(const QStringList &filenames, bool abortOnLoadError);
     void openMethod(const QModelIndex &index, bool forceNewTab);
     Editor *openEditor(std::unique_ptr<Method> method, bool forceNewTab);
     bool saveWorkspace(const QString &filename);

@@ -64,6 +64,8 @@ private slots:
 
     void cleanupSession();
 
+    void willEmitWorkspaceModified();
+
 private:
     Ui_Editor ui;
     QMenu *responseMetadataContextMenu;

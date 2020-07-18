@@ -3,6 +3,7 @@
 #include <google/protobuf/util/json_util.h>
 
 #include <QClipboard>
+#include <QDebug>
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -12,10 +13,12 @@
 #include <QStandardPaths>
 #include <QStyle>
 #include <QTextStream>
+#include <chrono>
 
 #include "AboutDialog.h"
 #include "ImportsManageDialog.h"
 #include "ServersManageDialog.h"
+#include "event/WorkspaceModifiedEvent.h"
 #include "flora_constants.h"
 #include "florarpc/workspace.pb.h"
 #include "util/DescriptorPoolProxy.h"
@@ -30,7 +33,8 @@ MainWindow::MainWindow(QWidget *parent)
       protocolTreeModel(std::make_unique<ProtocolTreeModel>(this)),
       tabCloseShortcut(QKeySequence(Qt::CTRL + Qt::Key_W), this),
       treeFileContextMenu(this),
-      treeMethodContextMenu(this) {
+      treeMethodContextMenu(this),
+      workspaceSaveTimer(this) {
     ui.setupUi(this);
 
     connect(ui.actionOpen, &QAction::triggered, this, &MainWindow::onActionOpenTriggered);
@@ -57,8 +61,10 @@ MainWindow::MainWindow(QWidget *parent)
             treeMethodContextMenu.exec(ui.treeView->viewport()->mapToGlobal(pos));
         }
     });
+    connect(ui.editorTabs, &QTabWidget::currentChanged, this, &MainWindow::onWorkspaceModified);
     connect(ui.editorTabs, &QTabWidget::tabCloseRequested, this, &MainWindow::onEditorTabCloseRequested);
     connect(&tabCloseShortcut, &QShortcut::activated, this, &MainWindow::onTabCloseShortcutActivated);
+    connect(&workspaceSaveTimer, &QTimer::timeout, this, &MainWindow::onTimeoutWorkspaceSaveTimer);
 
     auto toggleLogViewAction = ui.logDockWidget->toggleViewAction();
     toggleLogViewAction->setShortcut(Qt::CTRL + Qt::Key_L);
@@ -80,6 +86,8 @@ MainWindow::MainWindow(QWidget *parent)
         openMethod(index, true);
     });
 
+    workspaceSaveTimer.setSingleShot(true);
+
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(),
                                     QGuiApplication::primaryScreen()->availableGeometry()));
     setWindowTitle("新しいワークスペース");
@@ -94,7 +102,9 @@ void MainWindow::onLogging(const QString &message) { ui.logEdit->appendPlainText
 
 void MainWindow::onActionOpenTriggered() {
     auto filenames = QFileDialog::getOpenFileNames(this, "Open proto", "", "Proto definition files (*.proto)", nullptr);
-    openProtos(filenames, true);
+    if (openProtos(filenames, true)) {
+        onWorkspaceModified();
+    }
 }
 
 void MainWindow::onActionOpenWorkspaceTriggered() {
@@ -130,6 +140,7 @@ void MainWindow::onActionSaveWorkspaceTriggered() {
     if (saveWorkspace(filename)) {
         ui.statusbar->showMessage("ワークスペースを保存しました", 5000);
         setWorkspaceFilename(filename);
+        cancelWorkspaceSaveTimer();
     }
 }
 
@@ -138,6 +149,7 @@ void MainWindow::onActionManageProtoTriggered() {
     dialog->setPaths(imports);
     dialog->exec();
     imports = dialog->getPaths();
+    onWorkspaceModified();
 }
 
 void MainWindow::onActionManageServerTriggered() {
@@ -154,6 +166,7 @@ void MainWindow::onActionManageServerTriggered() {
             editor->setCertificates(certificates);
         }
     }
+    onWorkspaceModified();
 }
 
 void MainWindow::onActionCopyAsGrpcurlTriggered() {
@@ -175,6 +188,34 @@ void MainWindow::onActionOpenCopyAsUserScriptDirTriggered() {
         return;
     }
     QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
+}
+
+void MainWindow::onWorkspaceModified() {
+    qDebug() << "MainWindow::onWorkspaceModified from" << (sender() ? sender()->objectName() : "event");
+    workspaceSaveTimer.start(std::chrono::seconds(10));
+}
+
+void MainWindow::onTimeoutWorkspaceSaveTimer() {
+    qDebug() << "MainWindow::onTimeoutWorkspaceSaveTimer";
+    if (!workspaceFilename.isEmpty()) {
+        qDebug() << "MainWindow::onTimeoutWorkspaceSaveTimer: fire saveWorkspace()";
+        saveWorkspace(workspaceFilename);
+    }
+}
+
+void MainWindow::cancelWorkspaceSaveTimer() {
+    qDebug() << "MainWindow::cancelWorkspaceSaveTimer";
+    workspaceSaveTimer.stop();
+}
+
+bool MainWindow::event(QEvent *event) {
+    if (event->type() == Event::WorkspaceModifiedEvent::type) {
+        auto *ev = dynamic_cast<Event::WorkspaceModifiedEvent *>(event);
+        qDebug() << "Event::WorkspaceModifiedEvent from" << ev->sender;
+        onWorkspaceModified();
+        return true;
+    }
+    return QMainWindow::event(event);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -238,6 +279,7 @@ void MainWindow::onRemoveFileFromTreeTriggered() {
             return p->getFileDescriptor() == fileDescriptor;
         });
         protocols.erase(remove, protocols.end());
+        onWorkspaceModified();
     }
 }
 
@@ -245,6 +287,7 @@ void MainWindow::onEditorTabCloseRequested(const int index) {
     auto editor = ui.editorTabs->widget(index);
     ui.editorTabs->removeTab(index);
     delete editor;
+    onWorkspaceModified();
 }
 
 void MainWindow::onTabCloseShortcutActivated() {
@@ -252,12 +295,13 @@ void MainWindow::onTabCloseShortcutActivated() {
     if (editor) {
         ui.editorTabs->removeTab(ui.editorTabs->currentIndex());
         delete editor;
+        onWorkspaceModified();
     }
 }
 
-void MainWindow::openProtos(const QStringList &filenames, bool abortOnLoadError) {
+bool MainWindow::openProtos(const QStringList &filenames, bool abortOnLoadError) {
     if (filenames.isEmpty()) {
-        return;
+        return false;
     }
     std::vector<std::shared_ptr<Protocol>> successes;
     for (const auto &filename : filenames) {
@@ -286,7 +330,7 @@ void MainWindow::openProtos(const QStringList &filenames, bool abortOnLoadError)
             }
             QMessageBox::critical(this, "Load error", message);
             if (abortOnLoadError) {
-                return;
+                return false;
             }
         }
     }
@@ -295,6 +339,7 @@ void MainWindow::openProtos(const QStringList &filenames, bool abortOnLoadError)
         const auto index = protocolTreeModel->addProtocol(protocol);
         ui.treeView->expandRecursively(index);
     }
+    return true;
 }
 
 void MainWindow::openMethod(const QModelIndex &index, bool forceNewTab) {
@@ -304,6 +349,7 @@ void MainWindow::openMethod(const QModelIndex &index, bool forceNewTab) {
     }
 
     openEditor(std::make_unique<Method>(ProtocolTreeModel::indexToMethod(index)), forceNewTab);
+    onWorkspaceModified();
 }
 
 Editor *MainWindow::openEditor(std::unique_ptr<Method> method, bool forceNewTab) {
@@ -405,6 +451,9 @@ bool MainWindow::loadWorkspace(const QString &filename) {
     if (-1 < workspace.active_request_index() && workspace.active_request_index() < ui.editorTabs->count()) {
         ui.editorTabs->setCurrentIndex(workspace.active_request_index());
     }
+
+    // ロードに伴うUIの変更イベントによって要求されるであろうオートセーブをキャンセルする
+    QTimer::singleShot(std::chrono::milliseconds(100), this, &MainWindow::cancelWorkspaceSaveTimer);
 
     ui.statusbar->showMessage("ワークスペースを読み込みました", 5000);
     setWorkspaceFilename(filename);
