@@ -15,6 +15,7 @@
 
 #include "../entity/Method.h"
 #include "../util/GrpcUtility.h"
+#include "event/WorkspaceModifiedEvent.h"
 
 static std::shared_ptr<grpc::ChannelCredentials> getCredentials(
     Server &server, std::vector<std::shared_ptr<Certificate>> &certificates) {
@@ -45,6 +46,10 @@ Editor::Editor(std::unique_ptr<Method> &&method, KSyntaxHighlighting::Repository
             &Editor::onResponseBodyPageChanged);
     connect(ui.prevResponseBodyButton, &QPushButton::clicked, this, &Editor::onPrevResponseBodyButtonClicked);
     connect(ui.nextResponseBodyButton, &QPushButton::clicked, this, &Editor::onNextResponseBodyButtonClicked);
+    connect(ui.serverSelectBox, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            &Editor::willEmitWorkspaceModified);
+    connect(ui.requestEdit, &QTextEdit::textChanged, this, &Editor::willEmitWorkspaceModified);
+    connect(ui.requestMetadataEdit, &QTextEdit::textChanged, this, &Editor::willEmitWorkspaceModified);
 
     // 1:1にする
     // https://stackoverflow.com/a/43835396
@@ -380,6 +385,11 @@ void Editor::cleanupSession() {
     hideStreamingButtons();
     delete session;
     session = nullptr;
+}
+
+void Editor::willEmitWorkspaceModified() {
+    QApplication::postEvent(window(), new Event::WorkspaceModifiedEvent(
+                                          QString("%1:%2").arg(metaObject()->className()).arg(sender()->objectName())));
 }
 
 std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> Editor::setupHighlighter(
