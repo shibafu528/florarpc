@@ -7,6 +7,7 @@
 #include <grpcpp/grpcpp.h>
 
 #include <QClipboard>
+#include <QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMenu>
