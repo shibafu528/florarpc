@@ -158,7 +158,7 @@ void Editor::writeRequest(florarpc::Request &request) {
 
     request.set_body_draft(ui.requestEdit->toPlainText().toStdString());
     request.set_metadata_draft(ui.requestMetadataEdit->toPlainText().toStdString());
-    if (const auto server = getCurrentServer(); server) {
+    if (const auto server = getCurrentServer()) {
         request.set_selected_server_id(server->id.toByteArray().toStdString());
     } else {
         request.clear_selected_server_id();
