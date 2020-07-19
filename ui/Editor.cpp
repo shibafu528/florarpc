@@ -158,7 +158,11 @@ void Editor::writeRequest(florarpc::Request &request) {
 
     request.set_body_draft(ui.requestEdit->toPlainText().toStdString());
     request.set_metadata_draft(ui.requestMetadataEdit->toPlainText().toStdString());
-    request.set_selected_server_id(getCurrentServer()->id.toByteArray().toStdString());
+    if (const auto server = getCurrentServer(); server) {
+        request.set_selected_server_id(server->id.toByteArray().toStdString());
+    } else {
+        request.clear_selected_server_id();
+    }
 }
 
 QString Editor::getRequestBody() { return ui.requestEdit->toPlainText(); }
