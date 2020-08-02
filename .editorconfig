@@ -15,3 +15,7 @@ indent_size = 2
 
 [*.ui]
 indent_size = 1
+ij_xml_text_wrap = off
+ij_any_keep_line_breaks = true
+ij_xml_keep_line_breaks_in_text = true
+ij_xml_keep_whitespaces = true

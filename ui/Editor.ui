@@ -164,8 +164,7 @@
             <widget class="QCheckBox" name="useSharedMetadata">
              <property name="toolTip">
               <string>接続先設定で入力されている共通メタデータを使用します。
-               同じ名前のメタデータがある場合は、この下に書いた値が優先されます。
-              </string>
+同じ名前のメタデータがある場合は、この下に書いた値が優先されます。</string>
              </property>
              <property name="text">
               <string>接続先の共通メタデータを使用</string>
@@ -178,9 +177,7 @@
               <bool>false</bool>
              </property>
              <property name="placeholderText">
-              <string>{&quot;text-meta&quot;: &quot;value&quot;, &quot;binary-meta-bin&quot;: &quot;base64 value&quot;,
-               ...}
-              </string>
+              <string>{&quot;text-meta&quot;: &quot;value&quot;, &quot;binary-meta-bin&quot;: &quot;base64 value&quot;, ...}</string>
              </property>
             </widget>
            </item>
