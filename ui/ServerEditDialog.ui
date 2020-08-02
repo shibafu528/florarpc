@@ -86,13 +86,12 @@
     </widget>
    </item>
    <item>
-    <widget class="QTextEdit" name="sharedMetadataEdit">
-     <property name="acceptRichText">
-      <bool>false</bool>
-     </property>
-     <property name="placeholderText">
-      <string>{&quot;text-meta&quot;: &quot;value&quot;, &quot;binary-meta-bin&quot;: &quot;base64 value&quot;, ...}
-      </string>
+    <widget class="MetadataEdit" name="sharedMetadataEdit" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
     </widget>
    </item>
@@ -105,6 +104,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MetadataEdit</class>
+   <extends>QWidget</extends>
+   <header>ui/MetadataEdit.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>nameEdit</tabstop>
   <tabstop>addressEdit</tabstop>

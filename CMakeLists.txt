@@ -121,6 +121,9 @@ add_executable(flora
         ui/MainWindow.ui
         ui/MainWindow.cpp
         ui/MainWindow.h
+        ui/MetadataEdit.ui
+        ui/MetadataEdit.cpp
+        ui/MetadataEdit.h
         ui/ImportsManageDialog.ui
         ui/ImportsManageDialog.cpp
         ui/ImportsManageDialog.h
