@@ -33,6 +33,7 @@ message Request {
   string body_draft = 2;
   string metadata_draft = 3;
   string selected_server_id = 4;
+  bool use_shared_metadata = 5;
 }
 
 message Server {
@@ -41,6 +42,7 @@ message Server {
   string address = 3;
   bool useTLS = 4;
   string certificate_id = 5;
+  string shared_metadata = 6;
 }
 
 message Certificate {

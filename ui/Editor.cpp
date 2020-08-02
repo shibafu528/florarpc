@@ -150,6 +150,7 @@ void Editor::readRequest(const florarpc::Request &request) {
             break;
         }
     }
+    ui.useSharedMetadata->setChecked(request.use_shared_metadata());
 }
 
 void Editor::writeRequest(florarpc::Request &request) {
@@ -163,6 +164,7 @@ void Editor::writeRequest(florarpc::Request &request) {
     } else {
         request.clear_selected_server_id();
     }
+    request.set_use_shared_metadata(ui.useSharedMetadata->isChecked());
 }
 
 QString Editor::getRequestBody() { return ui.requestEdit->toPlainText(); }
