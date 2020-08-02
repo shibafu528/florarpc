@@ -5,22 +5,27 @@
 #include <QJsonObject>
 #include <chrono>
 
-MetadataEdit::MetadataEdit(QWidget *parent) : QWidget(parent), validateTimer(this), valid(true), metadata() {
+#include "util/SyntaxHighlighter.h"
+
+MetadataEdit::MetadataEdit(QWidget *parent)
+    : QWidget(parent), validateTimer(new QTimer(this)), valid(true), metadata() {
     ui.setupUi(this);
 
     connect(ui.textEdit, &QTextEdit::textChanged, this, &MetadataEdit::onTextChanged);
-    connect(&validateTimer, &QTimer::timeout, this, &MetadataEdit::onValidateTimerTimeout);
+    connect(validateTimer, &QTimer::timeout, this, &MetadataEdit::onValidateTimerTimeout);
+
+    highlighter = SyntaxHighlighter::setup(*ui.textEdit, palette());
 
     const auto fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui.textEdit->setFont(fixedFont);
     ui.error->hide();
 
-    validateTimer.setSingleShot(true);
+    validateTimer->setSingleShot(true);
 }
 
 bool MetadataEdit::isValid() {
-    if (validateTimer.isActive()) {
-        validateTimer.stop();
+    if (validateTimer->isActive()) {
+        validateTimer->stop();
         onValidateTimerTimeout();
     }
 
@@ -32,15 +37,18 @@ QString MetadataEdit::toString() { return ui.textEdit->toPlainText(); }
 void MetadataEdit::setString(const QString &metadata) { ui.textEdit->setText(metadata); }
 
 Session::Metadata MetadataEdit::toMap() {
-    if (validateTimer.isActive()) {
-        validateTimer.stop();
+    if (validateTimer->isActive()) {
+        validateTimer->stop();
         onValidateTimerTimeout();
     }
 
     return metadata;
 }
 
-void MetadataEdit::onTextChanged() { validateTimer.start(std::chrono::seconds(3)); }
+void MetadataEdit::onTextChanged() {
+    validateTimer->start(std::chrono::seconds(3));
+    emit changed();
+}
 
 void MetadataEdit::onValidateTimerTimeout() {
     valid = true;

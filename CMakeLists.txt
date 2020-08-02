@@ -160,6 +160,8 @@ add_executable(flora
         util/ProtobufIterator.h
         util/ProtobufJsonPrinter.cpp
         util/ProtobufJsonPrinter.h
+        util/SyntaxHighlighter.cpp
+        util/SyntaxHighlighter.h
         ${FLORA_PROTOBUF_SOURCES}
         ${FLORA_PROTOBUF_HEADERS}
         ${FLORA_PLATFORM_SOURCES})

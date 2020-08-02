@@ -1,6 +1,8 @@
 #ifndef FLORARPC_METADATAEDIT_H
 #define FLORARPC_METADATAEDIT_H
 
+#include <KSyntaxHighlighting/syntaxhighlighter.h>
+
 #include <QTimer>
 #include <QWidget>
 
@@ -17,13 +19,18 @@ public:
     void setString(const QString &metadata);
     Session::Metadata toMap();
 
+signals:
+    void changed();
+
 private slots:
     void onTextChanged();
     void onValidateTimerTimeout();
 
 private:
     Ui_MetadataEdit ui;
-    QTimer validateTimer;
+    std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> highlighter;
+    QTimer *validateTimer;
+
     bool valid;
     Session::Metadata metadata;
 };

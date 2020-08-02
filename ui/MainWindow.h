@@ -1,8 +1,6 @@
 #ifndef FLORARPC_MAINWINDOW_H
 #define FLORARPC_MAINWINDOW_H
 
-#include <KSyntaxHighlighting/repository.h>
-
 #include <QMainWindow>
 #include <QShortcut>
 #include <QTimer>
@@ -66,7 +64,6 @@ private:
     std::vector<std::shared_ptr<Certificate>> certificates;
     std::unique_ptr<ProtocolTreeModel> protocolTreeModel;
     QStringList imports;
-    KSyntaxHighlighting::Repository syntaxDefinitions;
     QShortcut tabCloseShortcut;
     QMenu treeFileContextMenu;
     QMenu treeMethodContextMenu;
