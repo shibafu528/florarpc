@@ -11,6 +11,7 @@
 #include <QMenu>
 #include <QMessageBox>
 
+#include "../entity/Metadata.h"
 #include "../entity/Method.h"
 #include "../util/GrpcUtility.h"
 #include "event/WorkspaceModifiedEvent.h"
@@ -161,35 +162,19 @@ void Editor::writeRequest(florarpc::Request &request) {
 QString Editor::getRequestBody() { return ui.requestEdit->toPlainText(); }
 
 std::optional<QHash<QString, QString>> Editor::getMetadata() {
-    QHash<QString, QString> metadata;
-
-    if (const auto metadataInput = ui.requestMetadataEdit->toString(); !metadataInput.isEmpty()) {
-        QJsonParseError parseError = {};
-        QJsonDocument metadataJson = QJsonDocument::fromJson(metadataInput.toUtf8(), &parseError);
-        if (metadataJson.isNull()) {
-            QMessageBox::warning(this, "Request Metadata Parse Error", parseError.errorString());
+    Metadata meta;
+    if (auto server = getCurrentServer(); server && !server->sharedMetadata.isEmpty()) {
+        if (auto parseResult = meta.parseJson(server->sharedMetadata); !parseResult.isEmpty()) {
+            QMessageBox::warning(this, "Shared Metadata Parse Error", parseResult);
             return std::nullopt;
-        }
-        if (!metadataJson.isObject()) {
-            QMessageBox::warning(this, "Request Metadata Parse Error", "Metadata input must be an object.");
-            return std::nullopt;
-        }
-
-        const QJsonObject &object = metadataJson.object();
-        for (auto iter = object.constBegin(); iter != object.constEnd(); iter++) {
-            const auto key = iter.key();
-            const auto value = iter.value().toString();
-            if (value == nullptr) {
-                QMessageBox::warning(this, "Request Metadata Parse Error",
-                                     QLatin1String("Metadata '") + key + QLatin1String("' must be a string."));
-                return std::nullopt;
-            }
-
-            metadata.insert(key, value);
         }
     }
+    if (auto parseResult = meta.parseJson(ui.requestMetadataEdit->toString()); !parseResult.isEmpty()) {
+        QMessageBox::warning(this, "Request Metadata Parse Error", parseResult);
+        return std::nullopt;
+    }
 
-    return metadata;
+    return meta.asHash();
 }
 
 void Editor::onExecuteButtonClicked() {
@@ -216,40 +201,21 @@ void Editor::onExecuteButtonClicked() {
     std::unique_ptr<grpc::ByteBuffer> sendBuffer = GrpcUtility::serializeMessage(*reqMessage);
 
     // Parse request metadata
-    Session::Metadata metadata;
-    if (const auto metadataInput = ui.requestMetadataEdit->toString(); !metadataInput.isEmpty()) {
-        QJsonParseError parseError = {};
-        QJsonDocument metadataJson = QJsonDocument::fromJson(metadataInput.toUtf8(), &parseError);
-        if (metadataJson.isNull()) {
-            setErrorToResponseView("-", "Request Metadata Parse Error", parseError.errorString());
+    Metadata meta;
+    if (auto server = getCurrentServer(); server && !server->sharedMetadata.isEmpty()) {
+        if (auto parseResult = meta.parseJson(server->sharedMetadata); !parseResult.isEmpty()) {
+            setErrorToResponseView("-", "Shared Metadata Parse Error", parseResult);
             return;
         }
-        if (!metadataJson.isObject()) {
-            setErrorToResponseView("-", "Request Metadata Parse Error", "Metadata input must be an object.");
-            return;
-        }
-
-        const QJsonObject &object = metadataJson.object();
-        for (auto iter = object.constBegin(); iter != object.constEnd(); iter++) {
-            const auto key = iter.key();
-            const auto value = iter.value().toString();
-            if (value == nullptr) {
-                setErrorToResponseView("-", "Request Metadata Parse Error",
-                                       QLatin1String("Metadata '") + key + QLatin1String("' must be a string."));
-                return;
-            }
-
-            if (key.endsWith("-bin")) {
-                metadata.insert(key, QByteArray::fromBase64(value.toUtf8()));
-            } else {
-                metadata.insert(key, value);
-            }
-        }
+    }
+    if (auto parseResult = meta.parseJson(ui.requestMetadataEdit->toString()); !parseResult.isEmpty()) {
+        setErrorToResponseView("-", "Request Metadata Parse Error", parseResult);
+        return;
     }
 
     auto server = getCurrentServer();
     auto credentials = getCredentials(*server, certificates);
-    session = new Session(*method, server->address, credentials, metadata, this);
+    session = new Session(*method, server->address, credentials, meta.getValues(), this);
     connect(session, &Session::messageSent, this, &Editor::onMessageSent);
     connect(session, &Session::messageReceived, this, &Editor::onMessageReceived);
     connect(session, &Session::initialMetadataReceived, this, &Editor::onMetadataReceived);

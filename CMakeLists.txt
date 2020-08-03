@@ -143,6 +143,8 @@ add_executable(flora
         entity/Certificate.h
         entity/Protocol.cpp
         entity/Protocol.h
+        entity/Metadata.cpp
+        entity/Metadata.h
         entity/Method.cpp
         entity/Method.h
         entity/Session.cpp
