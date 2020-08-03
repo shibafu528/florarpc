@@ -169,7 +169,8 @@ std::optional<QHash<QString, QString>> Editor::getMetadata() {
             return std::nullopt;
         }
     }
-    if (auto parseResult = meta.parseJson(ui.requestMetadataEdit->toString()); !parseResult.isEmpty()) {
+    if (auto parseResult = meta.parseJson(ui.requestMetadataEdit->toString(), Metadata::MergeStrategy::Replace);
+        !parseResult.isEmpty()) {
         QMessageBox::warning(this, "Request Metadata Parse Error", parseResult);
         return std::nullopt;
     }
@@ -208,7 +209,8 @@ void Editor::onExecuteButtonClicked() {
             return;
         }
     }
-    if (auto parseResult = meta.parseJson(ui.requestMetadataEdit->toString()); !parseResult.isEmpty()) {
+    if (auto parseResult = meta.parseJson(ui.requestMetadataEdit->toString(), Metadata::MergeStrategy::Replace);
+        !parseResult.isEmpty()) {
         setErrorToResponseView("-", "Request Metadata Parse Error", parseResult);
         return;
     }

@@ -3,7 +3,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
-QString Metadata::parseJson(const QString& input) {
+QString Metadata::parseJson(const QString& input, MergeStrategy mergeStrategy) {
     if (!input.isEmpty()) {
         QJsonParseError parseError = {};
         QJsonDocument metadataJson = QJsonDocument::fromJson(input.toUtf8(), &parseError);
@@ -22,10 +22,22 @@ QString Metadata::parseJson(const QString& input) {
                 return QString("Metadata '%1' must be a string.").arg(key);
             }
 
+            Container::iterator (Container::*mutator)(const QString&, const QString&) = nullptr;
+            switch (mergeStrategy) {
+                case MergeStrategy::Preserve:
+                    mutator = qOverload<const QString&, const QString&>(&Container::insert);
+                    break;
+                case MergeStrategy::Replace:
+                    mutator = &Container::replace;
+                    break;
+                default:
+                    Q_ASSERT(false);
+                    break;
+            }
             if (key.endsWith("-bin")) {
-                data.insert(key, QByteArray::fromBase64(value.toUtf8()));
+                (data.*mutator)(key, QByteArray::fromBase64(value.toUtf8()));
             } else {
-                data.insert(key, value);
+                (data.*mutator)(key, value);
             }
         }
     }

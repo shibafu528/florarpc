@@ -5,13 +5,20 @@
 #include <QMultiMap>
 
 class Metadata {
+    typedef QMultiMap<QString, QString> Container;
+
 public:
-    QString parseJson(const QString &input);
+    enum class MergeStrategy {
+        Preserve,
+        Replace,
+    };
+
+    QString parseJson(const QString &input, MergeStrategy mergeStrategy = MergeStrategy::Preserve);
     inline QMultiMap<QString, QString> getValues() const { return data; }
     QHash<QString, QString> asHash();
 
 private:
-    QMultiMap<QString, QString> data;
+    Container data;
 };
 
 #endif  // FLORARPC_METADATA_H
