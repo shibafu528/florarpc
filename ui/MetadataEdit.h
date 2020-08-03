@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <QWidget>
 
+#include "entity/Metadata.h"
 #include "entity/Session.h"
 #include "ui/ui_MetadataEdit.h"
 
@@ -32,7 +33,7 @@ private:
     QTimer *validateTimer;
 
     bool valid;
-    Session::Metadata metadata;
+    std::unique_ptr<Metadata> metadata;
 };
 
 #endif  // FLORARPC_METADATAEDIT_H
