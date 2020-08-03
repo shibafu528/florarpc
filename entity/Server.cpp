@@ -2,14 +2,15 @@
 
 Server::Server() : Server(QUuid::createUuid()) {}
 
-Server::Server(QUuid id) : id(id), name(), address(), useTLS(false), certificateUUID() {}
+Server::Server(QUuid id) : id(id), name(), address(), useTLS(false), certificateUUID(), sharedMetadata() {}
 
 Server::Server(const florarpc::Server& server)
     : id(QByteArray::fromStdString(server.id())),
       name(QString::fromStdString(server.name())),
       address(QString::fromStdString(server.address())),
       useTLS(server.usetls()),
-      certificateUUID(QByteArray::fromStdString(server.certificate_id())) {}
+      certificateUUID(QByteArray::fromStdString(server.certificate_id())),
+      sharedMetadata(QString::fromStdString(server.shared_metadata())) {}
 
 void Server::writeServer(florarpc::Server& server) {
     server.set_id(id.toString().toStdString());
@@ -17,6 +18,7 @@ void Server::writeServer(florarpc::Server& server) {
     server.set_address(address.toStdString());
     server.set_usetls(useTLS);
     server.set_certificate_id(certificateUUID.toString().toStdString());
+    server.set_shared_metadata(sharedMetadata.toStdString());
 }
 
 std::shared_ptr<Certificate> Server::findCertificate(const std::vector<std::shared_ptr<Certificate>>& certificates) {

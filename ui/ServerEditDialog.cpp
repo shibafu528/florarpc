@@ -19,6 +19,7 @@ ServerEditDialog::ServerEditDialog(std::shared_ptr<Server> server,
     ui.nameEdit->setText(this->server->name);
     ui.addressEdit->setText(this->server->address);
     ui.useTLSCheck->setChecked(this->server->useTLS);
+    ui.sharedMetadataEdit->setString(this->server->sharedMetadata);
 
     ui.certificateComboBox->setEnabled(this->server->useTLS);
     ui.certificateComboBox->addItem("(指定なし)");
@@ -48,6 +49,11 @@ void ServerEditDialog::onOkButtonClick() {
         return;
     }
 
+    if (!ui.sharedMetadataEdit->isValid()) {
+        QMessageBox::warning(this, "Error", "共通メタデータに入力エラーがあります。");
+        return;
+    }
+
     server->name = ui.nameEdit->text();
     server->address = ui.addressEdit->text();
     server->useTLS = ui.useTLSCheck->isChecked();
@@ -56,6 +62,7 @@ void ServerEditDialog::onOkButtonClick() {
     } else {
         server->certificateUUID = QUuid();
     }
+    server->sharedMetadata = ui.sharedMetadataEdit->toString();
 
     done(Accepted);
 }

@@ -366,7 +366,7 @@ Editor *MainWindow::openEditor(std::unique_ptr<Method> method, bool forceNewTab)
         }
     }
 
-    auto editor = new Editor(std::move(method), syntaxDefinitions);
+    auto editor = new Editor(std::move(method));
     editor->setServers(servers);
     editor->setCertificates(certificates);
     const auto addedIndex = ui.editorTabs->addTab(editor, QString::fromStdString(methodName));

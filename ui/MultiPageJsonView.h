@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include <KSyntaxHighlighting/syntaxhighlighter.h>
-#include <KSyntaxHighlighting/repository.h>
 #include "ui/ui_MultiPageJsonView.h"
 
 class MultiPageJsonView : public QWidget {
@@ -11,8 +10,6 @@ Q_OBJECT
 
 public:
     explicit MultiPageJsonView(QWidget *parent = nullptr);
-
-    void setupHighlighter(KSyntaxHighlighting::Repository &repository);
 
 signals:
 

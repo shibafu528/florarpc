@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>500</width>
-    <height>200</height>
+    <height>500</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -67,13 +67,33 @@
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
-       <height>40</height>
+       <height>6</height>
       </size>
      </property>
     </spacer>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>共通メタデータ &lt;small&gt;この接続先を使う際、常に送信したいメタデータを定義できます。&lt;/small&gt;</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="MetadataEdit" name="sharedMetadataEdit" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
@@ -84,6 +104,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MetadataEdit</class>
+   <extends>QWidget</extends>
+   <header>ui/MetadataEdit.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>nameEdit</tabstop>
   <tabstop>addressEdit</tabstop>

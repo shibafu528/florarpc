@@ -1,7 +1,5 @@
 #include "Editor.h"
 
-#include <KSyntaxHighlighting/definition.h>
-#include <KSyntaxHighlighting/theme.h>
 #include <google/protobuf/util/json_util.h>
 #include <grpcpp/generic/generic_stub.h>
 #include <grpcpp/grpcpp.h>
@@ -13,9 +11,11 @@
 #include <QMenu>
 #include <QMessageBox>
 
+#include "../entity/Metadata.h"
 #include "../entity/Method.h"
 #include "../util/GrpcUtility.h"
 #include "event/WorkspaceModifiedEvent.h"
+#include "util/SyntaxHighlighter.h"
 
 static std::shared_ptr<grpc::ChannelCredentials> getCredentials(
     Server &server, std::vector<std::shared_ptr<Certificate>> &certificates) {
@@ -34,7 +34,7 @@ static std::shared_ptr<grpc::ChannelCredentials> getCredentials(
     }
 }
 
-Editor::Editor(std::unique_ptr<Method> &&method, KSyntaxHighlighting::Repository &repository, QWidget *parent)
+Editor::Editor(std::unique_ptr<Method> &&method, QWidget *parent)
     : QWidget(parent), responseMetadataContextMenu(new QMenu(this)), session(nullptr), method(std::move(method)) {
     ui.setupUi(this);
 
@@ -49,7 +49,7 @@ Editor::Editor(std::unique_ptr<Method> &&method, KSyntaxHighlighting::Repository
     connect(ui.serverSelectBox, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &Editor::willEmitWorkspaceModified);
     connect(ui.requestEdit, &QTextEdit::textChanged, this, &Editor::willEmitWorkspaceModified);
-    connect(ui.requestMetadataEdit, &QTextEdit::textChanged, this, &Editor::willEmitWorkspaceModified);
+    connect(ui.requestMetadataEdit, &MetadataEdit::changed, this, &Editor::willEmitWorkspaceModified);
 
     // 1:1にする
     // https://stackoverflow.com/a/43835396
@@ -57,21 +57,11 @@ Editor::Editor(std::unique_ptr<Method> &&method, KSyntaxHighlighting::Repository
 
     const auto fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui.requestEdit->setFont(fixedFont);
-    ui.requestMetadataEdit->setFont(fixedFont);
     ui.responseEdit->setFont(fixedFont);
     ui.errorDetailsEdit->setFont(fixedFont);
 
-    const auto jsonDefinition = repository.definitionForMimeType("application/json");
-    if (jsonDefinition.isValid()) {
-        const auto theme = (palette().color(QPalette::Base).lightness() < 128)
-                               ? repository.defaultTheme(KSyntaxHighlighting::Repository::DarkTheme)
-                               : repository.defaultTheme(KSyntaxHighlighting::Repository::LightTheme);
-        requestHighlighter = setupHighlighter(*ui.requestEdit, jsonDefinition, theme);
-        requestMetadataHighlighter = setupHighlighter(*ui.requestMetadataEdit, jsonDefinition, theme);
-        responseHighlighter = setupHighlighter(*ui.responseEdit, jsonDefinition, theme);
-    }
-
-    ui.requestHistoryTab->setupHighlighter(repository);
+    requestHighlighter = SyntaxHighlighter::setup(*ui.requestEdit, palette());
+    responseHighlighter = SyntaxHighlighter::setup(*ui.responseEdit, palette());
 
     if (!this->method->isClientStreaming()) {
         ui.requestTabs->removeTab(ui.requestTabs->indexOf(ui.requestHistoryTab));
@@ -101,7 +91,9 @@ Editor::Editor(std::unique_ptr<Method> &&method, KSyntaxHighlighting::Repository
         ->setIcon(QIcon::fromTheme("edit-copy"));
 
     ui.requestEdit->setText(QString::fromStdString(this->method->makeRequestSkeleton()));
-    requestHighlighter->rehighlight();
+    if (requestHighlighter) {
+        requestHighlighter->rehighlight();
+    }
 
     if (this->method->isServerStreaming()) {
         ui.responseBodyPager->show();
@@ -143,13 +135,14 @@ void Editor::setCertificates(std::vector<std::shared_ptr<Certificate>> certifica
 
 void Editor::readRequest(const florarpc::Request &request) {
     ui.requestEdit->setPlainText(QString::fromStdString(request.body_draft()));
-    ui.requestMetadataEdit->setPlainText(QString::fromStdString(request.metadata_draft()));
+    ui.requestMetadataEdit->setString(QString::fromStdString(request.metadata_draft()));
     for (std::vector<std::shared_ptr<Server>>::size_type i = 0; i < servers.size(); i++) {
         if (request.selected_server_id() == servers[i]->id.toString().toStdString()) {
             ui.serverSelectBox->setCurrentIndex(i);
             break;
         }
     }
+    ui.useSharedMetadata->setChecked(request.use_shared_metadata());
 }
 
 void Editor::writeRequest(florarpc::Request &request) {
@@ -157,46 +150,33 @@ void Editor::writeRequest(florarpc::Request &request) {
     method->writeMethodRef(*methodRef);
 
     request.set_body_draft(ui.requestEdit->toPlainText().toStdString());
-    request.set_metadata_draft(ui.requestMetadataEdit->toPlainText().toStdString());
+    request.set_metadata_draft(ui.requestMetadataEdit->toString().toStdString());
     if (const auto server = getCurrentServer()) {
         request.set_selected_server_id(server->id.toByteArray().toStdString());
     } else {
         request.clear_selected_server_id();
     }
+    request.set_use_shared_metadata(ui.useSharedMetadata->isChecked());
 }
 
 QString Editor::getRequestBody() { return ui.requestEdit->toPlainText(); }
 
 std::optional<QHash<QString, QString>> Editor::getMetadata() {
-    QHash<QString, QString> metadata;
-
-    if (const auto metadataInput = ui.requestMetadataEdit->toPlainText(); !metadataInput.isEmpty()) {
-        QJsonParseError parseError = {};
-        QJsonDocument metadataJson = QJsonDocument::fromJson(metadataInput.toUtf8(), &parseError);
-        if (metadataJson.isNull()) {
-            QMessageBox::warning(this, "Request Metadata Parse Error", parseError.errorString());
+    Metadata meta;
+    if (auto server = getCurrentServer();
+        server && !server->sharedMetadata.isEmpty() && ui.useSharedMetadata->isChecked()) {
+        if (auto parseResult = meta.parseJson(server->sharedMetadata); !parseResult.isEmpty()) {
+            QMessageBox::warning(this, "Shared Metadata Parse Error", parseResult);
             return std::nullopt;
-        }
-        if (!metadataJson.isObject()) {
-            QMessageBox::warning(this, "Request Metadata Parse Error", "Metadata input must be an object.");
-            return std::nullopt;
-        }
-
-        const QJsonObject &object = metadataJson.object();
-        for (auto iter = object.constBegin(); iter != object.constEnd(); iter++) {
-            const auto key = iter.key();
-            const auto value = iter.value().toString();
-            if (value == nullptr) {
-                QMessageBox::warning(this, "Request Metadata Parse Error",
-                                     QLatin1String("Metadata '") + key + QLatin1String("' must be a string."));
-                return std::nullopt;
-            }
-
-            metadata.insert(key, value);
         }
     }
+    if (auto parseResult = meta.parseJson(ui.requestMetadataEdit->toString(), Metadata::MergeStrategy::Replace);
+        !parseResult.isEmpty()) {
+        QMessageBox::warning(this, "Request Metadata Parse Error", parseResult);
+        return std::nullopt;
+    }
 
-    return metadata;
+    return meta.asHash();
 }
 
 void Editor::onExecuteButtonClicked() {
@@ -223,40 +203,23 @@ void Editor::onExecuteButtonClicked() {
     std::unique_ptr<grpc::ByteBuffer> sendBuffer = GrpcUtility::serializeMessage(*reqMessage);
 
     // Parse request metadata
-    Session::Metadata metadata;
-    if (const auto metadataInput = ui.requestMetadataEdit->toPlainText(); !metadataInput.isEmpty()) {
-        QJsonParseError parseError = {};
-        QJsonDocument metadataJson = QJsonDocument::fromJson(metadataInput.toUtf8(), &parseError);
-        if (metadataJson.isNull()) {
-            setErrorToResponseView("-", "Request Metadata Parse Error", parseError.errorString());
+    Metadata meta;
+    if (auto server = getCurrentServer();
+        server && !server->sharedMetadata.isEmpty() && ui.useSharedMetadata->isChecked()) {
+        if (auto parseResult = meta.parseJson(server->sharedMetadata); !parseResult.isEmpty()) {
+            setErrorToResponseView("-", "Shared Metadata Parse Error", parseResult);
             return;
         }
-        if (!metadataJson.isObject()) {
-            setErrorToResponseView("-", "Request Metadata Parse Error", "Metadata input must be an object.");
-            return;
-        }
-
-        const QJsonObject &object = metadataJson.object();
-        for (auto iter = object.constBegin(); iter != object.constEnd(); iter++) {
-            const auto key = iter.key();
-            const auto value = iter.value().toString();
-            if (value == nullptr) {
-                setErrorToResponseView("-", "Request Metadata Parse Error",
-                                       QLatin1String("Metadata '") + key + QLatin1String("' must be a string."));
-                return;
-            }
-
-            if (key.endsWith("-bin")) {
-                metadata.insert(key, QByteArray::fromBase64(value.toUtf8()));
-            } else {
-                metadata.insert(key, value);
-            }
-        }
+    }
+    if (auto parseResult = meta.parseJson(ui.requestMetadataEdit->toString(), Metadata::MergeStrategy::Replace);
+        !parseResult.isEmpty()) {
+        setErrorToResponseView("-", "Request Metadata Parse Error", parseResult);
+        return;
     }
 
     auto server = getCurrentServer();
     auto credentials = getCredentials(*server, certificates);
-    session = new Session(*method, server->address, credentials, metadata, this);
+    session = new Session(*method, server->address, credentials, meta.getValues(), this);
     connect(session, &Session::messageSent, this, &Editor::onMessageSent);
     connect(session, &Session::messageReceived, this, &Editor::onMessageReceived);
     connect(session, &Session::initialMetadataReceived, this, &Editor::onMetadataReceived);
@@ -332,7 +295,9 @@ void Editor::onResponseBodyPageChanged(int page) {
     opts.always_print_primitive_fields = true;
     google::protobuf::util::MessageToJsonString(*resMessage, &out, opts);
     ui.responseEdit->setText(QString::fromStdString(out));
-    responseHighlighter->rehighlight();
+    if (responseHighlighter) {
+        responseHighlighter->rehighlight();
+    }
 
     updateResponsePager();
 }
@@ -394,24 +359,6 @@ void Editor::cleanupSession() {
 void Editor::willEmitWorkspaceModified() {
     QApplication::postEvent(window(), new Event::WorkspaceModifiedEvent(
                                           QString("%1:%2").arg(metaObject()->className()).arg(sender()->objectName())));
-}
-
-std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> Editor::setupHighlighter(
-    QTextEdit &edit, const KSyntaxHighlighting::Definition &definition, const KSyntaxHighlighting::Theme &theme) {
-    auto highlighter = std::make_unique<KSyntaxHighlighting::SyntaxHighlighter>(&edit);
-
-    auto pal = qApp->palette();
-    if (theme.isValid()) {
-        pal.setColor(QPalette::Base, theme.editorColor(KSyntaxHighlighting::Theme::BackgroundColor));
-        pal.setColor(QPalette::Highlight, theme.editorColor(KSyntaxHighlighting::Theme::TextSelection));
-    }
-    setPalette(pal);
-
-    highlighter->setDefinition(definition);
-    highlighter->setTheme(theme);
-    highlighter->rehighlight();
-
-    return highlighter;
 }
 
 void Editor::addMetadataRow(const QString &key, const QString &value) {

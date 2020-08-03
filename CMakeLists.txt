@@ -121,6 +121,9 @@ add_executable(flora
         ui/MainWindow.ui
         ui/MainWindow.cpp
         ui/MainWindow.h
+        ui/MetadataEdit.ui
+        ui/MetadataEdit.cpp
+        ui/MetadataEdit.h
         ui/ImportsManageDialog.ui
         ui/ImportsManageDialog.cpp
         ui/ImportsManageDialog.h
@@ -140,6 +143,8 @@ add_executable(flora
         entity/Certificate.h
         entity/Protocol.cpp
         entity/Protocol.h
+        entity/Metadata.cpp
+        entity/Metadata.h
         entity/Method.cpp
         entity/Method.h
         entity/Session.cpp
@@ -157,6 +162,8 @@ add_executable(flora
         util/ProtobufIterator.h
         util/ProtobufJsonPrinter.cpp
         util/ProtobufJsonPrinter.h
+        util/SyntaxHighlighter.cpp
+        util/SyntaxHighlighter.h
         ${FLORA_PROTOBUF_SOURCES}
         ${FLORA_PROTOBUF_HEADERS}
         ${FLORA_PLATFORM_SOURCES})

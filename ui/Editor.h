@@ -20,7 +20,7 @@ class Editor : public QWidget {
     Q_OBJECT
 
 public:
-    Editor(std::unique_ptr<Method> &&method, KSyntaxHighlighting::Repository &repository, QWidget *parent = nullptr);
+    Editor(std::unique_ptr<Method> &&method, QWidget *parent = nullptr);
 
     inline Method &getMethod() { return *method; }
 
@@ -79,9 +79,6 @@ private:
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> requestHighlighter;
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> requestMetadataHighlighter;
     std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> responseHighlighter;
-
-    std::unique_ptr<KSyntaxHighlighting::SyntaxHighlighter> setupHighlighter(
-        QTextEdit &edit, const KSyntaxHighlighting::Definition &definition, const KSyntaxHighlighting::Theme &theme);
 
     void addMetadataRow(const QString &key, const QString &value);
 

@@ -161,12 +161,26 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_10">
            <item>
-            <widget class="QTextEdit" name="requestMetadataEdit">
-             <property name="acceptRichText">
-              <bool>false</bool>
+            <widget class="QCheckBox" name="useSharedMetadata">
+             <property name="toolTip">
+              <string>接続先設定で入力されている共通メタデータを使用します。
+同じ名前のメタデータがある場合は、この下に書いた値が優先されます。</string>
              </property>
-             <property name="placeholderText">
-              <string>{&quot;text-meta&quot;: &quot;value&quot;, &quot;binary-meta-bin&quot;: &quot;base64 value&quot;, ...}</string>
+             <property name="text">
+              <string>接続先の共通メタデータを使用</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="MetadataEdit" name="requestMetadataEdit" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
              </property>
             </widget>
            </item>
@@ -464,6 +478,12 @@
    <class>MultiPageJsonView</class>
    <extends>QWidget</extends>
    <header>ui/MultiPageJsonView.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>MetadataEdit</class>
+   <extends>QWidget</extends>
+   <header>ui/MetadataEdit.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

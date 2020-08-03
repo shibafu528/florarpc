@@ -1,6 +1,6 @@
 #include "MultiPageJsonView.h"
-#include <KSyntaxHighlighting/definition.h>
-#include <KSyntaxHighlighting/theme.h>
+
+#include "util/SyntaxHighlighter.h"
 
 MultiPageJsonView::MultiPageJsonView(QWidget *parent) : QWidget(parent) {
     ui.setupUi(this);
@@ -10,32 +10,12 @@ MultiPageJsonView::MultiPageJsonView(QWidget *parent) : QWidget(parent) {
     connect(ui.prevButton, &QPushButton::clicked, this, &MultiPageJsonView::onPrevButtonClicked);
     connect(ui.nextButton, &QPushButton::clicked, this, &MultiPageJsonView::onNextButtonClicked);
 
+    highlighter = SyntaxHighlighter::setup(*ui.textEdit, palette());
+
     const auto fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui.textEdit->setFont(fixedFont);
 
     ui.pager->setDisabled(true);
-}
-
-void MultiPageJsonView::setupHighlighter(KSyntaxHighlighting::Repository &repository) {
-    const auto jsonDefinition = repository.definitionForMimeType("application/json");
-    if (jsonDefinition.isValid()) {
-        const auto theme = (palette().color(QPalette::Base).lightness() < 128) ?
-                           repository.defaultTheme(KSyntaxHighlighting::Repository::DarkTheme) :
-                           repository.defaultTheme(KSyntaxHighlighting::Repository::LightTheme);
-
-        highlighter = std::make_unique<KSyntaxHighlighting::SyntaxHighlighter>(ui.textEdit);
-
-        auto pal = qApp->palette();
-        if (theme.isValid()) {
-            pal.setColor(QPalette::Base, theme.editorColor(KSyntaxHighlighting::Theme::BackgroundColor));
-            pal.setColor(QPalette::Highlight, theme.editorColor(KSyntaxHighlighting::Theme::TextSelection));
-        }
-        setPalette(pal);
-
-        highlighter->setDefinition(jsonDefinition);
-        highlighter->setTheme(theme);
-        highlighter->rehighlight();
-    }
 }
 
 void MultiPageJsonView::clear() {
