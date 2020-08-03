@@ -163,7 +163,8 @@ QString Editor::getRequestBody() { return ui.requestEdit->toPlainText(); }
 
 std::optional<QHash<QString, QString>> Editor::getMetadata() {
     Metadata meta;
-    if (auto server = getCurrentServer(); server && !server->sharedMetadata.isEmpty()) {
+    if (auto server = getCurrentServer();
+        server && !server->sharedMetadata.isEmpty() && ui.useSharedMetadata->isChecked()) {
         if (auto parseResult = meta.parseJson(server->sharedMetadata); !parseResult.isEmpty()) {
             QMessageBox::warning(this, "Shared Metadata Parse Error", parseResult);
             return std::nullopt;
@@ -203,7 +204,8 @@ void Editor::onExecuteButtonClicked() {
 
     // Parse request metadata
     Metadata meta;
-    if (auto server = getCurrentServer(); server && !server->sharedMetadata.isEmpty()) {
+    if (auto server = getCurrentServer();
+        server && !server->sharedMetadata.isEmpty() && ui.useSharedMetadata->isChecked()) {
         if (auto parseResult = meta.parseJson(server->sharedMetadata); !parseResult.isEmpty()) {
             setErrorToResponseView("-", "Shared Metadata Parse Error", parseResult);
             return;
