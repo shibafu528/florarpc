@@ -5,6 +5,7 @@
 #include <QClipboard>
 #include <QDebug>
 #include <QDesktopServices>
+#include <QDirIterator>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QJSEngine>
@@ -38,6 +39,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui.setupUi(this);
 
     connect(ui.actionOpen, &QAction::triggered, this, &MainWindow::onActionOpenTriggered);
+    connect(ui.actionOpenDirectory, &QAction::triggered, this, &MainWindow::onActionOpenDirectoryTriggered);
     connect(ui.actionOpenWorkspace, &QAction::triggered, this, &MainWindow::onActionOpenWorkspaceTriggered);
     connect(ui.actionSaveWorkspace, &QAction::triggered, this, &MainWindow::onActionSaveWorkspaceTriggered);
     connect(ui.actionManageProto, &QAction::triggered, this, &MainWindow::onActionManageProtoTriggered);
@@ -101,10 +103,31 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::onLogging(const QString &message) { ui.logEdit->appendPlainText(message); }
 
 void MainWindow::onActionOpenTriggered() {
-    auto filenames = QFileDialog::getOpenFileNames(this, "Open proto", "", "Proto definition files (*.proto)", nullptr);
+    auto filenames =
+        QFileDialog::getOpenFileNames(this, "Import proto(s)", "", "Proto definition files (*.proto)", nullptr);
     if (openProtos(filenames, true)) {
         onWorkspaceModified();
     }
+}
+
+void MainWindow::onActionOpenDirectoryTriggered() {
+    auto dirname = QFileDialog::getExistingDirectory(this, "Import proto(s) from folder", "");
+    if (dirname.isEmpty()) {
+        return;
+    }
+
+    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+
+    QStringList filenames;
+    QDirIterator iterator(dirname, QStringList() << "*.proto", QDir::Files, QDirIterator::Subdirectories);
+    while (iterator.hasNext()) {
+        filenames << iterator.next();
+    }
+    if (openProtos(filenames, false)) {
+        onWorkspaceModified();
+    }
+
+    QApplication::restoreOverrideCursor();
 }
 
 void MainWindow::onActionOpenWorkspaceTriggered() {
