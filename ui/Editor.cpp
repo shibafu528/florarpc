@@ -52,7 +52,8 @@ Editor::Editor(std::unique_ptr<Method> &&method, QWidget *parent)
     connect(ui.requestEdit, &QTextEdit::textChanged, this, &Editor::willEmitWorkspaceModified);
     connect(ui.requestMetadataEdit, &MetadataEdit::changed, this, &Editor::willEmitWorkspaceModified);
 
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Return), this, this, &Editor::onExecuteShortcutActivated);
+    const auto executeShortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Return), this);
+    connect(executeShortcut, &QShortcut::activated, this, &Editor::onExecuteShortcutActivated);
 
     // 1:1にする
     // https://stackoverflow.com/a/43835396
