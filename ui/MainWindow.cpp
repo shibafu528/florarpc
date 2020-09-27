@@ -5,7 +5,6 @@
 #include <QClipboard>
 #include <QDebug>
 #include <QDesktopServices>
-#include <QDirIterator>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QJSEngine>
@@ -129,7 +128,7 @@ void MainWindow::onActionOpenDirectoryTriggered() {
         return;
     }
 
-    if (openProtos(filenames, false)) {
+    if (bulkOpenProtos(filenames)) {
         onWorkspaceModified();
     }
 }
@@ -366,6 +365,47 @@ bool MainWindow::openProtos(const QStringList &filenames, bool abortOnLoadError)
         const auto index = protocolTreeModel->addProtocol(protocol);
         ui.treeView->expandRecursively(index);
     }
+    return true;
+}
+
+bool MainWindow::bulkOpenProtos(const QStringList &filenames) {
+    std::vector<std::shared_ptr<Protocol>> successes;
+    bool error = false;
+
+    for (const auto &filename : filenames) {
+        QFileInfo file(filename);
+
+        if (std::any_of(protocols.begin(), protocols.end(),
+                        [file](std::shared_ptr<Protocol> &p) { return p->getSource() == file; })) {
+            continue;
+        }
+
+        try {
+            const auto protocol = std::make_shared<Protocol>(file, imports);
+            successes.push_back(protocol);
+        } catch (ProtocolLoadException &e) {
+            onLogging(QString("Protoファイルの読込中にエラー: %1").arg(filename));
+
+            for (const auto &err : *e.errors) {
+                onLogging(QString::fromStdString(err));
+            }
+
+            error = true;
+        }
+    }
+
+    for (const auto &protocol : successes) {
+        protocols.push_back(protocol);
+        const auto index = protocolTreeModel->addProtocol(protocol);
+        ui.treeView->expandRecursively(index);
+    }
+
+    if (error) {
+        QMessageBox::critical(this, "Load error",
+                              "Protoファイルの読込中にエラーが発生しました。\n詳細はログを確認してください。");
+        ui.logDockWidget->show();
+    }
+
     return true;
 }
 

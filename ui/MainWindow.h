@@ -1,6 +1,7 @@
 #ifndef FLORARPC_MAINWINDOW_H
 #define FLORARPC_MAINWINDOW_H
 
+#include <QDirIterator>
 #include <QMainWindow>
 #include <QShortcut>
 #include <QTimer>
@@ -73,6 +74,7 @@ private:
     QTimer workspaceSaveTimer;
 
     bool openProtos(const QStringList &filenames, bool abortOnLoadError);
+    bool bulkOpenProtos(const QStringList &filenames);
     void openMethod(const QModelIndex &index, bool forceNewTab);
     Editor *openEditor(std::unique_ptr<Method> method, bool forceNewTab);
     bool saveWorkspace(const QString &filename);
