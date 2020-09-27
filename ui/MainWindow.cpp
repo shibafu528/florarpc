@@ -401,9 +401,9 @@ bool MainWindow::bulkOpenProtos(const QStringList &filenames) {
     }
 
     if (error) {
+        ui.logDockWidget->show();
         QMessageBox::critical(this, "Load error",
                               "Protoファイルの読込中にエラーが発生しました。\n詳細はログを確認してください。");
-        ui.logDockWidget->show();
     }
 
     return true;
