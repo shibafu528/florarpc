@@ -116,18 +116,22 @@ void MainWindow::onActionOpenDirectoryTriggered() {
         return;
     }
 
-    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-
     QStringList filenames;
-    QDirIterator iterator(dirname, QStringList() << "*.proto", QDir::Files, QDirIterator::Subdirectories);
-    while (iterator.hasNext()) {
-        filenames << iterator.next();
+    {
+        QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+        QDirIterator iterator(dirname, QStringList() << "*.proto", QDir::Files, QDirIterator::Subdirectories);
+        while (iterator.hasNext()) {
+            filenames << iterator.next();
+        }
+        QApplication::restoreOverrideCursor();
     }
+    if (filenames.isEmpty()) {
+        return;
+    }
+
     if (openProtos(filenames, false)) {
         onWorkspaceModified();
     }
-
-    QApplication::restoreOverrideCursor();
 }
 
 void MainWindow::onActionOpenWorkspaceTriggered() {
