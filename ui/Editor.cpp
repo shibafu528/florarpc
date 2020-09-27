@@ -10,6 +10,7 @@
 #include <QJsonObject>
 #include <QMenu>
 #include <QMessageBox>
+#include <QShortcut>
 
 #include "../entity/Metadata.h"
 #include "../entity/Method.h"
@@ -50,6 +51,8 @@ Editor::Editor(std::unique_ptr<Method> &&method, QWidget *parent)
             &Editor::willEmitWorkspaceModified);
     connect(ui.requestEdit, &QTextEdit::textChanged, this, &Editor::willEmitWorkspaceModified);
     connect(ui.requestMetadataEdit, &MetadataEdit::changed, this, &Editor::willEmitWorkspaceModified);
+
+    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Return), this, this, &Editor::onExecuteShortcutActivated);
 
     // 1:1にする
     // https://stackoverflow.com/a/43835396
@@ -359,6 +362,14 @@ void Editor::cleanupSession() {
 void Editor::willEmitWorkspaceModified() {
     QApplication::postEvent(window(), new Event::WorkspaceModifiedEvent(
                                           QString("%1:%2").arg(metaObject()->className()).arg(sender()->objectName())));
+}
+
+void Editor::onExecuteShortcutActivated() {
+    if (ui.sendButton->isVisible()) {
+        onSendButtonClicked();
+    } else {
+        onExecuteButtonClicked();
+    }
 }
 
 void Editor::addMetadataRow(const QString &key, const QString &value) {

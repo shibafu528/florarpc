@@ -66,6 +66,8 @@ private slots:
 
     void willEmitWorkspaceModified();
 
+    void onExecuteShortcutActivated();
+
 private:
     Ui_Editor ui;
     QMenu *responseMetadataContextMenu;
