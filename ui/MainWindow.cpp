@@ -7,12 +7,14 @@
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QFutureWatcher>
 #include <QJSEngine>
 #include <QMessageBox>
 #include <QScreen>
 #include <QStandardPaths>
 #include <QStyle>
 #include <QTextStream>
+#include <QtConcurrent>
 #include <chrono>
 
 #include "AboutDialog.h"
@@ -115,22 +117,40 @@ void MainWindow::onActionOpenDirectoryTriggered() {
         return;
     }
 
-    QStringList filenames;
-    {
-        QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-        QDirIterator iterator(dirname, QStringList() << "*.proto", QDir::Files, QDirIterator::Subdirectories);
-        while (iterator.hasNext()) {
-            filenames << iterator.next();
-        }
-        QApplication::restoreOverrideCursor();
-    }
-    if (filenames.isEmpty()) {
-        return;
-    }
+    const auto loadingMessage = new QMessageBox(this);
+    loadingMessage->setWindowTitle("Loading");
+    loadingMessage->setText("読み込み中 しばらくお待ちください...");
+    loadingMessage->setIcon(QMessageBox::Information);
+    loadingMessage->setWindowFlag(Qt::Sheet);
+    loadingMessage->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::Sheet);
+    loadingMessage->setStandardButtons(QMessageBox::NoButton);
+    loadingMessage->show();
+    connect(loadingMessage, &QDialog::accepted, loadingMessage, &QDialog::deleteLater);
 
-    if (bulkOpenProtos(filenames)) {
-        onWorkspaceModified();
-    }
+    const auto watcher = new QFutureWatcher<QStringList>(this);
+    connect(watcher, &QFutureWatcher<QStringList>::finished, [=]() {
+        loadingMessage->accept();
+        if (watcher->result().isEmpty()) {
+            return;
+        }
+
+        if (bulkOpenProtos(watcher->result())) {
+            onWorkspaceModified();
+        }
+    });
+    connect(watcher, &QFutureWatcher<QStringList>::finished, watcher, &QObject::deleteLater);
+
+    auto future = QtConcurrent::run(
+        [](const QString &dirname) {
+            QStringList filenames;
+            QDirIterator iterator(dirname, QStringList() << "*.proto", QDir::Files, QDirIterator::Subdirectories);
+            while (iterator.hasNext()) {
+                filenames << iterator.next();
+            }
+            return filenames;
+        },
+        dirname);
+    watcher->setFuture(future);
 }
 
 void MainWindow::onActionOpenWorkspaceTriggered() {
