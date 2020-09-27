@@ -7,7 +7,6 @@
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QFileInfo>
-#include <QFutureWatcher>
 #include <QJSEngine>
 #include <QMessageBox>
 #include <QProgressDialog>
@@ -15,7 +14,6 @@
 #include <QStandardPaths>
 #include <QStyle>
 #include <QTextStream>
-#include <QtConcurrent>
 #include <chrono>
 
 #include "AboutDialog.h"
@@ -24,6 +22,7 @@
 #include "event/WorkspaceModifiedEvent.h"
 #include "flora_constants.h"
 #include "florarpc/workspace.pb.h"
+#include "task/ImportProtosTask.h"
 #include "util/DescriptorPoolProxy.h"
 #include "util/ProtobufIterator.h"
 
@@ -118,35 +117,11 @@ void MainWindow::onActionOpenDirectoryTriggered() {
         return;
     }
 
-    const auto progressDialog = new QProgressDialog("読み込み中...", QString(), 0, 0, this,
-                                                    Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::Sheet);
-    progressDialog->setWindowModality(Qt::WindowModal);
-    progressDialog->show();
-    connect(progressDialog, &QDialog::accepted, progressDialog, &QDialog::deleteLater);
-    const auto watcher = new QFutureWatcher<QStringList>(this);
-    connect(watcher, &QFutureWatcher<QStringList>::finished, [=]() {
-        progressDialog->accept();
-        if (watcher->result().isEmpty()) {
-            return;
-        }
-
-        if (bulkOpenProtos(watcher->result())) {
-            onWorkspaceModified();
-        }
-    });
-    connect(watcher, &QFutureWatcher<QStringList>::finished, watcher, &QObject::deleteLater);
-
-    auto future = QtConcurrent::run(
-        [](const QString &dirname) {
-            QStringList filenames;
-            QDirIterator iterator(dirname, QStringList() << "*.proto", QDir::Files, QDirIterator::Subdirectories);
-            while (iterator.hasNext()) {
-                filenames << iterator.next();
-            }
-            return filenames;
-        },
-        dirname);
-    watcher->setFuture(future);
+    auto task = new Task::ImportProtosTask(protocols, imports, this);
+    connect(task, &Task::ImportProtosTask::loadFinished, this, &MainWindow::onAsyncLoadFinished);
+    connect(task, &Task::ImportProtosTask::onLogging, this, &MainWindow::onLogging);
+    connect(task, &Task::ImportProtosTask::finished, task, &QObject::deleteLater);
+    task->importDirectoryAsync(dirname);
 }
 
 void MainWindow::onActionOpenWorkspaceTriggered() {
@@ -230,6 +205,20 @@ void MainWindow::onActionOpenCopyAsUserScriptDirTriggered() {
         return;
     }
     QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
+}
+
+void MainWindow::onAsyncLoadFinished(const QList<std::shared_ptr<Protocol>> &protocols, bool hasError) {
+    for (const auto &protocol : protocols) {
+        this->protocols.push_back(protocol);
+        const auto index = protocolTreeModel->addProtocol(protocol);
+        ui.treeView->expandRecursively(index);
+    }
+
+    if (hasError) {
+        ui.logDockWidget->show();
+        QMessageBox::critical(this, "Load error",
+                              "Protoファイルの読込中にエラーが発生しました。\n詳細はログを確認してください。");
+    }
 }
 
 void MainWindow::onWorkspaceModified() {
@@ -381,47 +370,6 @@ bool MainWindow::openProtos(const QStringList &filenames, bool abortOnLoadError)
         const auto index = protocolTreeModel->addProtocol(protocol);
         ui.treeView->expandRecursively(index);
     }
-    return true;
-}
-
-bool MainWindow::bulkOpenProtos(const QStringList &filenames) {
-    std::vector<std::shared_ptr<Protocol>> successes;
-    bool error = false;
-
-    for (const auto &filename : filenames) {
-        QFileInfo file(filename);
-
-        if (std::any_of(protocols.begin(), protocols.end(),
-                        [file](std::shared_ptr<Protocol> &p) { return p->getSource() == file; })) {
-            continue;
-        }
-
-        try {
-            const auto protocol = std::make_shared<Protocol>(file, imports);
-            successes.push_back(protocol);
-        } catch (ProtocolLoadException &e) {
-            onLogging(QString("Protoファイルの読込中にエラー: %1").arg(filename));
-
-            for (const auto &err : *e.errors) {
-                onLogging(QString::fromStdString(err));
-            }
-
-            error = true;
-        }
-    }
-
-    for (const auto &protocol : successes) {
-        protocols.push_back(protocol);
-        const auto index = protocolTreeModel->addProtocol(protocol);
-        ui.treeView->expandRecursively(index);
-    }
-
-    if (error) {
-        ui.logDockWidget->show();
-        QMessageBox::critical(this, "Load error",
-                              "Protoファイルの読込中にエラーが発生しました。\n詳細はログを確認してください。");
-    }
-
     return true;
 }
 

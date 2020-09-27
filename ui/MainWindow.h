@@ -1,7 +1,6 @@
 #ifndef FLORARPC_MAINWINDOW_H
 #define FLORARPC_MAINWINDOW_H
 
-#include <QDirIterator>
 #include <QMainWindow>
 #include <QShortcut>
 #include <QTimer>
@@ -46,6 +45,8 @@ private slots:
 
     void onActionOpenCopyAsUserScriptDirTriggered();
 
+    void onAsyncLoadFinished(const QList<std::shared_ptr<Protocol>> &protocols, bool hasError);
+
     void onTreeViewClicked(const QModelIndex &index);
 
     void onRemoveFileFromTreeTriggered();
@@ -74,7 +75,6 @@ private:
     QTimer workspaceSaveTimer;
 
     bool openProtos(const QStringList &filenames, bool abortOnLoadError);
-    bool bulkOpenProtos(const QStringList &filenames);
     void openMethod(const QModelIndex &index, bool forceNewTab);
     Editor *openEditor(std::unique_ptr<Method> method, bool forceNewTab);
     bool saveWorkspace(const QString &filename);
