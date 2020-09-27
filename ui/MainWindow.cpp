@@ -10,6 +10,7 @@
 #include <QFutureWatcher>
 #include <QJSEngine>
 #include <QMessageBox>
+#include <QProgressDialog>
 #include <QScreen>
 #include <QStandardPaths>
 #include <QStyle>
@@ -117,19 +118,14 @@ void MainWindow::onActionOpenDirectoryTriggered() {
         return;
     }
 
-    const auto loadingMessage = new QMessageBox(this);
-    loadingMessage->setWindowTitle("Loading");
-    loadingMessage->setText("読み込み中 しばらくお待ちください...");
-    loadingMessage->setIcon(QMessageBox::Information);
-    loadingMessage->setWindowFlag(Qt::Sheet);
-    loadingMessage->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::Sheet);
-    loadingMessage->setStandardButtons(QMessageBox::NoButton);
-    loadingMessage->show();
-    connect(loadingMessage, &QDialog::accepted, loadingMessage, &QDialog::deleteLater);
-
+    const auto progressDialog = new QProgressDialog("読み込み中...", QString(), 0, 0, this,
+                                                    Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::Sheet);
+    progressDialog->setWindowModality(Qt::WindowModal);
+    progressDialog->show();
+    connect(progressDialog, &QDialog::accepted, progressDialog, &QDialog::deleteLater);
     const auto watcher = new QFutureWatcher<QStringList>(this);
     connect(watcher, &QFutureWatcher<QStringList>::finished, [=]() {
-        loadingMessage->accept();
+        progressDialog->accept();
         if (watcher->result().isEmpty()) {
             return;
         }
