@@ -29,11 +29,12 @@ namespace Task {
                 }
                 filenames << iterator.next();
             }
-            emit onProgress(0, filenames.size());
+            emit onProgress(0, 100);
 
             QList<std::shared_ptr<Protocol>> successes;
             bool error = false;
-            int done = 0;
+            uint64_t done = 0;
+            int previousPercentage = 0;
             for (const auto &filename : filenames) {
                 if (QThread::currentThread()->isInterruptionRequested()) {
                     qDebug() << "ImportDirectoryWorker interrupted!";
@@ -60,7 +61,11 @@ namespace Task {
                     error = true;
                 }
 
-                emit onProgress(++done, filenames.size());
+                int percentage = (int)(++done * 100 / filenames.size());
+                if (percentage != previousPercentage) {
+                    emit onProgress(percentage, 100);
+                    previousPercentage = percentage;
+                }
             }
 
             emit loadFinished(successes, error);
