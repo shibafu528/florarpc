@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QProgressDialog>
 #include <QThread>
+#include <QTimer>
 #include <memory>
 
 #include "entity/Protocol.h"
@@ -33,6 +34,8 @@ namespace Task {
     private slots:
         void onProgress(int loaded, int filesCount);
 
+        void onThrottledProgress();
+
         void onCanceled();
 
     private:
@@ -41,6 +44,9 @@ namespace Task {
 
         QThread *workerThread;
         QProgressDialog *progressDialog;
+        QTimer *progressUpdateThrottle;
+        int throttledLoaded;
+        int throttledFilesCount;
 
         friend ImportDirectoryWorker;
     };

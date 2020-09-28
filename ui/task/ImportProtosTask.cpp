@@ -29,12 +29,11 @@ namespace Task {
                 }
                 filenames << iterator.next();
             }
-            emit onProgress(0, 100);
+            emit onProgress(0, filenames.size());
 
             QList<std::shared_ptr<Protocol>> successes;
             bool error = false;
             uint64_t done = 0;
-            int previousPercentage = 0;
             for (const auto &filename : filenames) {
                 if (QThread::currentThread()->isInterruptionRequested()) {
                     qDebug() << "ImportDirectoryWorker interrupted!";
@@ -61,11 +60,7 @@ namespace Task {
                     error = true;
                 }
 
-                int percentage = (int)(++done * 100 / filenames.size());
-                if (percentage != previousPercentage) {
-                    emit onProgress(percentage, 100);
-                    previousPercentage = percentage;
-                }
+                emit onProgress(++done, filenames.size());
             }
 
             emit loadFinished(successes, error);
@@ -95,6 +90,10 @@ void Task::ImportProtosTask::importDirectoryAsync(const QString &dirname) {
     connect(worker, &ImportDirectoryWorker::onProgress, this, &ImportProtosTask::onProgress);
     connect(worker, &ImportDirectoryWorker::onLogging, this, &ImportProtosTask::onLogging);
 
+    progressUpdateThrottle = new QTimer(this);
+    progressUpdateThrottle->setSingleShot(true);
+    connect(progressUpdateThrottle, &QTimer::timeout, this, &ImportProtosTask::onThrottledProgress);
+
     progressDialog = new QProgressDialog("読み込み中...", "キャンセル", 0, 0, qobject_cast<QWidget *>(parent()),
                                          Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::Sheet);
     progressDialog->setWindowModality(Qt::WindowModal);
@@ -105,9 +104,23 @@ void Task::ImportProtosTask::importDirectoryAsync(const QString &dirname) {
 }
 
 void Task::ImportProtosTask::onProgress(int loaded, int filesCount) {
+    throttledLoaded = loaded;
+    throttledFilesCount = filesCount;
+    if (!progressUpdateThrottle->isActive()) {
+        onThrottledProgress();
+        progressUpdateThrottle->start(std::chrono::milliseconds(500));
+    }
+}
+
+void Task::ImportProtosTask::onThrottledProgress() {
+    if (throttledLoaded == -1) {
+        return;
+    }
     if (progressDialog != nullptr) {
-        progressDialog->setMaximum(filesCount);
-        progressDialog->setValue(loaded);
+        progressDialog->setMaximum(throttledFilesCount);
+        progressDialog->setValue(throttledLoaded);
+        throttledFilesCount = -1;
+        throttledLoaded = -1;
     }
 }
 
