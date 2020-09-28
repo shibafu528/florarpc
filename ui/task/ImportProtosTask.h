@@ -31,8 +31,6 @@ namespace Task {
         void finished();
 
     private slots:
-        void onLoadFinished(const QList<std::shared_ptr<Protocol>> &protocols, bool hasError);
-
         void onProgress(int loaded, int filesCount);
 
         void onCanceled();

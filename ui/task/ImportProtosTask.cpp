@@ -87,7 +87,6 @@ void Task::ImportProtosTask::importDirectoryAsync(const QString &dirname) {
     connect(workerThread, &QThread::finished, worker, &QObject::deleteLater);
     connect(workerThread, &QThread::started, worker, &ImportDirectoryWorker::doWork);
     connect(worker, &ImportDirectoryWorker::loadFinished, this, &ImportProtosTask::loadFinished);
-    connect(worker, &ImportDirectoryWorker::loadFinished, this, &ImportProtosTask::onLoadFinished);
     connect(worker, &ImportDirectoryWorker::onProgress, this, &ImportProtosTask::onProgress);
     connect(worker, &ImportDirectoryWorker::onLogging, this, &ImportProtosTask::onLogging);
 
@@ -98,10 +97,6 @@ void Task::ImportProtosTask::importDirectoryAsync(const QString &dirname) {
 
     progressDialog->show();
     workerThread->start();
-}
-
-void Task::ImportProtosTask::onLoadFinished(const QList<std::shared_ptr<Protocol>> &protocols, bool hasError) {
-    progressDialog->accept();
 }
 
 void Task::ImportProtosTask::onProgress(int loaded, int filesCount) {
