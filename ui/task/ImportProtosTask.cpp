@@ -67,7 +67,7 @@ namespace Task {
 
             QList<std::shared_ptr<Protocol>> successes;
             bool error = false;
-            uint64_t done = 0;
+            int done = 0;
             for (const auto &filename : filenames) {
                 if (isInterrupted()) {
                     qDebug() << "ImportDirectoryWorker interrupted!";
