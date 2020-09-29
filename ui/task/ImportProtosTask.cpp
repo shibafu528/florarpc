@@ -105,7 +105,12 @@ namespace Task {
 
 Task::ImportProtosTask::ImportProtosTask(std::vector<std::shared_ptr<Protocol>> &protocols, QStringList &imports,
                                          QWidget *parent)
-    : QObject(parent), protocols(protocols), imports(imports), worker(nullptr), progressDialog(nullptr) {
+    : QObject(parent),
+      protocols(protocols),
+      imports(imports),
+      worker(nullptr),
+      progressDialog(nullptr),
+      alreadyFinished(false) {
     qRegisterMetaType<QList<std::shared_ptr<Protocol>>>();
 }
 
@@ -117,8 +122,8 @@ void Task::ImportProtosTask::importDirectoryAsync(const QString &dirname) {
     connect(worker, &ImportDirectoryWorker::loadFinished, this, &ImportProtosTask::loadFinished);
     connect(worker, &ImportDirectoryWorker::onProgress, this, &ImportProtosTask::onProgress);
     connect(worker, &ImportDirectoryWorker::onLogging, this, &ImportProtosTask::onLogging);
+    connect(worker, &ImportDirectoryWorker::finished, this, &ImportProtosTask::onFinished);
     connect(worker, &ImportDirectoryWorker::finished, this, &ImportProtosTask::finished);
-    connect(worker, &ImportDirectoryWorker::destroyed, this, &ImportProtosTask::onDestroyedWorker);
 
     progressUpdateThrottle = new QTimer(this);
     progressUpdateThrottle->setSingleShot(true);
@@ -163,11 +168,11 @@ void Task::ImportProtosTask::onLoadFinished(const QList<std::shared_ptr<Protocol
 }
 
 void Task::ImportProtosTask::onCanceled() {
-    if (worker != nullptr) {
+    if (worker != nullptr && !alreadyFinished) {
         worker->interrupt();
     }
 }
 
-void Task::ImportProtosTask::onDestroyedWorker() { worker = nullptr; }
+void Task::ImportProtosTask::onFinished() { alreadyFinished = true; }
 
 #include "ImportProtosTask.moc"

@@ -41,7 +41,7 @@ namespace Task {
 
         void onCanceled();
 
-        void onDestroyedWorker();
+        void onFinished();
 
     private:
         std::vector<std::shared_ptr<Protocol>> &protocols;
@@ -52,6 +52,7 @@ namespace Task {
         QTimer *progressUpdateThrottle;
         int throttledLoaded;
         int throttledFilesCount;
+        bool alreadyFinished;
 
         friend ImportDirectoryWorker;
     };
