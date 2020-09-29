@@ -44,6 +44,7 @@ namespace Task {
 
                 if (std::any_of(task.protocols.begin(), task.protocols.end(),
                                 [file](std::shared_ptr<Protocol> &p) { return p->getSource() == file; })) {
+                    emit onProgress(++done, filenames.size());
                     continue;
                 }
 
