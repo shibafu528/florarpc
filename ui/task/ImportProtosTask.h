@@ -41,6 +41,8 @@ namespace Task {
 
         void onCanceled();
 
+        void onDestroyedWorker();
+
     private:
         std::vector<std::shared_ptr<Protocol>> &protocols;
         QStringList &imports;

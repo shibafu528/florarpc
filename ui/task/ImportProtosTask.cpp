@@ -118,6 +118,7 @@ void Task::ImportProtosTask::importDirectoryAsync(const QString &dirname) {
     connect(worker, &ImportDirectoryWorker::onProgress, this, &ImportProtosTask::onProgress);
     connect(worker, &ImportDirectoryWorker::onLogging, this, &ImportProtosTask::onLogging);
     connect(worker, &ImportDirectoryWorker::finished, this, &ImportProtosTask::finished);
+    connect(worker, &ImportDirectoryWorker::destroyed, this, &ImportProtosTask::onDestroyedWorker);
 
     progressUpdateThrottle = new QTimer(this);
     progressUpdateThrottle->setSingleShot(true);
@@ -166,5 +167,7 @@ void Task::ImportProtosTask::onCanceled() {
         worker->interrupt();
     }
 }
+
+void Task::ImportProtosTask::onDestroyedWorker() { worker = nullptr; }
 
 #include "ImportProtosTask.moc"
