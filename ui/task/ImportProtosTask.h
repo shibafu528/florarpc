@@ -22,6 +22,8 @@ namespace Task {
         ImportProtosTask(std::vector<std::shared_ptr<Protocol>> &protocols, QStringList &imports,
                          QWidget *parent = nullptr);
 
+        ~ImportProtosTask() override;
+
         void importDirectoryAsync(const QString &dirname);
 
     signals:

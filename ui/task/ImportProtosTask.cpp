@@ -18,8 +18,19 @@ namespace Task {
 
         void onLogging(const QString &message);
 
+        void finished();
+
     public slots:
         void doWork() {
+            doWorkInternal();
+            emit finished();
+        }
+
+    private:
+        const ImportProtosTask &task;
+        const QString dirname;
+
+        void doWorkInternal() {
             QStringList filenames;
             QDirIterator iterator(dirname, QStringList() << "*.proto", QDir::Files, QDirIterator::Subdirectories);
             while (iterator.hasNext()) {
@@ -66,10 +77,6 @@ namespace Task {
 
             emit loadFinished(successes, error);
         }
-
-    private:
-        const ImportProtosTask &task;
-        const QString dirname;
     };
 }  // namespace Task
 
@@ -79,8 +86,16 @@ Task::ImportProtosTask::ImportProtosTask(std::vector<std::shared_ptr<Protocol>> 
     qRegisterMetaType<QList<std::shared_ptr<Protocol>>>();
 }
 
+Task::ImportProtosTask::~ImportProtosTask() {
+    if (workerThread != nullptr) {
+        workerThread->quit();
+        workerThread->wait();
+    }
+}
+
 void Task::ImportProtosTask::importDirectoryAsync(const QString &dirname) {
     workerThread = new QThread(this);
+    workerThread->setObjectName("Task::ImportProtosTask worker");
     connect(workerThread, &QThread::finished, this, &ImportProtosTask::finished);
 
     auto worker = new ImportDirectoryWorker(*this, dirname);
@@ -90,6 +105,7 @@ void Task::ImportProtosTask::importDirectoryAsync(const QString &dirname) {
     connect(worker, &ImportDirectoryWorker::loadFinished, this, &ImportProtosTask::loadFinished);
     connect(worker, &ImportDirectoryWorker::onProgress, this, &ImportProtosTask::onProgress);
     connect(worker, &ImportDirectoryWorker::onLogging, this, &ImportProtosTask::onLogging);
+    connect(worker, &ImportDirectoryWorker::finished, workerThread, &QThread::quit);
 
     progressUpdateThrottle = new QTimer(this);
     progressUpdateThrottle->setSingleShot(true);
@@ -99,6 +115,7 @@ void Task::ImportProtosTask::importDirectoryAsync(const QString &dirname) {
                                          Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::Sheet);
     progressDialog->setWindowModality(Qt::WindowModal);
     connect(progressDialog, &QProgressDialog::canceled, this, &ImportProtosTask::onCanceled);
+    connect(workerThread, &QThread::finished, progressDialog, &QProgressDialog::close);
 
     progressDialog->show();
     workerThread->start();
