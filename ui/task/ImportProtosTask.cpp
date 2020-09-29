@@ -2,14 +2,29 @@
 
 #include <QDebug>
 #include <QDirIterator>
+#include <QReadLocker>
+#include <QReadWriteLock>
+#include <QRunnable>
+#include <QThreadPool>
+#include <QWriteLocker>
 
 namespace Task {
-    class ImportDirectoryWorker : public QObject {
+    class ImportDirectoryWorker : public QObject, public QRunnable {
         Q_OBJECT
 
     public:
         explicit ImportDirectoryWorker(const ImportProtosTask &task, const QString &dirname)
-            : task(task), dirname(dirname) {}
+            : task(task), dirname(dirname), lock(), interrupted(false) {}
+
+        void run() override {
+            runInternal();
+            emit finished();
+        }
+
+        void interrupt() {
+            QWriteLocker locker(&lock);
+            interrupted = true;
+        }
 
     signals:
         void loadFinished(const QList<std::shared_ptr<Protocol>> &protocols, bool hasError);
@@ -20,21 +35,22 @@ namespace Task {
 
         void finished();
 
-    public slots:
-        void doWork() {
-            doWorkInternal();
-            emit finished();
-        }
-
     private:
         const ImportProtosTask &task;
         const QString dirname;
+        QReadWriteLock lock;
+        bool interrupted;
 
-        void doWorkInternal() {
+        bool isInterrupted() {
+            QReadLocker locker(&lock);
+            return interrupted;
+        }
+
+        void runInternal() {
             QStringList filenames;
             QDirIterator iterator(dirname, QStringList() << "*.proto", QDir::Files, QDirIterator::Subdirectories);
             while (iterator.hasNext()) {
-                if (QThread::currentThread()->isInterruptionRequested()) {
+                if (isInterrupted()) {
                     qDebug() << "ImportDirectoryWorker interrupted!";
                     return;
                 }
@@ -46,7 +62,7 @@ namespace Task {
             bool error = false;
             uint64_t done = 0;
             for (const auto &filename : filenames) {
-                if (QThread::currentThread()->isInterruptionRequested()) {
+                if (isInterrupted()) {
                     qDebug() << "ImportDirectoryWorker interrupted!";
                     return;
                 }
@@ -82,30 +98,19 @@ namespace Task {
 
 Task::ImportProtosTask::ImportProtosTask(std::vector<std::shared_ptr<Protocol>> &protocols, QStringList &imports,
                                          QWidget *parent)
-    : QObject(parent), protocols(protocols), imports(imports), workerThread(nullptr), progressDialog(nullptr) {
+    : QObject(parent), protocols(protocols), imports(imports), worker(nullptr), progressDialog(nullptr) {
     qRegisterMetaType<QList<std::shared_ptr<Protocol>>>();
 }
 
-Task::ImportProtosTask::~ImportProtosTask() {
-    if (workerThread != nullptr) {
-        workerThread->quit();
-        workerThread->wait();
-    }
-}
+Task::ImportProtosTask::~ImportProtosTask() {}
 
 void Task::ImportProtosTask::importDirectoryAsync(const QString &dirname) {
-    workerThread = new QThread(this);
-    workerThread->setObjectName("Task::ImportProtosTask worker");
-    connect(workerThread, &QThread::finished, this, &ImportProtosTask::finished);
-
-    auto worker = new ImportDirectoryWorker(*this, dirname);
-    worker->moveToThread(workerThread);
-    connect(workerThread, &QThread::finished, worker, &QObject::deleteLater);
-    connect(workerThread, &QThread::started, worker, &ImportDirectoryWorker::doWork);
+    worker = new ImportDirectoryWorker(*this, dirname);
+    connect(worker, &ImportDirectoryWorker::loadFinished, this, &ImportProtosTask::onLoadFinished);
     connect(worker, &ImportDirectoryWorker::loadFinished, this, &ImportProtosTask::loadFinished);
     connect(worker, &ImportDirectoryWorker::onProgress, this, &ImportProtosTask::onProgress);
     connect(worker, &ImportDirectoryWorker::onLogging, this, &ImportProtosTask::onLogging);
-    connect(worker, &ImportDirectoryWorker::finished, workerThread, &QThread::quit);
+    connect(worker, &ImportDirectoryWorker::finished, this, &ImportProtosTask::finished);
 
     progressUpdateThrottle = new QTimer(this);
     progressUpdateThrottle->setSingleShot(true);
@@ -115,10 +120,10 @@ void Task::ImportProtosTask::importDirectoryAsync(const QString &dirname) {
                                          Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::Sheet);
     progressDialog->setWindowModality(Qt::WindowModal);
     connect(progressDialog, &QProgressDialog::canceled, this, &ImportProtosTask::onCanceled);
-    connect(workerThread, &QThread::finished, progressDialog, &QProgressDialog::close);
+    connect(worker, &ImportDirectoryWorker::finished, progressDialog, &QProgressDialog::close);
 
     progressDialog->show();
-    workerThread->start();
+    QThreadPool::globalInstance()->start(worker);
 }
 
 void Task::ImportProtosTask::onProgress(int loaded, int filesCount) {
@@ -142,6 +147,17 @@ void Task::ImportProtosTask::onThrottledProgress() {
     }
 }
 
-void Task::ImportProtosTask::onCanceled() { workerThread->requestInterruption(); }
+void Task::ImportProtosTask::onLoadFinished(const QList<std::shared_ptr<Protocol>> &protocols, bool hasError) {
+    if (progressUpdateThrottle->isActive()) {
+        progressUpdateThrottle->stop();
+        onThrottledProgress();
+    }
+}
+
+void Task::ImportProtosTask::onCanceled() {
+    if (worker != nullptr) {
+        worker->interrupt();
+    }
+}
 
 #include "ImportProtosTask.moc"

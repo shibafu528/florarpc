@@ -38,13 +38,15 @@ namespace Task {
 
         void onThrottledProgress();
 
+        void onLoadFinished(const QList<std::shared_ptr<Protocol>> &protocols, bool hasError);
+
         void onCanceled();
 
     private:
         std::vector<std::shared_ptr<Protocol>> &protocols;
         QStringList &imports;
 
-        QThread *workerThread;
+        ImportDirectoryWorker *worker;
         QProgressDialog *progressDialog;
         QTimer *progressUpdateThrottle;
         int throttledLoaded;
