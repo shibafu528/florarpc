@@ -107,8 +107,8 @@ void Task::ImportProtosTask::onProgress(int loaded, int filesCount) {
     throttledLoaded = loaded;
     throttledFilesCount = filesCount;
     if (!progressUpdateThrottle->isActive()) {
-        onThrottledProgress();
         progressUpdateThrottle->start(std::chrono::milliseconds(500));
+        onThrottledProgress();
     }
 }
 
