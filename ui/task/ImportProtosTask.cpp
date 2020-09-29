@@ -22,8 +22,10 @@ namespace Task {
         }
 
         void interrupt() {
-            QWriteLocker locker(&lock);
-            interrupted = true;
+            if (isInterrupted()) {
+                return;
+            }
+            writeInterrupt();
         }
 
     signals:
@@ -44,6 +46,11 @@ namespace Task {
         bool isInterrupted() {
             QReadLocker locker(&lock);
             return interrupted;
+        }
+
+        void writeInterrupt() {
+            QWriteLocker writeLock(&lock);
+            interrupted = true;
         }
 
         void runInternal() {
