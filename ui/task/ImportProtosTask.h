@@ -4,7 +4,6 @@
 #include <QList>
 #include <QObject>
 #include <QProgressDialog>
-#include <QThread>
 #include <QTimer>
 #include <memory>
 
