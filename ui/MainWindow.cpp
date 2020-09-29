@@ -218,6 +218,8 @@ void MainWindow::onAsyncLoadFinished(const QList<std::shared_ptr<Protocol>> &pro
         ui.logDockWidget->show();
         QMessageBox::critical(this, "Load error",
                               "Protoファイルの読込中にエラーが発生しました。\n詳細はログを確認してください。");
+    } else if (protocols.isEmpty()) {
+        QMessageBox::warning(this, "Load error", "Protoファイルが見つからないか、すでに全てインポートされています。");
     }
 }
 
