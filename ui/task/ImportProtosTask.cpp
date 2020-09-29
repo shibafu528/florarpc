@@ -129,7 +129,7 @@ void Task::ImportProtosTask::importDirectoryAsync(const QString &dirname) {
     progressUpdateThrottle->setSingleShot(true);
     connect(progressUpdateThrottle, &QTimer::timeout, this, &ImportProtosTask::onThrottledProgress);
 
-    progressDialog = new QProgressDialog("読み込み中...", "キャンセル", 0, 0, qobject_cast<QWidget *>(parent()),
+    progressDialog = new QProgressDialog("ファイルを検索しています...", "キャンセル", 0, 0, qobject_cast<QWidget *>(parent()),
                                          Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::Sheet);
     progressDialog->setWindowModality(Qt::WindowModal);
     connect(progressDialog, &QProgressDialog::canceled, this, &ImportProtosTask::onCanceled);
@@ -153,6 +153,9 @@ void Task::ImportProtosTask::onThrottledProgress() {
         return;
     }
     if (progressDialog != nullptr) {
+        if (progressDialog->maximum() == 0) {
+            progressDialog->setLabelText("インポートしています...");
+        }
         progressDialog->setMaximum(throttledFilesCount);
         progressDialog->setValue(throttledLoaded);
         throttledFilesCount = -1;
