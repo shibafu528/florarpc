@@ -3,7 +3,7 @@ on: push
 jobs:
   build_windows_x64:
     name: Build on Windows x64
-    runs-on: windows-2016
+    runs-on: windows-2019
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -13,13 +13,13 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
         with:
-          version: '5.14.1'
-          arch: 'win64_msvc2017_64'
+          version: '5.15.0'
+          arch: 'win64_msvc2019_64'
 
       - name: Cache vcpkg
         uses: actions/cache@v1.0.3
         env:
-          cache-revision: 3
+          cache-revision: 4
         with:
           path: ${{ github.workspace }}/vendor/vcpkg/
           key: ${{ hashFiles('vcpkg_packages.txt') }}-${{ hashFiles('.git/modules/vendor/vcpkg/HEAD') }}-${{ runner.os }}-${{ env.cache-revision }}
@@ -39,7 +39,7 @@ jobs:
         shell: cmd
         working-directory: build
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           set PATH=%Qt5_DIR%\bin;%PATH%
           cmake -DFLORA_FORCE_BUILD_KF5LIB=true -DCMAKE_TOOLCHAIN_FILE=%RUNVCPKG_VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake -A x64 ..
           cmake --build . --config Release
@@ -78,12 +78,12 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
         with:
-          version: '5.14.1'
+          version: '5.15.0'
 
       - name: Cache vcpkg
         uses: actions/cache@v1
         env:
-          cache-revision: 2
+          cache-revision: 3
         with:
           path: ${{ github.workspace }}/vendor/vcpkg/
           key: ${{ hashFiles('vcpkg_packages.txt') }}-${{ hashFiles('.git/modules/vendor/vcpkg/HEAD') }}-${{ runner.os }}-${{ env.cache-revision }}
