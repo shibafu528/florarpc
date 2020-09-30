@@ -56,6 +56,7 @@
      <string>ファイル(&amp;F)</string>
     </property>
     <addaction name="actionOpen"/>
+    <addaction name="actionOpenDirectory"/>
     <addaction name="separator"/>
     <addaction name="actionOpenWorkspace"/>
     <addaction name="actionSaveWorkspace"/>
@@ -267,6 +268,11 @@
   <action name="actionOpenCopyAsUserScriptDir">
    <property name="text">
     <string>スクリプトフォルダを開く(&amp;O)</string>
+   </property>
+  </action>
+  <action name="actionOpenDirectory">
+   <property name="text">
+    <string>フォルダからProtoファイルを取り込む(&amp;F)...</string>
    </property>
   </action>
  </widget>

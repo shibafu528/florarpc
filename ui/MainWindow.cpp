@@ -9,6 +9,7 @@
 #include <QFileInfo>
 #include <QJSEngine>
 #include <QMessageBox>
+#include <QProgressDialog>
 #include <QScreen>
 #include <QStandardPaths>
 #include <QStyle>
@@ -21,6 +22,7 @@
 #include "event/WorkspaceModifiedEvent.h"
 #include "flora_constants.h"
 #include "florarpc/workspace.pb.h"
+#include "task/ImportProtosTask.h"
 #include "util/DescriptorPoolProxy.h"
 #include "util/ProtobufIterator.h"
 
@@ -38,6 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui.setupUi(this);
 
     connect(ui.actionOpen, &QAction::triggered, this, &MainWindow::onActionOpenTriggered);
+    connect(ui.actionOpenDirectory, &QAction::triggered, this, &MainWindow::onActionOpenDirectoryTriggered);
     connect(ui.actionOpenWorkspace, &QAction::triggered, this, &MainWindow::onActionOpenWorkspaceTriggered);
     connect(ui.actionSaveWorkspace, &QAction::triggered, this, &MainWindow::onActionSaveWorkspaceTriggered);
     connect(ui.actionManageProto, &QAction::triggered, this, &MainWindow::onActionManageProtoTriggered);
@@ -101,10 +104,24 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::onLogging(const QString &message) { ui.logEdit->appendPlainText(message); }
 
 void MainWindow::onActionOpenTriggered() {
-    auto filenames = QFileDialog::getOpenFileNames(this, "Open proto", "", "Proto definition files (*.proto)", nullptr);
+    auto filenames =
+        QFileDialog::getOpenFileNames(this, "Import proto(s)", "", "Proto definition files (*.proto)", nullptr);
     if (openProtos(filenames, true)) {
         onWorkspaceModified();
     }
+}
+
+void MainWindow::onActionOpenDirectoryTriggered() {
+    auto dirname = QFileDialog::getExistingDirectory(this, "Import proto(s) from folder", "");
+    if (dirname.isEmpty()) {
+        return;
+    }
+
+    auto task = new Task::ImportProtosTask(protocols, imports, this);
+    connect(task, &Task::ImportProtosTask::loadFinished, this, &MainWindow::onAsyncLoadFinished);
+    connect(task, &Task::ImportProtosTask::onLogging, this, &MainWindow::onLogging);
+    connect(task, &Task::ImportProtosTask::finished, task, &QObject::deleteLater);
+    task->importDirectoryAsync(dirname);
 }
 
 void MainWindow::onActionOpenWorkspaceTriggered() {
@@ -188,6 +205,22 @@ void MainWindow::onActionOpenCopyAsUserScriptDirTriggered() {
         return;
     }
     QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
+}
+
+void MainWindow::onAsyncLoadFinished(const QList<std::shared_ptr<Protocol>> &protocols, bool hasError) {
+    for (const auto &protocol : protocols) {
+        this->protocols.push_back(protocol);
+        const auto index = protocolTreeModel->addProtocol(protocol);
+        ui.treeView->expandRecursively(index);
+    }
+
+    if (hasError) {
+        ui.logDockWidget->show();
+        QMessageBox::critical(this, "Load error",
+                              "Protoファイルの読込中にエラーが発生しました。\n詳細はログを確認してください。");
+    } else if (protocols.isEmpty()) {
+        QMessageBox::warning(this, "Load error", "Protoファイルが見つからないか、すでに全てインポートされています。");
+    }
 }
 
 void MainWindow::onWorkspaceModified() {

@@ -31,6 +31,8 @@ private slots:
 
     void onActionOpenTriggered();
 
+    void onActionOpenDirectoryTriggered();
+
     void onActionOpenWorkspaceTriggered();
 
     void onActionSaveWorkspaceTriggered();
@@ -42,6 +44,8 @@ private slots:
     void onActionCopyAsGrpcurlTriggered();
 
     void onActionOpenCopyAsUserScriptDirTriggered();
+
+    void onAsyncLoadFinished(const QList<std::shared_ptr<Protocol>> &protocols, bool hasError);
 
     void onTreeViewClicked(const QModelIndex &index);
 
