@@ -93,6 +93,8 @@ namespace Task {
                     }
 
                     error = true;
+                } catch (ServiceNotFoundException &e) {
+                    // ignored
                 }
 
                 emit onProgress(++done, filenames.size());

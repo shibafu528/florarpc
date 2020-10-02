@@ -35,4 +35,6 @@ public:
     const std::unique_ptr<std::vector<std::string>> errors;
 };
 
-#endif //FLORARPC_PROTOCOL_H
+class ServiceNotFoundException : public std::exception {};
+
+#endif  // FLORARPC_PROTOCOL_H

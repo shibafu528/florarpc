@@ -219,7 +219,8 @@ void MainWindow::onAsyncLoadFinished(const QList<std::shared_ptr<Protocol>> &pro
         QMessageBox::critical(this, "Load error",
                               "Protoファイルの読込中にエラーが発生しました。\n詳細はログを確認してください。");
     } else if (protocols.isEmpty()) {
-        QMessageBox::warning(this, "Load error", "Protoファイルが見つからないか、すでに全てインポートされています。");
+        QMessageBox::warning(this, "Load error",
+                             "Serviceを含むProtoファイルが見つからないか、すでに全てインポートされています。");
     }
 }
 
@@ -362,6 +363,13 @@ bool MainWindow::openProtos(const QStringList &filenames, bool abortOnLoadError)
                 stream << QString::fromStdString(err);
             }
             QMessageBox::critical(this, "Load error", message);
+            if (abortOnLoadError) {
+                return false;
+            }
+        } catch (ServiceNotFoundException &e) {
+            QMessageBox::warning(
+                this, "Load error",
+                "Protoファイル内にServiceが1つもありません。Serviceの定義が含まれているファイルを指定してください。");
             if (abortOnLoadError) {
                 return false;
             }
