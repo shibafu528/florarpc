@@ -2,7 +2,8 @@ FloraRPC
 ====
 
 <div align="center">
-<img alt="App icon" src="./resources/appicon/FloraRPC.iconset/icon_256x256.png">
+<img alt="App icon" src="./resources/appicon/FloraRPC.iconset/icon_256x256.png"><br>
+<img alt="Screenshot" src="./.readme-imgs/screenshot.png" width="800" height="493">
 </div>
 
 ----
