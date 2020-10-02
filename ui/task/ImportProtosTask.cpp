@@ -84,9 +84,7 @@ namespace Task {
 
                 try {
                     const auto protocol = std::make_shared<Protocol>(file, task.imports);
-                    if (protocol->getFileDescriptor()->service_count() > 0) {
-                        successes.push_back(protocol);
-                    }
+                    successes.push_back(protocol);
                 } catch (ProtocolLoadException &e) {
                     emit onLogging(QString("Protoファイルの読込中にエラー: %1").arg(filename));
 
@@ -95,6 +93,8 @@ namespace Task {
                     }
 
                     error = true;
+                } catch (ServiceNotFoundException &e) {
+                    // ignored
                 }
 
                 emit onProgress(++done, filenames.size());

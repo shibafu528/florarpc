@@ -138,6 +138,10 @@ Protocol::Protocol(const QFileInfo &file, const QStringList &imports) : source(f
         throw ProtocolLoadException(move(errorCollectorStub->errors));
     }
 
+    if (fd->service_count() == 0) {
+        throw ServiceNotFoundException();
+    }
+
     errorCollector = move(errorCollectorStub);
     sourceTree = move(wellKnownSourceTree);
     fileDescriptor = fd;

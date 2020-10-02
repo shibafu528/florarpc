@@ -351,16 +351,6 @@ bool MainWindow::openProtos(const QStringList &filenames, bool abortOnLoadError)
 
         try {
             const auto protocol = std::make_shared<Protocol>(file, imports);
-            if (protocol->getFileDescriptor()->service_count() == 0) {
-                QMessageBox::warning(this, "Load error",
-                                     "Protoファイル内にServiceが1つもありません。Serviceの定義が含まれているファイルを"
-                                     "指定してください。");
-                if (abortOnLoadError) {
-                    return false;
-                }
-                continue;
-            }
-
             successes.push_back(protocol);
         } catch (ProtocolLoadException &e) {
             QString message = "Protoファイルの読込中にエラーが発生しました。\n";
@@ -373,6 +363,13 @@ bool MainWindow::openProtos(const QStringList &filenames, bool abortOnLoadError)
                 stream << QString::fromStdString(err);
             }
             QMessageBox::critical(this, "Load error", message);
+            if (abortOnLoadError) {
+                return false;
+            }
+        } catch (ServiceNotFoundException &e) {
+            QMessageBox::warning(
+                this, "Load error",
+                "Protoファイル内にServiceが1つもありません。Serviceの定義が含まれているファイルを指定してください。");
             if (abortOnLoadError) {
                 return false;
             }
