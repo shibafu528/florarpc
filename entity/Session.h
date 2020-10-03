@@ -1,14 +1,17 @@
 #ifndef FLORARPC_SESSION_H
 #define FLORARPC_SESSION_H
 
-#include <QObject>
-#include <QMultiMap>
-#include <QThread>
 #include <grpcpp/channel.h>
 #include <grpcpp/client_context.h>
 #include <grpcpp/completion_queue.h>
 #include <grpcpp/generic/generic_stub_impl.h>
 #include <grpcpp/security/credentials.h>
+
+#include <QMultiMap>
+#include <QObject>
+#include <QThread>
+#include <chrono>
+
 #include "Method.h"
 
 class Session : public QObject {
@@ -23,6 +26,8 @@ public:
             const Metadata &metadata, QObject *parent = nullptr);
 
     ~Session() override;
+
+    std::chrono::steady_clock::time_point &getBeginTime();
 
 signals:
 
@@ -85,6 +90,7 @@ private:
     std::shared_ptr<grpc::Channel> channel;
     std::unique_ptr<grpc::GenericClientAsyncReaderWriter> call;
     QThread queueWatcherWorker;
+    std::chrono::steady_clock::time_point beginTime;
 
     Sequence sequence = Sequence::Preparing;
     bool receivedInitialMetadata = false;

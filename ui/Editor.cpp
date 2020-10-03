@@ -350,6 +350,12 @@ void Editor::onSessionFinished(int code, const QString &message, const QByteArra
     if (code != grpc::StatusCode::OK) {
         setErrorToResponseView(GrpcUtility::errorCodeToString((grpc::StatusCode)code), message, details);
     }
+
+    const auto elapsed = std::chrono::steady_clock::now() - session->getBeginTime();
+    const auto secs = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
+    const auto nsecs = std::chrono::duration_cast<std::chrono::nanoseconds>(elapsed).count() % 1000000;
+    ui.responseElapsedLabel->setText(QString("%1.%2s").arg(secs).arg(nsecs));
+
     cleanupSession();
 }
 
@@ -388,6 +394,7 @@ void Editor::addMetadataRow(const QString &key, const QString &value) {
 }
 
 void Editor::clearResponseView() {
+    ui.responseElapsedLabel->clear();
     ui.responseEdit->clear();
     ui.responseMetadataTable->clearContents();
     ui.responseMetadataTable->setRowCount(0);
