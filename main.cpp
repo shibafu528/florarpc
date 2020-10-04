@@ -6,6 +6,7 @@
 #include <QLibraryInfo>
 #include <QTranslator>
 
+#include "entity/Preferences.h"
 #include "flora_constants.h"
 #include "ui/MainWindow.h"
 
@@ -29,6 +30,7 @@
 #endif
 
 static MainWindow *mainWindow;
+static Preferences *preferences;
 
 void gpr_custom_log_handler(gpr_log_func_args *args) {
     auto message = QString("[%1][gRPC]%2: %3:%4 %5")
@@ -41,6 +43,8 @@ void gpr_custom_log_handler(gpr_log_func_args *args) {
     qDebug() << message.toStdString().c_str();
     QMetaObject::invokeMethod(mainWindow, "onLogging", Qt::QueuedConnection, Q_ARG(QString, message));
 }
+
+Preferences &sharedPref() { return *preferences; }
 
 int main(int argc, char *argv[]) {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
