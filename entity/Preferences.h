@@ -22,7 +22,7 @@ public:
         WriteError,
     };
 
-    explicit Preferences(QString &filePath);
+    explicit Preferences(const QString &filePath);
 
     LoadResult load();
 

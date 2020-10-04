@@ -7,7 +7,7 @@
 
 #include "flora_constants.h"
 
-Preferences::Preferences(QString &filePath)
+Preferences::Preferences(const QString &filePath)
     : filePath(filePath), data(), lock(), latestSaveResult(SaveResult::Success) {}
 
 Preferences::LoadResult Preferences::load() {

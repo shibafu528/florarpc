@@ -3,7 +3,10 @@
 #include <QApplication>
 #include <QDateTime>
 #include <QDebug>
+#include <QDir>
 #include <QLibraryInfo>
+#include <QMessageBox>
+#include <QStandardPaths>
 #include <QTranslator>
 
 #include "entity/Preferences.h"
@@ -95,6 +98,15 @@ int main(int argc, char *argv[]) {
     QTranslator qtTranslator;
     qtTranslator.load(QLocale::system(), "qtbase_", "", QLibraryInfo::location(QLibraryInfo::TranslationsPath));
     app.installTranslator(&qtTranslator);
+
+    const auto appConfigDir = QDir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
+    if (!appConfigDir.exists() && !appConfigDir.mkpath(".")) {
+        QMessageBox::critical(nullptr, "Fatal error", "設定フォルダを作成できませんでした。");
+        return EXIT_FAILURE;
+    }
+    const auto preferenceFilePath = appConfigDir.filePath("preferences.pb");
+    preferences = new Preferences(preferenceFilePath);
+    preferences->load();
 
     mainWindow = new MainWindow();
     if (auto args = app.arguments(); args.length() > 1) {
