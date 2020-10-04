@@ -1,12 +1,13 @@
 #include "Session.h"
-#include <chrono>
+
 #include <grpcpp/create_channel.h>
 #include <grpcpp/generic/generic_stub.h>
-#include <QRunnable>
+
 #include <QDebug>
+#include <QRunnable>
 
 class Session::QueueWatcher : public QObject {
-Q_OBJECT
+    Q_OBJECT
 
 public:
     explicit QueueWatcher(Session &session) : session(session) {}
@@ -125,9 +126,7 @@ private:
         emit messageSent();
     }
 
-    void onSuccessWritesDone() {
-        qDebug() << __FUNCTION__;
-    }
+    void onSuccessWritesDone() { qDebug() << __FUNCTION__; }
 
     void onSuccessFinish() {
         qDebug() << __FUNCTION__;
@@ -137,15 +136,14 @@ private:
                             QString::fromLatin1(value.data(), value.size()));
         }
         emit trailingMetadataReceived(metadata);
-        emit finished(session.statusBuffer.error_code(),
-                      QString::fromStdString(session.statusBuffer.error_message()),
+        emit finished(session.statusBuffer.error_code(), QString::fromStdString(session.statusBuffer.error_message()),
                       QByteArray::fromStdString(session.statusBuffer.error_details()));
     }
 };
 
 Session::Session(const Method &method, const QString &serverAddress, std::shared_ptr<grpc::ChannelCredentials> &creds,
                  const Metadata &metadata, QObject *parent)
-        : QObject(parent), method(method), readTag(true), writeTag(false) {
+    : QObject(parent), method(method), beginTime(std::chrono::steady_clock::now()), readTag(true), writeTag(false) {
     qRegisterMetaType<Metadata>();
     qRegisterMetaType<grpc::ByteBuffer>();
     for (auto iter = metadata.cbegin(); iter != metadata.cend(); iter++) {
@@ -176,6 +174,8 @@ Session::~Session() {
     queueWatcherWorker.quit();
     queueWatcherWorker.wait();
 }
+
+std::chrono::steady_clock::time_point &Session::getBeginTime() { return beginTime; }
 
 void Session::send(const grpc::ByteBuffer &buffer) {
     qDebug() << __FUNCTION__;
