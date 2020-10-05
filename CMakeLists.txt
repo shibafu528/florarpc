@@ -64,14 +64,17 @@ set(FLORA_PROTOBUF_GENERATED "${PROJECT_BINARY_DIR}/proto_generated")
 set(FLORA_PROTOBUF_PROTOS
         ${FLORA_PROTOBUF_INCLUDE}/florarpc/descriptor_exports.proto
         ${FLORA_PROTOBUF_INCLUDE}/florarpc/version.proto
+        ${FLORA_PROTOBUF_INCLUDE}/florarpc/preferences.proto
         ${FLORA_PROTOBUF_INCLUDE}/florarpc/workspace.proto)
 set(FLORA_PROTOBUF_SOURCES
         ${FLORA_PROTOBUF_GENERATED}/florarpc/descriptor_exports.pb.cc
         ${FLORA_PROTOBUF_GENERATED}/florarpc/version.pb.cc
+        ${FLORA_PROTOBUF_GENERATED}/florarpc/preferences.pb.cc
         ${FLORA_PROTOBUF_GENERATED}/florarpc/workspace.pb.cc)
 set(FLORA_PROTOBUF_HEADERS
         ${FLORA_PROTOBUF_GENERATED}/florarpc/descriptor_exports.pb.h
         ${FLORA_PROTOBUF_GENERATED}/florarpc/version.pb.h
+        ${FLORA_PROTOBUF_GENERATED}/florarpc/preferences.pb.h
         ${FLORA_PROTOBUF_GENERATED}/florarpc/workspace.pb.h)
 file(MAKE_DIRECTORY "${FLORA_PROTOBUF_GENERATED}")
 add_custom_command(
@@ -143,6 +146,8 @@ add_executable(flora
         entity/Certificate.h
         entity/Protocol.cpp
         entity/Protocol.h
+        entity/Preferences.cpp
+        entity/Preferences.h
         entity/Metadata.cpp
         entity/Metadata.h
         entity/Method.cpp

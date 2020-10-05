@@ -3,9 +3,13 @@
 #include <QApplication>
 #include <QDateTime>
 #include <QDebug>
+#include <QDir>
 #include <QLibraryInfo>
+#include <QMessageBox>
+#include <QStandardPaths>
 #include <QTranslator>
 
+#include "entity/Preferences.h"
 #include "flora_constants.h"
 #include "ui/MainWindow.h"
 
@@ -29,6 +33,7 @@
 #endif
 
 static MainWindow *mainWindow;
+static Preferences *preferences;
 
 void gpr_custom_log_handler(gpr_log_func_args *args) {
     auto message = QString("[%1][gRPC]%2: %3:%4 %5")
@@ -41,6 +46,8 @@ void gpr_custom_log_handler(gpr_log_func_args *args) {
     qDebug() << message.toStdString().c_str();
     QMetaObject::invokeMethod(mainWindow, "onLogging", Qt::QueuedConnection, Q_ARG(QString, message));
 }
+
+Preferences &sharedPref() { return *preferences; }
 
 int main(int argc, char *argv[]) {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -91,6 +98,15 @@ int main(int argc, char *argv[]) {
     QTranslator qtTranslator;
     qtTranslator.load(QLocale::system(), "qtbase_", "", QLibraryInfo::location(QLibraryInfo::TranslationsPath));
     app.installTranslator(&qtTranslator);
+
+    const auto appConfigDir = QDir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
+    if (!appConfigDir.exists() && !appConfigDir.mkpath(".")) {
+        QMessageBox::critical(nullptr, "Fatal error", "設定フォルダを作成できませんでした。");
+        return EXIT_FAILURE;
+    }
+    const auto preferenceFilePath = appConfigDir.filePath("preferences.pb");
+    preferences = new Preferences(preferenceFilePath);
+    preferences->load();
 
     mainWindow = new MainWindow();
     if (auto args = app.arguments(); args.length() > 1) {

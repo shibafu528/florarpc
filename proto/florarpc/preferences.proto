@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package florarpc;
+
+import "florarpc/version.proto";
+
+message Preferences {
+  Version app_version = 1;
+  repeated string recent_workspaces = 2;
+}

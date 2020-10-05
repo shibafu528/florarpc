@@ -55,10 +55,17 @@
     <property name="title">
      <string>ファイル(&amp;F)</string>
     </property>
+    <widget class="QMenu" name="menuRecentWorkspaces">
+     <property name="title">
+      <string>最近使ったワークスペース(&amp;R)</string>
+     </property>
+    </widget>
     <addaction name="actionOpen"/>
     <addaction name="actionOpenDirectory"/>
     <addaction name="separator"/>
     <addaction name="actionOpenWorkspace"/>
+    <addaction name="menuRecentWorkspaces"/>
+    <addaction name="separator"/>
     <addaction name="actionSaveWorkspace"/>
     <addaction name="separator"/>
     <addaction name="actionManageProto"/>
@@ -273,6 +280,11 @@
   <action name="actionOpenDirectory">
    <property name="text">
     <string>フォルダからProtoファイルを取り込む(&amp;F)...</string>
+   </property>
+  </action>
+  <action name="actionl">
+   <property name="text">
+    <string>l</string>
    </property>
   </action>
  </widget>

@@ -19,6 +19,7 @@
 #include "AboutDialog.h"
 #include "ImportsManageDialog.h"
 #include "ServersManageDialog.h"
+#include "entity/Preferences.h"
 #include "event/WorkspaceModifiedEvent.h"
 #include "flora_constants.h"
 #include "florarpc/workspace.pb.h"
@@ -94,6 +95,7 @@ MainWindow::MainWindow(QWidget *parent)
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(),
                                     QGuiApplication::primaryScreen()->availableGeometry()));
     setWindowTitle("新しいワークスペース");
+    reloadRecentWorkspaces();
     reloadCopyAsUserScripts();
 
 #if !defined(_WIN32) && !defined(__APPLE__)
@@ -496,6 +498,9 @@ bool MainWindow::loadWorkspace(const QString &filename) {
     // ロードに伴うUIの変更イベントによって要求されるであろうオートセーブをキャンセルする
     QTimer::singleShot(std::chrono::milliseconds(100), this, &MainWindow::cancelWorkspaceSaveTimer);
 
+    sharedPref().addRecentWorkspace(filename);
+    reloadRecentWorkspaces();
+
     ui.statusbar->showMessage("ワークスペースを読み込みました", 5000);
     setWorkspaceFilename(filename);
     return true;
@@ -555,6 +560,9 @@ bool MainWindow::saveWorkspace(const QString &filename) {
     file.write(QByteArray::fromStdString(output));
     file.close();
 
+    sharedPref().addRecentWorkspace(filename);
+    reloadRecentWorkspaces();
+
     return true;
 }
 
@@ -563,6 +571,19 @@ void MainWindow::setWorkspaceFilename(const QString &filename) {
     QFileInfo fileInfo(filename);
     setWindowTitle(fileInfo.fileName());
     setWindowFilePath(fileInfo.absoluteFilePath());
+}
+
+void MainWindow::reloadRecentWorkspaces() {
+    sharedPref().read([=](const florarpc::Preferences &pref) {
+        ui.menuRecentWorkspaces->clear();
+        ui.menuRecentWorkspaces->setEnabled(pref.recent_workspaces_size() != 0);
+        for (const auto &workspace : pref.recent_workspaces()) {
+            const auto qWorkspace = QString::fromStdString(workspace);
+            const auto action = new QAction(qWorkspace, ui.menuRecentWorkspaces);
+            connect(action, &QAction::triggered, [this, qWorkspace]() { loadWorkspace(qWorkspace); });
+            ui.menuRecentWorkspaces->addAction(action);
+        }
+    });
 }
 
 void MainWindow::reloadCopyAsUserScripts() {
