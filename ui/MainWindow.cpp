@@ -19,6 +19,7 @@
 #include "AboutDialog.h"
 #include "ImportsManageDialog.h"
 #include "ServersManageDialog.h"
+#include "entity/Preferences.h"
 #include "event/WorkspaceModifiedEvent.h"
 #include "flora_constants.h"
 #include "florarpc/workspace.pb.h"
@@ -496,6 +497,8 @@ bool MainWindow::loadWorkspace(const QString &filename) {
     // ロードに伴うUIの変更イベントによって要求されるであろうオートセーブをキャンセルする
     QTimer::singleShot(std::chrono::milliseconds(100), this, &MainWindow::cancelWorkspaceSaveTimer);
 
+    sharedPref().addRecentWorkspace(filename);
+
     ui.statusbar->showMessage("ワークスペースを読み込みました", 5000);
     setWorkspaceFilename(filename);
     return true;
@@ -554,6 +557,8 @@ bool MainWindow::saveWorkspace(const QString &filename) {
     }
     file.write(QByteArray::fromStdString(output));
     file.close();
+
+    sharedPref().addRecentWorkspace(filename);
 
     return true;
 }

@@ -70,3 +70,30 @@ void Preferences::mutation(const std::function<void(florarpc::Preferences &)> &m
     // TODO: delayed save, notify error
     save();
 }
+
+void Preferences::addRecentWorkspace(const QString &file) {
+    mutation([file](florarpc::Preferences &pref) {
+        const auto stdFile = file.toStdString();
+        auto recents = pref.mutable_recent_workspaces();
+
+        int i = 0;
+        for (; i < recents->size(); i++) {
+            if (recents->at(i) == stdFile) {
+                break;
+            }
+        }
+        if (i == recents->size()) {
+            *recents->Add() = stdFile;
+        }
+
+        // bubble up
+        for (; i > 0; i--) {
+            recents->SwapElements(i, i - 1);
+        }
+
+        // truncate
+        while (recents->size() > 10) {
+            recents->RemoveLast();
+        }
+    });
+}

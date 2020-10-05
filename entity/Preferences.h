@@ -28,9 +28,13 @@ public:
 
     SaveResult save();
 
+    inline SaveResult getLatestSaveResult() const { return latestSaveResult; }
+
     void read(const std::function<void(const florarpc::Preferences &)> &reader);
 
     void mutation(const std::function<void(florarpc::Preferences &)> &mutator);
+
+    void addRecentWorkspace(const QString &file);
 
 private:
     QString filePath;
