@@ -177,6 +177,8 @@ Session::~Session() {
 
 std::chrono::steady_clock::time_point &Session::getBeginTime() { return beginTime; }
 
+Session::Sequence Session::getSequence() { return sequence; }
+
 void Session::send(const grpc::ByteBuffer &buffer) {
     qDebug() << __FUNCTION__;
     writeBuffer = buffer;

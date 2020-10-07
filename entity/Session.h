@@ -15,12 +15,19 @@
 #include "Method.h"
 
 class Session : public QObject {
-Q_OBJECT
+    Q_OBJECT
 
     Q_DISABLE_COPY(Session)
 
 public:
     typedef QMultiMap<QString, QString> Metadata;
+
+    enum class Sequence {
+        Preparing,
+        Connected,
+        WritesDone,
+        Finishing,
+    };
 
     Session(const Method &method, const QString &serverAddress, std::shared_ptr<grpc::ChannelCredentials> &creds,
             const Metadata &metadata, QObject *parent = nullptr);
@@ -28,6 +35,8 @@ public:
     ~Session() override;
 
     std::chrono::steady_clock::time_point &getBeginTime();
+
+    Sequence getSequence();
 
 signals:
 
@@ -54,13 +63,6 @@ public slots:
     void finish();
 
 private:
-    enum class Sequence {
-        Preparing,
-        Connected,
-        WritesDone,
-        Finishing,
-    };
-
     class SequentialTag {
     public:
         explicit SequentialTag(bool reverse) : reverse(reverse) {}

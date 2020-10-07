@@ -40,8 +40,6 @@ public:
 
 private slots:
 
-    void onExecuteButtonClicked();
-
     void onSendButtonClicked();
 
     void onFinishButtonClicked();
@@ -66,12 +64,11 @@ private slots:
 
     void willEmitWorkspaceModified();
 
-    void onExecuteShortcutActivated();
-
 private:
     Ui_Editor ui;
     QMenu *responseMetadataContextMenu;
     Session *session;
+    bool sendingRequest;
     QVector<grpc::ByteBuffer> responses;
 
     std::unique_ptr<Method> method;
@@ -88,9 +85,11 @@ private:
 
     void setErrorToResponseView(const QString &code, const QString &message, const QString &details);
 
-    void showStreamingButtons();
+    void updateSendButton();
 
-    void hideStreamingButtons();
+    void enableStreamingButtons();
+
+    void disableStreamingButtons();
 
     void updateResponsePager();
 };
