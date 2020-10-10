@@ -131,11 +131,11 @@ void Editor::setServers(std::vector<std::shared_ptr<Server>> servers) {
     this->servers = servers;
     ui.serverSelectBox->clear();
     if (servers.empty()) {
-        ui.serverSelectBox->setDisabled(true);
         ui.serverSelectBox->addItem("ファイル→接続先の管理 から追加してください");
+        updateServerSelectBox();
         updateSendButton();
     } else {
-        ui.serverSelectBox->setDisabled(false);
+        updateServerSelectBox();
         updateSendButton();
         for (std::vector<std::shared_ptr<Server>>::size_type i = 0; i < servers.size(); i++) {
             ui.serverSelectBox->addItem(servers[i]->name);
@@ -254,6 +254,7 @@ void Editor::onSendButtonClicked() {
     emit session->send(*sendBuffer);
 
     sendingRequest = true;
+    updateServerSelectBox();
     updateSendButton();
     if (method->isClientStreaming() || method->isServerStreaming()) {
         enableStreamingButtons();
@@ -367,6 +368,7 @@ void Editor::cleanupSession() {
     session = nullptr;
     disableStreamingButtons();
     updateSendButton();
+    updateServerSelectBox();
 }
 
 void Editor::willEmitWorkspaceModified() {
@@ -405,6 +407,8 @@ void Editor::setErrorToResponseView(const QString &code, const QString &message,
     ui.responseTabs->insertTab(0, ui.responseErrorTab, "Error");
     ui.responseTabs->setCurrentIndex(0);
 }
+
+void Editor::updateServerSelectBox() { ui.serverSelectBox->setDisabled(session != nullptr || servers.empty()); }
 
 void Editor::updateSendButton() {
     bool disabled = false;

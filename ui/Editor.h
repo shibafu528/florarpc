@@ -85,6 +85,8 @@ private:
 
     void setErrorToResponseView(const QString &code, const QString &message, const QString &details);
 
+    void updateServerSelectBox();
+
     void updateSendButton();
 
     void enableStreamingButtons();
