@@ -56,21 +56,10 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="executeButton">
+      <widget class="QPushButton" name="sendButton">
        <property name="enabled">
         <bool>false</bool>
        </property>
-       <property name="text">
-        <string>実行(&amp;X)</string>
-       </property>
-       <property name="icon">
-        <iconset theme="go-next">
-         <normaloff>.</normaloff>.</iconset>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="sendButton">
        <property name="text">
         <string>送信(&amp;S)</string>
        </property>
@@ -82,6 +71,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="finishButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>終了(&amp;F)</string>
        </property>
@@ -93,6 +85,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="cancelButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>キャンセル(&amp;C)</string>
        </property>

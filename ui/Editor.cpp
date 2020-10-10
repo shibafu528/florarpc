@@ -36,10 +36,13 @@ static std::shared_ptr<grpc::ChannelCredentials> getCredentials(
 }
 
 Editor::Editor(std::unique_ptr<Method> &&method, QWidget *parent)
-    : QWidget(parent), responseMetadataContextMenu(new QMenu(this)), session(nullptr), method(std::move(method)) {
+    : QWidget(parent),
+      responseMetadataContextMenu(new QMenu(this)),
+      session(nullptr),
+      sendingRequest(false),
+      method(std::move(method)) {
     ui.setupUi(this);
 
-    connect(ui.executeButton, &QPushButton::clicked, this, &Editor::onExecuteButtonClicked);
     connect(ui.sendButton, &QPushButton::clicked, this, &Editor::onSendButtonClicked);
     connect(ui.finishButton, &QPushButton::clicked, this, &Editor::onFinishButtonClicked);
     connect(ui.cancelButton, &QPushButton::clicked, this, &Editor::onCancelButtonClicked);
@@ -53,7 +56,7 @@ Editor::Editor(std::unique_ptr<Method> &&method, QWidget *parent)
     connect(ui.requestMetadataEdit, &MetadataEdit::changed, this, &Editor::willEmitWorkspaceModified);
 
     const auto executeShortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Return), this);
-    connect(executeShortcut, &QShortcut::activated, this, &Editor::onExecuteShortcutActivated);
+    connect(executeShortcut, &QShortcut::activated, this, &Editor::onSendButtonClicked);
 
     // 1:1にする
     // https://stackoverflow.com/a/43835396
@@ -106,7 +109,17 @@ Editor::Editor(std::unique_ptr<Method> &&method, QWidget *parent)
         ui.responseBodyPager->hide();
     }
 
-    hideStreamingButtons();
+    updateSendButton();
+    if (this->method->isClientStreaming()) {
+        ui.finishButton->show();
+    } else {
+        ui.finishButton->hide();
+    }
+    if (this->method->isClientStreaming() || this->method->isServerStreaming()) {
+        ui.cancelButton->show();
+    } else {
+        ui.cancelButton->hide();
+    }
 }
 
 void Editor::setServers(std::vector<std::shared_ptr<Server>> servers) {
@@ -120,10 +133,10 @@ void Editor::setServers(std::vector<std::shared_ptr<Server>> servers) {
     if (servers.empty()) {
         ui.serverSelectBox->setDisabled(true);
         ui.serverSelectBox->addItem("ファイル→接続先の管理 から追加してください");
-        ui.executeButton->setDisabled(true);
+        updateSendButton();
     } else {
         ui.serverSelectBox->setDisabled(false);
-        ui.executeButton->setDisabled(false);
+        updateSendButton();
         for (std::vector<std::shared_ptr<Server>>::size_type i = 0; i < servers.size(); i++) {
             ui.serverSelectBox->addItem(servers[i]->name);
             if (selected == servers[i]->id) {
@@ -183,17 +196,17 @@ std::optional<QHash<QString, QString>> Editor::getMetadata() {
     return meta.asHash();
 }
 
-void Editor::onExecuteButtonClicked() {
-    if (session != nullptr) {
-        return;
-    }
+void Editor::onSendButtonClicked() {
+    const auto initialize = session == nullptr;
 
-    clearResponseView();
-    responses.clear();
-    ui.requestHistoryTab->clear();
-    ui.responseBodyPageSpin->setValue(1);
-    updateResponsePager();
-    ui.responseBodyPager->setDisabled(true);
+    if (initialize) {
+        clearResponseView();
+        responses.clear();
+        ui.requestHistoryTab->clear();
+        ui.responseBodyPageSpin->setValue(1);
+        updateResponsePager();
+        ui.responseBodyPager->setDisabled(true);
+    }
 
     // Parse request body
     google::protobuf::DynamicMessageFactory dmf;
@@ -201,64 +214,51 @@ void Editor::onExecuteButtonClicked() {
     try {
         reqMessage = method->parseRequest(dmf, ui.requestEdit->toPlainText().toStdString());
     } catch (Method::ParseError &e) {
-        setErrorToResponseView("-", "Request Parse Error", QString::fromStdString(e.getMessage()));
+        if (initialize) {
+            setErrorToResponseView("-", "Request Parse Error", QString::fromStdString(e.getMessage()));
+        } else {
+            // TODO: setErrorToResponseViewするとbodyが消えるので使わない、もっといい出し方考える
+            QMessageBox::warning(this, "Request Parse Error", QString::fromStdString(e.getMessage()));
+        }
         return;
     }
     std::unique_ptr<grpc::ByteBuffer> sendBuffer = GrpcUtility::serializeMessage(*reqMessage);
 
-    // Parse request metadata
-    Metadata meta;
-    if (auto server = getCurrentServer();
-        server && !server->sharedMetadata.isEmpty() && ui.useSharedMetadata->isChecked()) {
-        if (auto parseResult = meta.parseJson(server->sharedMetadata); !parseResult.isEmpty()) {
-            setErrorToResponseView("-", "Shared Metadata Parse Error", parseResult);
+    if (initialize) {
+        // Parse request metadata
+        Metadata meta;
+        if (auto server = getCurrentServer();
+            server && !server->sharedMetadata.isEmpty() && ui.useSharedMetadata->isChecked()) {
+            if (auto parseResult = meta.parseJson(server->sharedMetadata); !parseResult.isEmpty()) {
+                setErrorToResponseView("-", "Shared Metadata Parse Error", parseResult);
+                return;
+            }
+        }
+        if (auto parseResult = meta.parseJson(ui.requestMetadataEdit->toString(), Metadata::MergeStrategy::Replace);
+            !parseResult.isEmpty()) {
+            setErrorToResponseView("-", "Request Metadata Parse Error", parseResult);
             return;
         }
-    }
-    if (auto parseResult = meta.parseJson(ui.requestMetadataEdit->toString(), Metadata::MergeStrategy::Replace);
-        !parseResult.isEmpty()) {
-        setErrorToResponseView("-", "Request Metadata Parse Error", parseResult);
-        return;
-    }
 
-    auto server = getCurrentServer();
-    auto credentials = getCredentials(*server, certificates);
-    session = new Session(*method, server->address, credentials, meta.getValues(), this);
-    connect(session, &Session::messageSent, this, &Editor::onMessageSent);
-    connect(session, &Session::messageReceived, this, &Editor::onMessageReceived);
-    connect(session, &Session::initialMetadataReceived, this, &Editor::onMetadataReceived);
-    connect(session, &Session::trailingMetadataReceived, this, &Editor::onMetadataReceived);
-    connect(session, &Session::finished, this, &Editor::onSessionFinished);
-    connect(session, &Session::aborted, this, &Editor::cleanupSession);
+        auto server = getCurrentServer();
+        auto credentials = getCredentials(*server, certificates);
+        session = new Session(*method, server->address, credentials, meta.getValues(), this);
+        connect(session, &Session::messageSent, this, &Editor::onMessageSent);
+        connect(session, &Session::messageReceived, this, &Editor::onMessageReceived);
+        connect(session, &Session::initialMetadataReceived, this, &Editor::onMetadataReceived);
+        connect(session, &Session::trailingMetadataReceived, this, &Editor::onMetadataReceived);
+        connect(session, &Session::finished, this, &Editor::onSessionFinished);
+        connect(session, &Session::aborted, this, &Editor::cleanupSession);
+    }
 
     emit session->send(*sendBuffer);
-    ui.executeButton->setDisabled(true);
+
+    sendingRequest = true;
+    updateSendButton();
     if (method->isClientStreaming() || method->isServerStreaming()) {
-        showStreamingButtons();
+        enableStreamingButtons();
     }
 
-    ui.requestHistoryTab->append(ui.requestEdit->toPlainText());
-}
-
-void Editor::onSendButtonClicked() {
-    if (session == nullptr) {
-        return;
-    }
-
-    // Parse request body
-    google::protobuf::DynamicMessageFactory dmf;
-    std::unique_ptr<google::protobuf::Message> reqMessage;
-    try {
-        reqMessage = method->parseRequest(dmf, ui.requestEdit->toPlainText().toStdString());
-    } catch (Method::ParseError &e) {
-        // TODO: setErrorToResponseViewするとbodyが消えるので使わない、もっといい出し方考える
-        QMessageBox::warning(this, "Request Parse Error", QString::fromStdString(e.getMessage()));
-        return;
-    }
-    std::unique_ptr<grpc::ByteBuffer> sendBuffer = GrpcUtility::serializeMessage(*reqMessage);
-    emit session->send(*sendBuffer);
-
-    ui.sendButton->setDisabled(true);
     ui.requestHistoryTab->append(ui.requestEdit->toPlainText());
 }
 
@@ -269,7 +269,7 @@ void Editor::onFinishButtonClicked() {
 
     emit session->done();
 
-    ui.sendButton->setDisabled(true);
+    updateSendButton();
     ui.finishButton->setDisabled(true);
 }
 
@@ -280,7 +280,7 @@ void Editor::onCancelButtonClicked() {
 
     emit session->finish();
 
-    ui.sendButton->setDisabled(true);
+    updateSendButton();
     ui.finishButton->setDisabled(true);
     ui.cancelButton->setDisabled(true);
 }
@@ -316,7 +316,10 @@ void Editor::onNextResponseBodyButtonClicked() {
     updateResponsePager();
 }
 
-void Editor::onMessageSent() { ui.sendButton->setDisabled(false); }
+void Editor::onMessageSent() {
+    sendingRequest = false;
+    updateSendButton();
+}
 
 void Editor::onMessageReceived(const grpc::ByteBuffer &buffer) {
     responses.append(buffer);
@@ -360,23 +363,15 @@ void Editor::onSessionFinished(int code, const QString &message, const QByteArra
 }
 
 void Editor::cleanupSession() {
-    ui.executeButton->setDisabled(false);
-    hideStreamingButtons();
     delete session;
     session = nullptr;
+    disableStreamingButtons();
+    updateSendButton();
 }
 
 void Editor::willEmitWorkspaceModified() {
     QApplication::postEvent(window(), new Event::WorkspaceModifiedEvent(
                                           QString("%1:%2").arg(metaObject()->className()).arg(sender()->objectName())));
-}
-
-void Editor::onExecuteShortcutActivated() {
-    if (ui.sendButton->isVisible()) {
-        onSendButtonClicked();
-    } else {
-        onExecuteButtonClicked();
-    }
 }
 
 void Editor::addMetadataRow(const QString &key, const QString &value) {
@@ -411,24 +406,39 @@ void Editor::setErrorToResponseView(const QString &code, const QString &message,
     ui.responseTabs->setCurrentIndex(0);
 }
 
-void Editor::showStreamingButtons() {
-    ui.executeButton->hide();
-    ui.cancelButton->show();
+void Editor::updateSendButton() {
+    bool disabled = false;
+
+    if (servers.empty()) {
+        disabled = true;
+    } else {
+        if (session == nullptr) {
+            disabled = false;
+        } else {
+            auto sequence = session->getSequence();
+            if (sendingRequest || sequence == Session::Sequence::WritesDone ||
+                sequence == Session::Sequence::Finishing) {
+                disabled = true;
+            } else {
+                disabled = !method->isClientStreaming();
+            }
+        }
+    }
+
+    ui.sendButton->setDisabled(disabled);
+}
+
+void Editor::enableStreamingButtons() {
     ui.cancelButton->setDisabled(false);
 
     if (method->isClientStreaming()) {
-        ui.sendButton->show();
-        ui.sendButton->setDisabled(true);
-        ui.finishButton->show();
         ui.finishButton->setDisabled(false);
     }
 }
 
-void Editor::hideStreamingButtons() {
-    ui.executeButton->show();
-    ui.sendButton->hide();
-    ui.finishButton->hide();
-    ui.cancelButton->hide();
+void Editor::disableStreamingButtons() {
+    ui.finishButton->setDisabled(true);
+    ui.cancelButton->setDisabled(true);
 }
 
 void Editor::updateResponsePager() {
