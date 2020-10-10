@@ -119,6 +119,19 @@ void MainWindow::onActionOpenDirectoryTriggered() {
         return;
     }
 
+    if (!imports.contains(dirname)) {
+        auto response = QMessageBox::information(
+            this, "Import proto(s) from folder",
+            QString("インポート パスに登録されていないフォルダを取り込もうとしています。\nこのフォルダをインポート "
+                    "パスに登録してから取り込みますか？\n\n%1")
+                .arg(dirname),
+            QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+        if (response == QMessageBox::Yes) {
+            imports.append(dirname);
+            onWorkspaceModified();
+        }
+    }
+
     auto task = new Task::ImportProtosTask(protocols, imports, this);
     connect(task, &Task::ImportProtosTask::loadFinished, this, &MainWindow::onAsyncLoadFinished);
     connect(task, &Task::ImportProtosTask::onLogging, this, &MainWindow::onLogging);
