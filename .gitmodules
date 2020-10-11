@@ -7,3 +7,6 @@
 [submodule "vendor/vcpkg"]
 	path = vendor/vcpkg
 	url = https://github.com/microsoft/vcpkg.git
+[submodule "vendor/googleapis"]
+	path = vendor/googleapis
+	url = https://github.com/googleapis/googleapis.git
