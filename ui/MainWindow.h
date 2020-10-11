@@ -33,6 +33,8 @@ private slots:
 
     void onActionOpenDirectoryTriggered();
 
+    void onActionNewWorkspaceTriggered();
+
     void onActionOpenWorkspaceTriggered();
 
     void onActionSaveWorkspaceTriggered();
