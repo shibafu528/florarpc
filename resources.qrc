@@ -23,4 +23,10 @@
         <file>proto/google/protobuf/wrappers.proto</file>
         <file>proto/google/protobuf/source_context.proto</file>
     </qresource>
+
+    <qresource prefix="/proto/google/rpc">
+        <file alias="code.proto">vendor/googleapis/google/rpc/code.proto</file>
+        <file alias="error_details.proto">vendor/googleapis/google/rpc/error_details.proto</file>
+        <file alias="status.proto">vendor/googleapis/google/rpc/status.proto</file>
+    </qresource>
 </RCC>

@@ -41,6 +41,9 @@ public:
     std::unique_ptr<google::protobuf::Message> parseResponse(google::protobuf::DynamicMessageFactory &factory,
                                                              const grpc::ByteBuffer &buffer);
 
+    std::unique_ptr<google::protobuf::Message> parseErrorDetails(google::protobuf::DynamicMessageFactory &factory,
+                                                                 const std::string &buffer);
+
     void writeMethodRef(florarpc::MethodRef &ref);
 
     bool isChildOf(const google::protobuf::FileDescriptor *fileDescriptor) const;
