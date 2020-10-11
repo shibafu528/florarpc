@@ -59,23 +59,33 @@ else()
 endif()
 configure_file(${PROJECT_SOURCE_DIR}/flora_constants.h.in ${PROJECT_BINARY_DIR}/flora_generated/flora_constants.h)
 
+set(GOOGLEAPIS_PROTOBUF_INCLUDE "${PROJECT_SOURCE_DIR}/vendor/googleapis")
 set(FLORA_PROTOBUF_INCLUDE "${PROJECT_SOURCE_DIR}/proto")
 set(FLORA_PROTOBUF_GENERATED "${PROJECT_BINARY_DIR}/proto_generated")
 set(FLORA_PROTOBUF_PROTOS
         ${FLORA_PROTOBUF_INCLUDE}/florarpc/descriptor_exports.proto
         ${FLORA_PROTOBUF_INCLUDE}/florarpc/version.proto
         ${FLORA_PROTOBUF_INCLUDE}/florarpc/preferences.proto
-        ${FLORA_PROTOBUF_INCLUDE}/florarpc/workspace.proto)
+        ${FLORA_PROTOBUF_INCLUDE}/florarpc/workspace.proto
+        ${GOOGLEAPIS_PROTOBUF_INCLUDE}/google/rpc/code.proto
+        ${GOOGLEAPIS_PROTOBUF_INCLUDE}/google/rpc/error_details.proto
+        ${GOOGLEAPIS_PROTOBUF_INCLUDE}/google/rpc/status.proto)
 set(FLORA_PROTOBUF_SOURCES
         ${FLORA_PROTOBUF_GENERATED}/florarpc/descriptor_exports.pb.cc
         ${FLORA_PROTOBUF_GENERATED}/florarpc/version.pb.cc
         ${FLORA_PROTOBUF_GENERATED}/florarpc/preferences.pb.cc
-        ${FLORA_PROTOBUF_GENERATED}/florarpc/workspace.pb.cc)
+        ${FLORA_PROTOBUF_GENERATED}/florarpc/workspace.pb.cc
+        ${FLORA_PROTOBUF_GENERATED}/google/rpc/code.pb.cc
+        ${FLORA_PROTOBUF_GENERATED}/google/rpc/error_details.pb.cc
+        ${FLORA_PROTOBUF_GENERATED}/google/rpc/status.pb.cc)
 set(FLORA_PROTOBUF_HEADERS
         ${FLORA_PROTOBUF_GENERATED}/florarpc/descriptor_exports.pb.h
         ${FLORA_PROTOBUF_GENERATED}/florarpc/version.pb.h
         ${FLORA_PROTOBUF_GENERATED}/florarpc/preferences.pb.h
-        ${FLORA_PROTOBUF_GENERATED}/florarpc/workspace.pb.h)
+        ${FLORA_PROTOBUF_GENERATED}/florarpc/workspace.pb.h
+        ${FLORA_PROTOBUF_GENERATED}/google/rpc/code.pb.h
+        ${FLORA_PROTOBUF_GENERATED}/google/rpc/error_details.pb.h
+        ${FLORA_PROTOBUF_GENERATED}/google/rpc/status.pb.h)
 file(MAKE_DIRECTORY "${FLORA_PROTOBUF_GENERATED}")
 add_custom_command(
         OUTPUT
@@ -86,6 +96,7 @@ add_custom_command(
         ARGS
         --cpp_out "${FLORA_PROTOBUF_GENERATED}"
         -I "${FLORA_PROTOBUF_INCLUDE}"
+        -I "${GOOGLEAPIS_PROTOBUF_INCLUDE}"
         ${FLORA_PROTOBUF_PROTOS}
         MAIN_DEPENDENCY
         ${FLORA_PROTOBUF_PROTOS})
