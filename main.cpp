@@ -111,6 +111,18 @@ int main(int argc, char *argv[]) {
     mainWindow = new MainWindow();
     if (auto args = app.arguments(); args.length() > 1) {
         mainWindow->loadWorkspace(args[1]);
+    } else {
+        const auto workspace = preferences->read<QString>([](const florarpc::Preferences &pref) {
+            if (pref.recent_workspaces_size() < 1) {
+                return QString();
+            }
+
+            return QString::fromStdString(pref.recent_workspaces(0));
+        });
+
+        if (!workspace.isEmpty() && QFile(workspace).exists()) {
+            mainWindow->loadWorkspace(workspace);
+        }
     }
 
     mainWindow->show();

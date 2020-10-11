@@ -32,6 +32,12 @@ public:
 
     void read(const std::function<void(const florarpc::Preferences &)> &reader);
 
+    template <typename T>
+    inline T read(const std::function<T(const florarpc::Preferences &)> &reader) {
+        QReadLocker locker(&lock);
+        return reader(data);
+    }
+
     void mutation(const std::function<void(florarpc::Preferences &)> &mutator);
 
     void addRecentWorkspace(const QString &file);
