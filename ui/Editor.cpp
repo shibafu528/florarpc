@@ -1,5 +1,6 @@
 #include "Editor.h"
 
+#include <google/protobuf/text_format.h>
 #include <google/protobuf/util/json_util.h>
 #include <grpcpp/generic/generic_stub.h>
 #include <grpcpp/grpcpp.h>
@@ -16,6 +17,7 @@
 #include "../entity/Method.h"
 #include "../util/GrpcUtility.h"
 #include "event/WorkspaceModifiedEvent.h"
+#include "google/rpc/status.pb.h"
 #include "util/SyntaxHighlighter.h"
 
 static std::shared_ptr<grpc::ChannelCredentials> getCredentials(
@@ -352,7 +354,22 @@ void Editor::onMetadataReceived(const Session::Metadata &metadata) {
 
 void Editor::onSessionFinished(int code, const QString &message, const QByteArray &details) {
     if (code != grpc::StatusCode::OK) {
-        setErrorToResponseView(GrpcUtility::errorCodeToString((grpc::StatusCode)code), message, details);
+        QString formattedDetails = details;
+        google::rpc::Status status;
+        if (!details.isEmpty()) {
+            bool successParse = status.ParseFromString(details.toStdString());
+            if (successParse) {
+                std::string out;
+                // TODO: JSONにしたい気持ちはあるけど、Anyの解決に失敗した時に何も出力されないのが困るから妥協した
+                google::protobuf::TextFormat::Printer printer;
+                printer.SetExpandAny(true);
+                bool successPrint = printer.PrintToString(status, &out);
+                if (successPrint) {
+                    formattedDetails = QString::fromStdString(out);
+                }
+            }
+        }
+        setErrorToResponseView(GrpcUtility::errorCodeToString((grpc::StatusCode)code), message, formattedDetails);
     }
 
     const auto elapsed = std::chrono::steady_clock::now() - session->getBeginTime();
