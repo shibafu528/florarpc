@@ -355,15 +355,15 @@ void Editor::onMetadataReceived(const Session::Metadata &metadata) {
 void Editor::onSessionFinished(int code, const QString &message, const QByteArray &details) {
     if (code != grpc::StatusCode::OK) {
         QString formattedDetails = details;
-        google::rpc::Status status;
         if (!details.isEmpty()) {
-            bool successParse = status.ParseFromString(details.toStdString());
-            if (successParse) {
+            google::protobuf::DynamicMessageFactory dmf;
+            const auto status = method->parseErrorDetails(dmf, details.toStdString());
+            if (status) {
                 std::string out;
                 // TODO: JSONにしたい気持ちはあるけど、Anyの解決に失敗した時に何も出力されないのが困るから妥協した
                 google::protobuf::TextFormat::Printer printer;
                 printer.SetExpandAny(true);
-                bool successPrint = printer.PrintToString(status, &out);
+                bool successPrint = printer.PrintToString(*status, &out);
                 if (successPrint) {
                     formattedDetails = QString::fromStdString(out);
                 }

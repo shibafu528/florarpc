@@ -1,9 +1,13 @@
 #include "Method.h"
-#include "../util/GrpcUtility.h"
-#include "../util/ProtobufJsonPrinter.h"
-#include <sstream>
+
 #include <google/protobuf/dynamic_message.h>
 #include <google/protobuf/util/json_util.h>
+
+#include <sstream>
+
+#include "../util/GrpcUtility.h"
+#include "../util/ProtobufJsonPrinter.h"
+#include "google/rpc/status.pb.h"
 
 Method::Method(std::shared_ptr<Protocol> protocol, const google::protobuf::MethodDescriptor *descriptor)
     : protocol(std::move(protocol)), descriptor(descriptor) {}
@@ -36,12 +40,42 @@ Method::parseRequest(google::protobuf::DynamicMessageFactory &factory, const std
     return reqMessage;
 }
 
-std::unique_ptr<google::protobuf::Message>
-Method::parseResponse(google::protobuf::DynamicMessageFactory &factory, const grpc::ByteBuffer &buffer) {
+std::unique_ptr<google::protobuf::Message> Method::parseResponse(google::protobuf::DynamicMessageFactory &factory,
+                                                                 const grpc::ByteBuffer &buffer) {
     auto resProto = factory.GetPrototype(descriptor->output_type());
     auto resMessage = std::unique_ptr<google::protobuf::Message>(resProto->New());
     GrpcUtility::parseMessage(buffer, *resMessage);
     return resMessage;
+}
+
+std::unique_ptr<google::protobuf::Message> Method::parseErrorDetails(google::protobuf::DynamicMessageFactory &factory,
+                                                                     const std::string &buffer) {
+    auto pool = protocol->getFileDescriptor()->pool();
+    // import proto file
+    {
+        pool->FindFileByName("google/rpc/status.proto");
+        pool->FindFileByName("google/rpc/error_details.proto");
+        pool->FindFileByName("google/rpc/code.proto");
+    }
+    auto desc = pool->FindMessageTypeByName("google.rpc.Status");
+    if (desc != nullptr) {
+        // parse message using method's descriptor pool
+        auto proto = factory.GetPrototype(desc);
+        auto message = std::unique_ptr<google::protobuf::Message>(proto->New());
+        if (message->ParseFromString(buffer)) {
+            return message;
+        } else {
+            return nullptr;
+        }
+    } else {
+        // fallback, retry with default descriptor pool
+        auto message = std::make_unique<google::rpc::Status>();
+        if (message->ParseFromString(buffer)) {
+            return message;
+        } else {
+            return nullptr;
+        }
+    }
 }
 
 void Method::writeMethodRef(florarpc::MethodRef &ref) {
