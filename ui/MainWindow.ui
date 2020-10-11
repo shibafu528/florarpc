@@ -63,6 +63,7 @@
     <addaction name="actionOpen"/>
     <addaction name="actionOpenDirectory"/>
     <addaction name="separator"/>
+    <addaction name="actionNewWorkspace"/>
     <addaction name="actionOpenWorkspace"/>
     <addaction name="menuRecentWorkspaces"/>
     <addaction name="separator"/>
@@ -285,6 +286,11 @@
   <action name="actionl">
    <property name="text">
     <string>l</string>
+   </property>
+  </action>
+  <action name="actionNewWorkspace">
+   <property name="text">
+    <string>新規ワークスペース(&amp;N)</string>
    </property>
   </action>
  </widget>

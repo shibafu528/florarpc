@@ -42,6 +42,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui.actionOpen, &QAction::triggered, this, &MainWindow::onActionOpenTriggered);
     connect(ui.actionOpenDirectory, &QAction::triggered, this, &MainWindow::onActionOpenDirectoryTriggered);
+    connect(ui.actionNewWorkspace, &QAction::triggered, this, &MainWindow::onActionNewWorkspaceTriggered);
     connect(ui.actionOpenWorkspace, &QAction::triggered, this, &MainWindow::onActionOpenWorkspaceTriggered);
     connect(ui.actionSaveWorkspace, &QAction::triggered, this, &MainWindow::onActionSaveWorkspaceTriggered);
     connect(ui.actionManageProto, &QAction::triggered, this, &MainWindow::onActionManageProtoTriggered);
@@ -137,6 +138,55 @@ void MainWindow::onActionOpenDirectoryTriggered() {
     connect(task, &Task::ImportProtosTask::onLogging, this, &MainWindow::onLogging);
     connect(task, &Task::ImportProtosTask::finished, task, &QObject::deleteLater);
     task->importDirectoryAsync(dirname);
+}
+
+void MainWindow::onActionNewWorkspaceTriggered() {
+    if (workspaceFilename.isEmpty()) {
+        QMessageBox messageBox;
+        messageBox.setIcon(QMessageBox::Warning);
+        messageBox.setWindowTitle("確認");
+        messageBox.setText("ワークスペースは保存されていません。\n保存してから新しいワークスペースを作成しますか？");
+        messageBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+        messageBox.setDefaultButton(QMessageBox::Save);
+        auto response = messageBox.exec();
+        if (response == QMessageBox::Save) {
+            auto filename = QFileDialog::getSaveFileName(this, "Save workspace", "", "FloraRPC Workspace (*.floraws)");
+            if (filename.isEmpty()) {
+                return;
+            }
+            if (!saveWorkspace(filename)) {
+                return;
+            }
+        } else if (response == QMessageBox::Cancel) {
+            return;
+        }
+    } else {
+        if (!saveWorkspace(workspaceFilename)) {
+            if (QMessageBox::warning(
+                    this, "確認",
+                    "ワークスペースは保存されていません！\nこのまま新しいワークスペースを作成してもよろしいですか？",
+                    QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel) {
+                return;
+            }
+        }
+    }
+
+    workspaceFilename.clear();
+    protocols.clear();
+    imports.clear();
+    servers.clear();
+    certificates.clear();
+    for (int i = ui.editorTabs->count() - 1; i >= 0; i--) {
+        auto editor = ui.editorTabs->widget(i);
+        ui.editorTabs->removeTab(i);
+        delete editor;
+    }
+    protocolTreeModel->clear();
+
+    setWindowTitle("新しいワークスペース");
+    setWindowFilePath(QString());
+
+    ui.statusbar->showMessage("新しいワークスペースを作成しました", 5000);
 }
 
 void MainWindow::onActionOpenWorkspaceTriggered() {
