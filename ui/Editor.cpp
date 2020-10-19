@@ -363,6 +363,7 @@ void Editor::onSessionFinished(int code, const QString &message, const QByteArra
                 // TODO: JSONにしたい気持ちはあるけど、Anyの解決に失敗した時に何も出力されないのが困るから妥協した
                 google::protobuf::TextFormat::Printer printer;
                 printer.SetExpandAny(true);
+                printer.SetUseUtf8StringEscaping(true);
                 bool successPrint = printer.PrintToString(*status, &out);
                 if (successPrint) {
                     formattedDetails = QString::fromStdString(out);
