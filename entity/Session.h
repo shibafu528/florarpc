@@ -4,7 +4,7 @@
 #include <grpcpp/channel.h>
 #include <grpcpp/client_context.h>
 #include <grpcpp/completion_queue.h>
-#include <grpcpp/generic/generic_stub_impl.h>
+#include <grpcpp/generic/generic_stub.h>
 #include <grpcpp/security/credentials.h>
 
 #include <QMultiMap>
