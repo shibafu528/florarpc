@@ -36,10 +36,10 @@ public slots:
         void *gotTag;
         bool ok;
         while (auto event = session.queue.AsyncNext(&gotTag, &ok, system_clock::now())) {
-            if (event == grpc_impl::CompletionQueue::SHUTDOWN) {
+            if (event == grpc::CompletionQueue::SHUTDOWN) {
                 break;
             }
-            if (event == grpc_impl::CompletionQueue::TIMEOUT) {
+            if (event == grpc::CompletionQueue::TIMEOUT) {
                 if (QThread::currentThread()->isInterruptionRequested()) {
                     break;
                 }
