@@ -70,6 +70,14 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui.treeFilterEdit, &QLineEdit::textChanged, &proxyModel, &QSortFilterProxyModel::setFilterWildcard);
     connect(ui.editorTabs, &QTabWidget::currentChanged, this, &MainWindow::onWorkspaceModified);
     connect(ui.editorTabs, &QTabWidget::tabCloseRequested, this, &MainWindow::onEditorTabCloseRequested);
+    connect(&proxyModel, &QAbstractItemModel::rowsInserted, [=](const QModelIndex &parent, int first, int last) {
+        for (int i = first; i <= last; i++) {
+            const auto index = proxyModel.index(i, 0, parent);
+            if (index.isValid()) {
+                ui.treeView->expandRecursively(index);
+            }
+        }
+    });
     connect(&tabCloseShortcut, &QShortcut::activated, this, &MainWindow::onTabCloseShortcutActivated);
     connect(&workspaceSaveTimer, &QTimer::timeout, this, &MainWindow::onTimeoutWorkspaceSaveTimer);
 
@@ -282,8 +290,7 @@ void MainWindow::onActionOpenCopyAsUserScriptDirTriggered() {
 void MainWindow::onAsyncLoadFinished(const QList<std::shared_ptr<Protocol>> &protocols, bool hasError) {
     for (const auto &protocol : protocols) {
         this->protocols.push_back(protocol);
-        const auto index = protocolTreeModel->addProtocol(protocol);
-        ui.treeView->expandRecursively(proxyModel.mapFromSource(index));
+        protocolTreeModel->addProtocol(protocol);
     }
 
     if (hasError) {
@@ -450,8 +457,7 @@ bool MainWindow::openProtos(const QStringList &filenames, bool abortOnLoadError)
     }
     for (const auto &protocol : successes) {
         protocols.push_back(protocol);
-        const auto index = protocolTreeModel->addProtocol(protocol);
-        ui.treeView->expandRecursively(proxyModel.mapFromSource(index));
+        protocolTreeModel->addProtocol(protocol);
     }
     return true;
 }
