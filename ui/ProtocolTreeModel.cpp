@@ -146,6 +146,12 @@ QVariant ProtocolTreeModel::data(const QModelIndex &index, int role) const {
                 }
             }
             break;
+        case Qt::UserRole:  // use to filter
+            if (node->type == Node::MethodNode) {
+                return QString::fromStdString(node->getMethodDescriptor()->name());
+            } else {
+                return QVariant();
+            }
         default:
             return QVariant();
     }

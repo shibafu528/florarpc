@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QShortcut>
+#include <QSortFilterProxyModel>
 #include <QTimer>
 
 #include "../entity/Certificate.h"
@@ -69,6 +70,7 @@ private:
     std::vector<std::shared_ptr<Server>> servers;
     std::vector<std::shared_ptr<Certificate>> certificates;
     std::unique_ptr<ProtocolTreeModel> protocolTreeModel;
+    QSortFilterProxyModel proxyModel;
     QStringList imports;
     QShortcut tabCloseShortcut;
     QMenu treeFileContextMenu;
