@@ -16,20 +16,13 @@ jobs:
           version: '5.15.0'
           arch: 'win64_msvc2019_64'
 
-      - name: Cache vcpkg
-        uses: actions/cache@v2
-        env:
-          cache-revision: 4
-        with:
-          path: ${{ github.workspace }}/vendor/vcpkg/
-          key: ${{ hashFiles('vcpkg_packages.txt') }}-${{ hashFiles('.git/modules/vendor/vcpkg/HEAD') }}-${{ runner.os }}-${{ env.cache-revision }}
-
       - name: Install packages with vcpkg
-        uses: lukka/run-vcpkg@v1
+        uses: lukka/run-vcpkg@v5
         with:
           vcpkgArguments: '@${{ github.workspace }}/vcpkg_packages.txt'
           vcpkgDirectory: '${{ github.workspace }}/vendor/vcpkg'
           vcpkgTriplet: 'x64-windows'
+          appendedCacheKey: ${{ hashFiles('vcpkg_packages.txt') }}-${{ hashFiles('.git/modules/vendor/vcpkg/HEAD') }}-${{ runner.os }}-${{ env.cache-revision }}
 
       - name: Make build directory
         shell: cmd
@@ -80,20 +73,13 @@ jobs:
         with:
           version: '5.15.0'
 
-      - name: Cache vcpkg
-        uses: actions/cache@v2
-        env:
-          cache-revision: 3
-        with:
-          path: ${{ github.workspace }}/vendor/vcpkg/
-          key: ${{ hashFiles('vcpkg_packages.txt') }}-${{ hashFiles('.git/modules/vendor/vcpkg/HEAD') }}-${{ runner.os }}-${{ env.cache-revision }}
-
       - name: Install packages with vcpkg
-        uses: lukka/run-vcpkg@v1
+        uses: lukka/run-vcpkg@v5
         with:
           vcpkgArguments: '@${{ github.workspace }}/vcpkg_packages.txt'
           vcpkgDirectory: '${{ github.workspace }}/vendor/vcpkg'
           vcpkgTriplet: 'x64-osx'
+          appendedCacheKey: ${{ hashFiles('vcpkg_packages.txt') }}-${{ hashFiles('.git/modules/vendor/vcpkg/HEAD') }}-${{ runner.os }}-${{ env.cache-revision }}
 
       - name: Make build directory
         run: mkdir build
