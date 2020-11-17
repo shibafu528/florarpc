@@ -115,7 +115,7 @@
    <property name="minimumSize">
     <size>
      <width>123</width>
-     <height>123</height>
+     <height>159</height>
     </size>
    </property>
    <property name="features">
@@ -133,7 +133,7 @@
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QVBoxLayout" name="verticalLayout_8">
      <property name="spacing">
-      <number>6</number>
+      <number>0</number>
      </property>
      <property name="leftMargin">
       <number>0</number>
@@ -147,6 +147,16 @@
      <property name="bottomMargin">
       <number>0</number>
      </property>
+     <item>
+      <widget class="QLineEdit" name="treeFilterEdit">
+       <property name="placeholderText">
+        <string>フィルタ</string>
+       </property>
+       <property name="clearButtonEnabled">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QTreeView" name="treeView">
        <property name="sizePolicy">

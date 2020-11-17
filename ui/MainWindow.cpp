@@ -34,6 +34,7 @@ static QString getCopyAsUserScriptDir() {
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       protocolTreeModel(std::make_unique<ProtocolTreeModel>(this)),
+      proxyModel(this),
       tabCloseShortcut(QKeySequence(Qt::CTRL + Qt::Key_W), this),
       treeFileContextMenu(this),
       treeMethodContextMenu(this),
@@ -57,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
             &MainWindow::onActionOpenCopyAsUserScriptDirTriggered);
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
     connect(ui.treeView, &QWidget::customContextMenuRequested, [=](const QPoint &pos) {
-        const QModelIndex &index = ui.treeView->indexAt(pos);
+        const QModelIndex &index = proxyModel.mapToSource(ui.treeView->indexAt(pos));
         if (!index.parent().isValid()) {
             // file node
             treeFileContextMenu.exec(ui.treeView->viewport()->mapToGlobal(pos));
@@ -66,8 +67,17 @@ MainWindow::MainWindow(QWidget *parent)
             treeMethodContextMenu.exec(ui.treeView->viewport()->mapToGlobal(pos));
         }
     });
+    connect(ui.treeFilterEdit, &QLineEdit::textChanged, &proxyModel, &QSortFilterProxyModel::setFilterWildcard);
     connect(ui.editorTabs, &QTabWidget::currentChanged, this, &MainWindow::onWorkspaceModified);
     connect(ui.editorTabs, &QTabWidget::tabCloseRequested, this, &MainWindow::onEditorTabCloseRequested);
+    connect(&proxyModel, &QAbstractItemModel::rowsInserted, [=](const QModelIndex &parent, int first, int last) {
+        for (int i = first; i <= last; i++) {
+            const auto index = proxyModel.index(i, 0, parent);
+            if (index.isValid()) {
+                ui.treeView->expandRecursively(index);
+            }
+        }
+    });
     connect(&tabCloseShortcut, &QShortcut::activated, this, &MainWindow::onTabCloseShortcutActivated);
     connect(&workspaceSaveTimer, &QTimer::timeout, this, &MainWindow::onTimeoutWorkspaceSaveTimer);
 
@@ -76,18 +86,23 @@ MainWindow::MainWindow(QWidget *parent)
     ui.menuView->addAction(toggleLogViewAction);
 
     ui.logDockWidget->hide();
-    ui.treeView->setModel(protocolTreeModel.get());
+
+    proxyModel.setSourceModel(protocolTreeModel.get());
+    proxyModel.setRecursiveFilteringEnabled(true);
+    proxyModel.setFilterCaseSensitivity(Qt::CaseInsensitive);
+    proxyModel.setFilterRole(Qt::UserRole);
+    ui.treeView->setModel(&proxyModel);
 
     treeFileContextMenu.addAction("ワークスペースから削除(&D)", this, &MainWindow::onRemoveFileFromTreeTriggered);
 
     treeMethodContextMenu.addAction("開く(&O)", [=]() {
-        const QModelIndex &index =
-            ui.treeView->indexAt(ui.treeView->viewport()->mapFromGlobal(treeMethodContextMenu.pos()));
+        const QModelIndex &index = proxyModel.mapToSource(
+            ui.treeView->indexAt(ui.treeView->viewport()->mapFromGlobal(treeMethodContextMenu.pos())));
         openMethod(index, false);
     });
     treeMethodContextMenu.addAction("新しいタブで開く(&N)", [=]() {
-        const QModelIndex &index =
-            ui.treeView->indexAt(ui.treeView->viewport()->mapFromGlobal(treeMethodContextMenu.pos()));
+        const QModelIndex &index = proxyModel.mapToSource(
+            ui.treeView->indexAt(ui.treeView->viewport()->mapFromGlobal(treeMethodContextMenu.pos())));
         openMethod(index, true);
     });
 
@@ -275,8 +290,7 @@ void MainWindow::onActionOpenCopyAsUserScriptDirTriggered() {
 void MainWindow::onAsyncLoadFinished(const QList<std::shared_ptr<Protocol>> &protocols, bool hasError) {
     for (const auto &protocol : protocols) {
         this->protocols.push_back(protocol);
-        const auto index = protocolTreeModel->addProtocol(protocol);
-        ui.treeView->expandRecursively(index);
+        protocolTreeModel->addProtocol(protocol);
     }
 
     if (hasError) {
@@ -351,10 +365,11 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     }
 }
 
-void MainWindow::onTreeViewClicked(const QModelIndex &index) { openMethod(index, false); }
+void MainWindow::onTreeViewClicked(const QModelIndex &index) { openMethod(proxyModel.mapToSource(index), false); }
 
 void MainWindow::onRemoveFileFromTreeTriggered() {
-    const QModelIndex &index = ui.treeView->indexAt(ui.treeView->viewport()->mapFromGlobal(treeFileContextMenu.pos()));
+    const QModelIndex &index =
+        proxyModel.mapToSource(ui.treeView->indexAt(ui.treeView->viewport()->mapFromGlobal(treeFileContextMenu.pos())));
     if (index.parent().isValid()) {
         return;
     }
@@ -442,8 +457,7 @@ bool MainWindow::openProtos(const QStringList &filenames, bool abortOnLoadError)
     }
     for (const auto &protocol : successes) {
         protocols.push_back(protocol);
-        const auto index = protocolTreeModel->addProtocol(protocol);
-        ui.treeView->expandRecursively(index);
+        protocolTreeModel->addProtocol(protocol);
     }
     return true;
 }
