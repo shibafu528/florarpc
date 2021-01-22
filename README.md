@@ -15,8 +15,8 @@ UIの構成は [BloomRPC](https://github.com/uw-labs/bloomrpc/) の影響を強�
 
 ## Dependencies
 - Qt 5.15
-- protobuf 3.11
-- gRPC 1.27
+- protobuf 3.14
+- gRPC 1.33
 - KSyntaxHighlighting 5.66
 
 ## Build (for Arch Linux)
