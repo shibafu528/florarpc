@@ -36,6 +36,8 @@ public:
 
     std::chrono::steady_clock::time_point &getBeginTime();
 
+    std::chrono::steady_clock::time_point &getEndTime();
+
     Sequence getSequence();
 
 signals:
@@ -93,6 +95,7 @@ private:
     std::unique_ptr<grpc::GenericClientAsyncReaderWriter> call;
     QThread queueWatcherWorker;
     std::chrono::steady_clock::time_point beginTime;
+    std::chrono::steady_clock::time_point endTime;
 
     Sequence sequence = Sequence::Preparing;
     bool receivedInitialMetadata = false;
