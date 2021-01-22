@@ -112,7 +112,6 @@ private:
         }
 
         grpc::ByteBuffer buffer(session.readBuffer);
-        buffer.Duplicate();
         emit messageReceived(buffer);
 
         session.readTag.advance();
