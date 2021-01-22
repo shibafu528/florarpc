@@ -181,7 +181,6 @@ Session::Sequence Session::getSequence() { return sequence; }
 void Session::send(const grpc::ByteBuffer &buffer) {
     qDebug() << __FUNCTION__;
     writeBuffer = buffer;
-    writeBuffer.Duplicate();
     if (sequence == Sequence::Preparing) {
         call->StartCall(writeTag());
     } else {
