@@ -373,7 +373,7 @@ void Editor::onSessionFinished(int code, const QString &message, const QByteArra
         setErrorToResponseView(GrpcUtility::errorCodeToString((grpc::StatusCode)code), message, formattedDetails);
     }
 
-    const auto elapsed = std::chrono::steady_clock::now() - session->getBeginTime();
+    const auto elapsed = session->getEndTime() - session->getBeginTime();
     const auto secs = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
     const auto nsecs = std::chrono::duration_cast<std::chrono::nanoseconds>(elapsed).count() % 1000000;
     ui.responseElapsedLabel->setText(QString("%1.%2s").arg(secs).arg(nsecs));

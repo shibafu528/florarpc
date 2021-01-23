@@ -130,6 +130,7 @@ private:
 
     void onSuccessFinish() {
         qDebug() << __FUNCTION__;
+        session.endTime = std::chrono::steady_clock::now();
         Metadata metadata;
         for (const auto &[key, value] : session.context.GetServerTrailingMetadata()) {
             metadata.insert(QString::fromLatin1(key.data(), key.size()),
@@ -143,7 +144,12 @@ private:
 
 Session::Session(const Method &method, const QString &serverAddress, std::shared_ptr<grpc::ChannelCredentials> &creds,
                  const Metadata &metadata, QObject *parent)
-    : QObject(parent), method(method), beginTime(std::chrono::steady_clock::now()), readTag(true), writeTag(false) {
+    : QObject(parent),
+      method(method),
+      beginTime(std::chrono::steady_clock::now()),
+      endTime(beginTime),
+      readTag(true),
+      writeTag(false) {
     qRegisterMetaType<Metadata>();
     qRegisterMetaType<grpc::ByteBuffer>();
     for (auto iter = metadata.cbegin(); iter != metadata.cend(); iter++) {
@@ -176,6 +182,8 @@ Session::~Session() {
 }
 
 std::chrono::steady_clock::time_point &Session::getBeginTime() { return beginTime; }
+
+std::chrono::steady_clock::time_point &Session::getEndTime() { return endTime; }
 
 Session::Sequence Session::getSequence() { return sequence; }
 
