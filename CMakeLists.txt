@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(florarpc VERSION 0.1.9)
+project(florarpc VERSION 0.1.10)
 
 set(CMAKE_CXX_STANDARD 17)
 if(MSVC)
