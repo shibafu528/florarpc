@@ -1,7 +1,24 @@
 #include "Metadata.h"
 
+#include <grpc/grpc.h>
+#include <grpcpp/grpcpp.h>
+
 #include <QJsonDocument>
 #include <QJsonObject>
+
+class QSlice {
+public:
+    explicit QSlice(const QString& value) {
+        v = value.toStdString();
+        s = grpc::SliceReferencingString(v);
+    }
+    ~QSlice() { grpc_slice_unref(s); }
+    operator grpc_slice() const { return s; }
+
+private:
+    std::string v;
+    grpc_slice s;
+};
 
 QString Metadata::parseJson(const QString& input, MergeStrategy mergeStrategy) {
     if (!input.isEmpty()) {
@@ -21,6 +38,9 @@ QString Metadata::parseJson(const QString& input, MergeStrategy mergeStrategy) {
             if (value == nullptr) {
                 return QString("Metadata '%1' must be a string.").arg(key);
             }
+            if (!grpc_header_key_is_legal(QSlice(key))) {
+                return QString("Metadata '%1' is an invalid key.").arg(key);
+            }
 
             Container::iterator (Container::*mutator)(const QString&, const QString&) = nullptr;
             switch (mergeStrategy) {
@@ -37,6 +57,9 @@ QString Metadata::parseJson(const QString& input, MergeStrategy mergeStrategy) {
             if (key.endsWith("-bin")) {
                 (data.*mutator)(key, QByteArray::fromBase64(value.toUtf8()));
             } else {
+                if (!grpc_header_nonbin_value_is_legal(QSlice(value))) {
+                    return QString("Metadata '%1' has invalid characters in value.").arg(key);
+                }
                 (data.*mutator)(key, value);
             }
         }
