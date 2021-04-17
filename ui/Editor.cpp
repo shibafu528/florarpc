@@ -52,6 +52,7 @@ Editor::Editor(std::unique_ptr<Method> &&method, QWidget *parent)
             &Editor::onResponseBodyPageChanged);
     connect(ui.prevResponseBodyButton, &QPushButton::clicked, this, &Editor::onPrevResponseBodyButtonClicked);
     connect(ui.nextResponseBodyButton, &QPushButton::clicked, this, &Editor::onNextResponseBodyButtonClicked);
+    connect(ui.lastResponseBodyButton, &QPushButton::clicked, this, &Editor::onLastResponseBodyButtonClicked);
     connect(ui.serverSelectBox, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &Editor::willEmitWorkspaceModified);
     connect(ui.requestEdit, &QTextEdit::textChanged, this, &Editor::willEmitWorkspaceModified);
@@ -319,6 +320,11 @@ void Editor::onNextResponseBodyButtonClicked() {
     updateResponsePager();
 }
 
+void Editor::onLastResponseBodyButtonClicked() {
+    ui.responseBodyPageSpin->setValue(responses.size());
+    updateResponsePager();
+}
+
 void Editor::onMessageSent() {
     sendingRequest = false;
     updateSendButton();
@@ -478,9 +484,11 @@ void Editor::updateResponsePager() {
     if (responses.isEmpty()) {
         ui.prevResponseBodyButton->setDisabled(true);
         ui.nextResponseBodyButton->setDisabled(true);
+        ui.lastResponseBodyButton->setDisabled(true);
     } else {
         ui.prevResponseBodyButton->setDisabled(false);
         ui.nextResponseBodyButton->setDisabled(false);
+        ui.lastResponseBodyButton->setDisabled(false);
     }
 
     if (ui.responseBodyPageSpin->value() <= 1) {
@@ -488,6 +496,7 @@ void Editor::updateResponsePager() {
     }
     if (ui.responseBodyPageSpin->value() == responses.size()) {
         ui.nextResponseBodyButton->setDisabled(true);
+        ui.lastResponseBodyButton->setDisabled(true);
     }
 }
 
