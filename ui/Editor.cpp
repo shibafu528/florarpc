@@ -336,6 +336,13 @@ void Editor::onMessageReceived(const grpc::ByteBuffer &buffer) {
 
     updateResponsePager();
 
+    if (method->isServerStreaming() && ui.followResponseCheck->isChecked()) {
+        auto current = ui.responseBodyPageSpin->value();
+        if (current == responses.size() - 1) {
+            ui.responseBodyPageSpin->setValue(responses.size());
+        }
+    }
+
     if (!(method->isClientStreaming() || method->isServerStreaming())) {
         emit session->finish();
     }
