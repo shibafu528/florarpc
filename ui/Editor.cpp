@@ -106,10 +106,10 @@ Editor::Editor(std::unique_ptr<Method> &&method, QWidget *parent)
     }
 
     if (this->method->isServerStreaming()) {
-        ui.responseBodyPager->show();
+        ui.responseBodyPagerWrapper->show();
         ui.responseBodyPager->setDisabled(true);
     } else {
-        ui.responseBodyPager->hide();
+        ui.responseBodyPagerWrapper->hide();
     }
 
     updateSendButton();
