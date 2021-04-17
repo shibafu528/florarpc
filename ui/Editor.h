@@ -52,6 +52,8 @@ private slots:
 
     void onNextResponseBodyButtonClicked();
 
+    void onLastResponseBodyButtonClicked();
+
     void onMessageSent();
 
     void onMetadataReceived(const Session::Metadata &metadata);
