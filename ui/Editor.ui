@@ -327,6 +327,16 @@
                 </property>
                </spacer>
               </item>
+              <item>
+               <widget class="QCheckBox" name="followResponseCheck">
+                <property name="text">
+                 <string>常に新着を表示</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
              </layout>
             </widget>
            </item>

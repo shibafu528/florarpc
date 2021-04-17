@@ -107,8 +107,10 @@ Editor::Editor(std::unique_ptr<Method> &&method, QWidget *parent)
     if (this->method->isServerStreaming()) {
         ui.responseBodyPager->show();
         ui.responseBodyPager->setDisabled(true);
+        ui.followResponseCheck->show();
     } else {
         ui.responseBodyPager->hide();
+        ui.followResponseCheck->hide();
     }
 
     updateSendButton();
@@ -335,6 +337,13 @@ void Editor::onMessageReceived(const grpc::ByteBuffer &buffer) {
     }
 
     updateResponsePager();
+
+    if (method->isServerStreaming() && ui.followResponseCheck->isChecked()) {
+        auto current = ui.responseBodyPageSpin->value();
+        if (current == responses.size() - 1) {
+            ui.responseBodyPageSpin->setValue(responses.size());
+        }
+    }
 
     if (!(method->isClientStreaming() || method->isServerStreaming())) {
         emit session->finish();
