@@ -13,6 +13,7 @@ public:
 
 private slots:
     void onOkButtonClick();
+    void onQtAboutActivated();
 
 private:
     Ui_AboutDialog ui;

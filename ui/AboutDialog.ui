@@ -77,6 +77,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QLabel" name="qtVersionLabel">
+     <property name="text">
+      <string>This software uses &lt;a href=&quot;about://qt&quot;&gt;Qt $version$&lt;/a&gt;.</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer_2">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
