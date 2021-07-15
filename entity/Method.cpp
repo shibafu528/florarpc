@@ -35,7 +35,7 @@ Method::parseRequest(google::protobuf::DynamicMessageFactory &factory, const std
     parseOptions.case_insensitive_enum_parsing = true;
     auto parseStatus = google::protobuf::util::JsonStringToMessage(json, reqMessage.get(), parseOptions);
     if (!parseStatus.ok()) {
-        throw ParseError(std::make_unique<std::string>(parseStatus.error_message()));
+        throw ParseError(std::make_unique<std::string>(parseStatus.message()));
     }
     return reqMessage;
 }
