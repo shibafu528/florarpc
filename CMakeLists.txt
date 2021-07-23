@@ -173,6 +173,8 @@ add_executable(flora
         ui/task/ImportProtosTask.h
         ui/ProtocolTreeModel.cpp
         ui/ProtocolTreeModel.h
+        util/importer/QFileInputStream.cpp
+        util/importer/QFileInputStream.h
         util/DescriptorPoolProxy.cpp
         util/DescriptorPoolProxy.h
         util/GrpcUtility.cpp

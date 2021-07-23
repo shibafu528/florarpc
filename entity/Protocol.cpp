@@ -8,7 +8,9 @@
 #include <sstream>
 
 #include "util/ProtobufIterator.h"
+#include "util/importer/QFileInputStream.h"
 
+using namespace importer;
 using namespace google::protobuf::compiler;
 using google::protobuf::FileDescriptor;
 using google::protobuf::MethodDescriptor;
@@ -30,58 +32,10 @@ public:
     }
 };
 
-class QFileInputStream : public ZeroCopyInputStream {
-public:
-    explicit QFileInputStream(unique_ptr<QFile> file)
-            : file(move(file)), inputStream(this), inputAdaptor(&inputStream) {}
-
-    ~QFileInputStream() override {
-        if (file->isOpen()) {
-            file->close();
-        }
-    }
-
-    bool Next(const void **data, int *size) override {
-        return inputAdaptor.Next(data, size);
-    }
-
-    void BackUp(int count) override {
-        return inputAdaptor.BackUp(count);
-    }
-
-    bool Skip(int count) override {
-        return inputAdaptor.Skip(count);
-    }
-
-    int64_t ByteCount() const override {
-        return inputAdaptor.ByteCount();
-    }
-
-private:
-    class CopyingInputStream : public google::protobuf::io::CopyingInputStream {
-    public:
-        explicit CopyingInputStream(QFileInputStream *parent) : parent(parent) {}
-
-        int Read(void *buffer, int size) override {
-            return parent->file->read((char *) buffer, size);
-        }
-
-        int Skip(int count) override {
-            return parent->file->skip(count);
-        }
-
-    private:
-        QFileInputStream *parent;
-    };
-
-    unique_ptr<QFile> file;
-    CopyingInputStream inputStream;
-    google::protobuf::io::CopyingInputStreamAdaptor inputAdaptor;
-};
-
-template<class T>
+template <class T>
 class WellKnownSourceTree : public SourceTree {
     static_assert(std::is_base_of<SourceTree, T>::value == true, "template parameter T must inherit from SourceTree.");
+
 public:
     explicit WellKnownSourceTree(unique_ptr<T> fallback) : fallback(move(fallback)) {}
 
@@ -109,15 +63,10 @@ public:
         return SourceTree::GetLastErrorMessage();
     }
 
-    T *getFallback() {
-        return fallback.get();
-    }
+    T *getFallback() { return fallback.get(); }
 
 private:
-    enum class OpenFrom {
-        Resource,
-        Fallback
-    };
+    enum class OpenFrom { Resource, Fallback };
 
     unique_ptr<T> fallback;
     OpenFrom lastOpenFrom = OpenFrom::Resource;
@@ -125,8 +74,8 @@ private:
 
 Protocol::Protocol(const QFileInfo &file, const QStringList &imports) : source(file) {
     auto errorCollectorStub = std::make_unique<ErrorCollectorStub>();
-    auto wellKnownSourceTree = std::make_unique<WellKnownSourceTree<DiskSourceTree>>(
-            std::make_unique<DiskSourceTree>());
+    auto wellKnownSourceTree =
+        std::make_unique<WellKnownSourceTree<DiskSourceTree>>(std::make_unique<DiskSourceTree>());
     importer = std::make_unique<Importer>(wellKnownSourceTree.get(), errorCollectorStub.get());
 
     wellKnownSourceTree->getFallback()->MapPath("", file.dir().absolutePath().toStdString());
