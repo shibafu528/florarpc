@@ -1,21 +1,17 @@
 #include "Protocol.h"
 
-#include <google/protobuf/compiler/importer.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
-
 #include <QDataStream>
 #include <QDir>
 #include <sstream>
 
 #include "util/ProtobufIterator.h"
-#include "util/importer/QFileInputStream.h"
+#include "util/importer/WellKnownSourceTree.h"
 
 using namespace importer;
 using namespace google::protobuf::compiler;
 using google::protobuf::FileDescriptor;
 using google::protobuf::MethodDescriptor;
 using google::protobuf::ServiceDescriptor;
-using google::protobuf::io::ZeroCopyInputStream;
 using std::move;
 using std::shared_ptr;
 using std::unique_ptr;
@@ -30,46 +26,6 @@ public:
         error << filename << " " << line << ":" << column << " - " << message;
         errors->push_back(error.str());
     }
-};
-
-template <class T>
-class WellKnownSourceTree : public SourceTree {
-    static_assert(std::is_base_of<SourceTree, T>::value == true, "template parameter T must inherit from SourceTree.");
-
-public:
-    explicit WellKnownSourceTree(unique_ptr<T> fallback) : fallback(move(fallback)) {}
-
-    ~WellKnownSourceTree() override = default;
-
-    ZeroCopyInputStream *Open(const std::string &filename) override {
-        auto file = std::make_unique<QFile>(":/proto/" + QString::fromStdString(filename));
-        if (!file->exists()) {
-            lastOpenFrom = OpenFrom::Fallback;
-            return fallback->Open(filename);
-        }
-
-        lastOpenFrom = OpenFrom::Resource;
-        if (!file->open(QIODevice::ReadOnly)) {
-            return nullptr;
-        }
-
-        return new QFileInputStream(move(file));
-    }
-
-    std::string GetLastErrorMessage() override {
-        if (lastOpenFrom == OpenFrom::Fallback) {
-            return fallback->GetLastErrorMessage();
-        }
-        return SourceTree::GetLastErrorMessage();
-    }
-
-    T *getFallback() { return fallback.get(); }
-
-private:
-    enum class OpenFrom { Resource, Fallback };
-
-    unique_ptr<T> fallback;
-    OpenFrom lastOpenFrom = OpenFrom::Resource;
 };
 
 Protocol::Protocol(const QFileInfo &file, const QStringList &imports) : source(file) {

@@ -175,6 +175,7 @@ add_executable(flora
         ui/ProtocolTreeModel.h
         util/importer/QFileInputStream.cpp
         util/importer/QFileInputStream.h
+        util/importer/WellKnownSourceTree.h
         util/DescriptorPoolProxy.cpp
         util/DescriptorPoolProxy.h
         util/GrpcUtility.cpp
