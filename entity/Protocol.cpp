@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include "util/ProtobufIterator.h"
+#include "util/importer/FloraSourceTree.h"
 #include "util/importer/WellKnownSourceTree.h"
 
 using namespace importer;
@@ -31,12 +32,12 @@ public:
 Protocol::Protocol(const QFileInfo &file, const QStringList &imports) : source(file) {
     auto errorCollectorStub = std::make_unique<ErrorCollectorStub>();
     auto wellKnownSourceTree =
-        std::make_unique<WellKnownSourceTree<DiskSourceTree>>(std::make_unique<DiskSourceTree>());
+        std::make_unique<WellKnownSourceTree<FloraSourceTree>>(std::make_unique<FloraSourceTree>());
     importer = std::make_unique<Importer>(wellKnownSourceTree.get(), errorCollectorStub.get());
 
-    wellKnownSourceTree->getFallback()->MapPath("", file.dir().absolutePath().toStdString());
+    wellKnownSourceTree->getFallback()->map("", file.dir().absolutePath().toStdString());
     for (const QString &include : imports) {
-        wellKnownSourceTree->getFallback()->MapPath("", include.toStdString());
+        wellKnownSourceTree->getFallback()->map("", include.toStdString());
     }
     auto fd = importer->Import(file.fileName().toStdString());
     if (fd == nullptr) {
