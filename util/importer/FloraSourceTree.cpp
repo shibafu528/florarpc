@@ -30,7 +30,7 @@ static std::string canonicalize(std::string path) {
             result = '/' + result;
         }
     }
-    if (!path.empty() && absl::EndsWith(path, "/") && !result.empty() && !absl::EndsWith(result, "/")) {
+    if (absl::EndsWith(path, "/") && !absl::EndsWith(result, "/")) {
         result += '/';
     }
 
