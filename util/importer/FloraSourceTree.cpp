@@ -95,6 +95,7 @@ static bool apply_mapping(const std::string& filename, const std::string& oldPre
             return true;
         }
     }
+    return false;
 }
 
 google::protobuf::io::ZeroCopyInputStream* importer::FloraSourceTree::Open(const std::string& filename) {
