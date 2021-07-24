@@ -18,7 +18,7 @@ namespace importer {
 
         bool Skip(int count) override;
 
-        long long int ByteCount() const override;
+        int64_t ByteCount() const override;
 
     private:
         class CopyingInputStream : public google::protobuf::io::CopyingInputStream {

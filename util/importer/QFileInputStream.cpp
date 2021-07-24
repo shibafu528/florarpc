@@ -16,7 +16,7 @@ namespace importer {
 
     bool QFileInputStream::Skip(int count) { return inputAdaptor.Skip(count); }
 
-    long long int QFileInputStream::ByteCount() const { return inputAdaptor.ByteCount(); }
+    int64_t QFileInputStream::ByteCount() const { return inputAdaptor.ByteCount(); }
 
     QFileInputStream::CopyingInputStream::CopyingInputStream(QFileInputStream *parent) : parent(parent) {}
 
