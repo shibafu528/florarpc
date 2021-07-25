@@ -17,11 +17,13 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
         with:
-          version: '5.15.0'
+          version: '5.15.2'
           arch: 'win64_msvc2019_64'
 
       - name: Install packages with vcpkg
         uses: lukka/run-vcpkg@v5
+        env:
+          cache-revision: 2
         with:
           vcpkgArguments: '@${{ github.workspace }}/vcpkg_packages.txt'
           vcpkgDirectory: '${{ github.workspace }}/vendor/vcpkg'
@@ -75,10 +77,12 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
         with:
-          version: '5.15.0'
+          version: '5.15.2'
 
       - name: Install packages with vcpkg
         uses: lukka/run-vcpkg@v5
+        env:
+          cache-revision: 2
         with:
           vcpkgArguments: '@${{ github.workspace }}/vcpkg_packages.txt'
           vcpkgDirectory: '${{ github.workspace }}/vendor/vcpkg'

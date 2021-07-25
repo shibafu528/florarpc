@@ -14,7 +14,7 @@ Qtを使ったgRPC GUI Clientです。
 UIの構成は [BloomRPC](https://github.com/uw-labs/bloomrpc/) の影響を強く受けています。
 
 ## Dependencies
-- Qt 5.15
+- Qt 5.15.2
 - protobuf 3.14
 - gRPC 1.33
 - KSyntaxHighlighting 5.66
