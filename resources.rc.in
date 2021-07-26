@@ -1,0 +1,24 @@
+IDI_ICON1 ICON DISCARDABLE "resources/appicon/FloraRPC.ico"
+
+1 VERSIONINFO
+FILEVERSION @FLORA_VERSION_MAJOR@,@FLORA_VERSION_MINOR@,@FLORA_VERSION_PATCH@,@FLORA_VERSION_TWEAK@
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "041104B0"
+        BEGIN
+            VALUE "CompanyName", ""
+            VALUE "FileDescription", "FloraRPC"
+            VALUE "FileVersion", "@florarpc_VERSION@"
+            VALUE "InternalName", "flora"
+            VALUE "OriginalFilename", "flora"
+            VALUE "ProductName", "FloraRPC"
+            VALUE "ProductVersion", "@florarpc_VERSION@"
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0411, 0x04B0
+    END
+END
