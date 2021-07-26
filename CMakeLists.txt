@@ -104,6 +104,7 @@ add_custom_command(
 if(WIN32)
     set(FLORA_PLATFORM_SOURCES
             resources.rc
+            app.manifest
             platform/RootCertificates.h
             platform/windows/RootCertificates.cpp)
 endif()
