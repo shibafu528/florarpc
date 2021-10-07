@@ -62,6 +62,37 @@
      <item row="3" column="1">
       <widget class="CertsEditControl" name="privateKeyControl" native="true"/>
      </item>
+     <item row="4" column="1">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QCheckBox" name="targetNameOverrideCheck">
+         <property name="text">
+          <string>ホスト名検証を別名で偽装</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_5">
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>接続先アドレスと証明書のCNが異なり、接続に失敗する場合に使います。
+ここに設定したホスト名を使って、TLSの検証を通過させることができます。</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="targetNameOverrideEdit">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
     </layout>
    </item>
    <item>

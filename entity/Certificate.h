@@ -26,6 +26,7 @@ public:
     QString privateKeyName;
     QString certChainPath;
     QString certChainName;
+    QString targetNameOverride;
 };
 
 #endif  // FLORARPC_CERTIFICATE_H

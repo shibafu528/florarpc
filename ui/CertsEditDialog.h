@@ -17,6 +17,8 @@ private slots:
 
     void onCancelButtonClick();
 
+    void onTargetNameOverrideCheckChanged(int state);
+
 private:
     Ui_CertsEditDialog ui;
     std::shared_ptr<Certificate> certificate;

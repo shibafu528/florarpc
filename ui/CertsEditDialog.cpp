@@ -11,6 +11,8 @@ CertsEditDialog::CertsEditDialog(std::shared_ptr<Certificate> certificate, QWidg
             &CertsEditDialog::onOkButtonClick);
     connect(ui.buttonBox->button(QDialogButtonBox::Cancel), &QAbstractButton::clicked, this,
             &CertsEditDialog::onCancelButtonClick);
+    connect(ui.targetNameOverrideCheck, &QCheckBox::stateChanged, this,
+            &CertsEditDialog::onTargetNameOverrideCheckChanged);
 
     ui.rootCertsControl->setAcceptType(CertsEditControl::AcceptType::Certificate);
     ui.privateKeyControl->setAcceptType(CertsEditControl::AcceptType::RSAPrivateKey);
@@ -23,6 +25,10 @@ CertsEditDialog::CertsEditDialog(std::shared_ptr<Certificate> certificate, QWidg
     ui.privateKeyControl->setFilename(this->certificate->privateKeyName);
     ui.certChainControl->setFilePath(this->certificate->certChainPath);
     ui.certChainControl->setFilename(this->certificate->certChainName);
+    if (!this->certificate->targetNameOverride.isEmpty()) {
+        ui.targetNameOverrideCheck->setChecked(true);
+        ui.targetNameOverrideEdit->setText(this->certificate->targetNameOverride);
+    }
 }
 
 void CertsEditDialog::onOkButtonClick() {
@@ -43,8 +49,17 @@ void CertsEditDialog::onOkButtonClick() {
     certificate->privateKeyName = ui.privateKeyControl->getFilename();
     certificate->certChainPath = ui.certChainControl->getFilePath();
     certificate->certChainName = ui.certChainControl->getFilename();
+    if (ui.targetNameOverrideCheck->isChecked()) {
+        certificate->targetNameOverride = ui.targetNameOverrideEdit->text();
+    } else {
+        certificate->targetNameOverride = "";
+    }
 
     done(Accepted);
 }
 
 void CertsEditDialog::onCancelButtonClick() { done(Rejected); }
+
+void CertsEditDialog::onTargetNameOverrideCheckChanged(int state) {
+    ui.targetNameOverrideEdit->setEnabled(state == Qt::CheckState::Checked);
+}

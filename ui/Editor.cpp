@@ -37,6 +37,18 @@ static std::shared_ptr<grpc::ChannelCredentials> getCredentials(
     }
 }
 
+static grpc::ChannelArguments getChannelArguments(Server &server,
+                                                  std::vector<std::shared_ptr<Certificate>> &certificates) {
+    grpc::ChannelArguments args;
+    if (server.useTLS) {
+        auto certificate = server.findCertificate(certificates);
+        if (certificate && !certificate->targetNameOverride.isEmpty()) {
+            args.SetSslTargetNameOverride(certificate->targetNameOverride.toStdString());
+        }
+    }
+    return args;
+}
+
 Editor::Editor(std::unique_ptr<Method> &&method, QWidget *parent)
     : QWidget(parent),
       responseMetadataContextMenu(new QMenu(this)),
@@ -245,7 +257,8 @@ void Editor::onSendButtonClicked() {
 
         auto server = getCurrentServer();
         auto credentials = getCredentials(*server, certificates);
-        session = new Session(*method, server->address, credentials, meta.getValues(), this);
+        auto channelArgs = getChannelArguments(*server, certificates);
+        session = new Session(*method, server->address, credentials, channelArgs, meta.getValues(), this);
         connect(session, &Session::messageSent, this, &Editor::onMessageSent);
         connect(session, &Session::messageReceived, this, &Editor::onMessageReceived);
         connect(session, &Session::initialMetadataReceived, this, &Editor::onMetadataReceived);
