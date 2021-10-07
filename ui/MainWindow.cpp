@@ -59,7 +59,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui.treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
     connect(ui.treeView, &QWidget::customContextMenuRequested, [=](const QPoint &pos) {
         const QModelIndex &index = proxyModel.mapToSource(ui.treeView->indexAt(pos));
-        if (!index.parent().isValid()) {
+        if (!index.parent().isValid() && index.isValid()) {
             // file node
             treeFileContextMenu.exec(ui.treeView->viewport()->mapToGlobal(pos));
         } else if (index.parent().isValid() && index.flags().testFlag(Qt::ItemFlag::ItemIsSelectable)) {
