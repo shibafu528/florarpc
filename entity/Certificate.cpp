@@ -26,7 +26,8 @@ Certificate::Certificate(const florarpc::Certificate &certificate)
       privateKeyPath(QString::fromStdString(certificate.private_key_path())),
       privateKeyName(QString::fromStdString(certificate.private_key_name())),
       certChainPath(QString::fromStdString(certificate.cert_chain_path())),
-      certChainName(QString::fromStdString(certificate.cert_chain_name())) {}
+      certChainName(QString::fromStdString(certificate.cert_chain_name())),
+      targetNameOverride(QString::fromStdString(certificate.target_name_override())) {}
 
 void Certificate::writeCertificate(florarpc::Certificate &certificate) {
     certificate.set_id(id.toString().toStdString());
@@ -37,6 +38,7 @@ void Certificate::writeCertificate(florarpc::Certificate &certificate) {
     certificate.set_private_key_name(privateKeyName.toStdString());
     certificate.set_cert_chain_path(certChainPath.toStdString());
     certificate.set_cert_chain_name(certChainName.toStdString());
+    certificate.set_target_name_override(targetNameOverride.toStdString());
 
 #ifdef __clang__
 #pragma clang diagnostic push

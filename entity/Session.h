@@ -30,7 +30,7 @@ public:
     };
 
     Session(const Method &method, const QString &serverAddress, std::shared_ptr<grpc::ChannelCredentials> &creds,
-            const Metadata &metadata, QObject *parent = nullptr);
+            const grpc::ChannelArguments &channelArguments, const Metadata &metadata, QObject *parent = nullptr);
 
     ~Session() override;
 
