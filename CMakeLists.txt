@@ -102,8 +102,10 @@ add_custom_command(
         ${FLORA_PROTOBUF_PROTOS})
 
 if(WIN32)
+    configure_file(${PROJECT_SOURCE_DIR}/resources.rc.in ${PROJECT_BINARY_DIR}/flora_generated/resources.rc)
     set(FLORA_PLATFORM_SOURCES
-            resources.rc
+            ${PROJECT_BINARY_DIR}/flora_generated/resources.rc
+            app.manifest
             platform/RootCertificates.h
             platform/windows/RootCertificates.cpp)
 endif()
