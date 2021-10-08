@@ -37,14 +37,10 @@ static std::shared_ptr<grpc::ChannelCredentials> getCredentials(
     }
 }
 
-static grpc::ChannelArguments getChannelArguments(Server &server,
-                                                  std::vector<std::shared_ptr<Certificate>> &certificates) {
+static grpc::ChannelArguments getChannelArguments(Server &server) {
     grpc::ChannelArguments args;
-    if (server.useTLS) {
-        auto certificate = server.findCertificate(certificates);
-        if (certificate && !certificate->targetNameOverride.isEmpty()) {
-            args.SetSslTargetNameOverride(certificate->targetNameOverride.toStdString());
-        }
+    if (server.useTLS && !server.tlsTargetNameOverride.isEmpty()) {
+        args.SetSslTargetNameOverride(server.tlsTargetNameOverride.toStdString());
     }
     return args;
 }
@@ -257,7 +253,7 @@ void Editor::onSendButtonClicked() {
 
         auto server = getCurrentServer();
         auto credentials = getCredentials(*server, certificates);
-        auto channelArgs = getChannelArguments(*server, certificates);
+        auto channelArgs = getChannelArguments(*server);
         session = new Session(*method, server->address, credentials, channelArgs, meta.getValues(), this);
         connect(session, &Session::messageSent, this, &Editor::onMessageSent);
         connect(session, &Session::messageReceived, this, &Editor::onMessageReceived);

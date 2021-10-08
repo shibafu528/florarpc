@@ -11,6 +11,8 @@ ServerEditDialog::ServerEditDialog(std::shared_ptr<Server> server,
     ui.setupUi(this);
 
     connect(ui.useTLSCheck, &QCheckBox::stateChanged, this, &ServerEditDialog::onUseTLSCheckChanged);
+    connect(ui.targetNameOverrideCheck, &QCheckBox::stateChanged, this,
+            &ServerEditDialog::onTargetNameOverrideCheckChanged);
     connect(ui.buttonBox->button(QDialogButtonBox::Ok), &QAbstractButton::clicked, this,
             &ServerEditDialog::onOkButtonClick);
     connect(ui.buttonBox->button(QDialogButtonBox::Cancel), &QAbstractButton::clicked, this,
@@ -32,10 +34,23 @@ ServerEditDialog::ServerEditDialog(std::shared_ptr<Server> server,
             ui.certificateComboBox->setCurrentIndex(certificateIndex);
         }
     }
+
+    if (!this->server->tlsTargetNameOverride.isEmpty()) {
+        ui.targetNameOverrideCheck->setChecked(true);
+        ui.targetNameOverrideEdit->setText(this->server->tlsTargetNameOverride);
+    }
 }
 
 void ServerEditDialog::onUseTLSCheckChanged(int state) {
-    ui.certificateComboBox->setEnabled(state == Qt::CheckState::Checked);
+    auto checked = state == Qt::CheckState::Checked;
+    ui.certificateComboBox->setEnabled(checked);
+    ui.targetNameOverrideCheck->setEnabled(checked);
+    ui.targetNameOverrideHelp->setEnabled(checked);
+    ui.targetNameOverrideEdit->setEnabled(checked && ui.targetNameOverrideCheck->isChecked());
+}
+
+void ServerEditDialog::onTargetNameOverrideCheckChanged(int state) {
+    ui.targetNameOverrideEdit->setEnabled(state == Qt::CheckState::Checked && ui.useTLSCheck->isChecked());
 }
 
 void ServerEditDialog::onOkButtonClick() {
@@ -63,6 +78,12 @@ void ServerEditDialog::onOkButtonClick() {
         server->certificateUUID = QUuid();
     }
     server->sharedMetadata = ui.sharedMetadataEdit->toString();
+
+    if (ui.targetNameOverrideCheck->isChecked()) {
+        server->tlsTargetNameOverride = ui.targetNameOverrideEdit->text();
+    } else {
+        server->tlsTargetNameOverride = "";
+    }
 
     done(Accepted);
 }

@@ -43,6 +43,7 @@ message Server {
   bool useTLS = 4;
   string certificate_id = 5;
   string shared_metadata = 6;
+  string tls_target_name_override = 7;
 }
 
 message Certificate {
@@ -54,10 +55,10 @@ message Certificate {
   string private_key_name = 6;
   string cert_chain_path = 11;
   string cert_chain_name = 8;
-  string target_name_override = 12;
 
   // deprecated fields
   bytes root_certs = 3 [deprecated = true];
   bytes private_key = 5 [deprecated = true];
   bytes cert_chain = 7 [deprecated = true];
+  string target_name_override = 12 [deprecated = true];
 }

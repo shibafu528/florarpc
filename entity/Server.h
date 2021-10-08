@@ -23,6 +23,7 @@ public:
     bool useTLS;
     QUuid certificateUUID;
     QString sharedMetadata;
+    QString tlsTargetNameOverride;
 };
 
 #endif  // FLORARPC_SERVER_H
