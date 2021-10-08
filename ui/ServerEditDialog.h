@@ -17,6 +17,8 @@ public:
 private slots:
     void onUseTLSCheckChanged(int state);
 
+    void onTargetNameOverrideCheckChanged(int state);
+
     void onOkButtonClick();
 
     void onCancelButtonClick();

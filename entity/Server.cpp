@@ -10,7 +10,8 @@ Server::Server(const florarpc::Server& server)
       address(QString::fromStdString(server.address())),
       useTLS(server.usetls()),
       certificateUUID(QByteArray::fromStdString(server.certificate_id())),
-      sharedMetadata(QString::fromStdString(server.shared_metadata())) {}
+      sharedMetadata(QString::fromStdString(server.shared_metadata())),
+      tlsTargetNameOverride(QString::fromStdString(server.tls_target_name_override())) {}
 
 void Server::writeServer(florarpc::Server& server) {
     server.set_id(id.toString().toStdString());
@@ -19,6 +20,7 @@ void Server::writeServer(florarpc::Server& server) {
     server.set_usetls(useTLS);
     server.set_certificate_id(certificateUUID.toString().toStdString());
     server.set_shared_metadata(sharedMetadata.toStdString());
+    server.set_tls_target_name_override(tlsTargetNameOverride.toStdString());
 }
 
 std::shared_ptr<Certificate> Server::findCertificate(const std::vector<std::shared_ptr<Certificate>>& certificates) {
