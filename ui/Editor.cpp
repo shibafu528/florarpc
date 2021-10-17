@@ -126,11 +126,6 @@ Editor::Editor(std::unique_ptr<Method> &&method, QWidget *parent)
     } else {
         ui.finishButton->hide();
     }
-    if (this->method->isClientStreaming() || this->method->isServerStreaming()) {
-        ui.cancelButton->show();
-    } else {
-        ui.cancelButton->hide();
-    }
 }
 
 void Editor::setServers(std::vector<std::shared_ptr<Server>> servers) {
@@ -268,6 +263,7 @@ void Editor::onSendButtonClicked() {
     sendingRequest = true;
     updateServerSelectBox();
     updateSendButton();
+    updateCancelButton();
     if (method->isClientStreaming() || method->isServerStreaming()) {
         enableStreamingButtons();
     }
@@ -291,7 +287,7 @@ void Editor::onCancelButtonClicked() {
         return;
     }
 
-    emit session->finish();
+    emit session->cancel();
 
     updateSendButton();
     ui.finishButton->setDisabled(true);
@@ -408,6 +404,7 @@ void Editor::cleanupSession() {
     session = nullptr;
     disableStreamingButtons();
     updateSendButton();
+    updateCancelButton();
     updateServerSelectBox();
 }
 
@@ -472,18 +469,15 @@ void Editor::updateSendButton() {
     ui.sendButton->setDisabled(disabled);
 }
 
-void Editor::enableStreamingButtons() {
-    ui.cancelButton->setDisabled(false);
+void Editor::updateCancelButton() { ui.cancelButton->setDisabled(session == nullptr); }
 
+void Editor::enableStreamingButtons() {
     if (method->isClientStreaming()) {
         ui.finishButton->setDisabled(false);
     }
 }
 
-void Editor::disableStreamingButtons() {
-    ui.finishButton->setDisabled(true);
-    ui.cancelButton->setDisabled(true);
-}
+void Editor::disableStreamingButtons() { ui.finishButton->setDisabled(true); }
 
 void Editor::updateResponsePager() {
     ui.responseBodyPager->setDisabled(false);

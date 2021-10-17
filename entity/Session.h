@@ -64,6 +64,8 @@ public slots:
 
     void finish();
 
+    void cancel();
+
 private:
     class SequentialTag {
     public:
@@ -71,7 +73,7 @@ private:
 
         void *operator()() {
             intptr_t tag = reverse ? -count : count;
-            return (void *) tag;
+            return (void *)tag;
         }
 
         void advance() {
