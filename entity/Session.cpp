@@ -219,4 +219,9 @@ void Session::finish() {
     call->Finish(&statusBuffer, writeTag());
 }
 
+void Session::cancel() {
+    qDebug() << __FUNCTION__;
+    context.TryCancel();
+}
+
 #include "Session.moc"

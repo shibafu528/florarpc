@@ -91,6 +91,8 @@ private:
 
     void updateSendButton();
 
+    void updateCancelButton();
+
     void enableStreamingButtons();
 
     void disableStreamingButtons();
